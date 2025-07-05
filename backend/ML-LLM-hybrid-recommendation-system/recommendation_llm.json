@@ -1,0 +1,271 @@
+[
+  {
+    "date": "2019-01-01",
+    "predicted_occupancy": 161,
+    "capacity": 160,
+    "excess": 1,
+    "severity": "LOW",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Monitor occupancy trends closely",
+      "Prepare contingency plans if situation worsens"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 1 beds on 2019-01-01. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Monitor occupancy trends closely; Prepare contingency plans if situation worsens",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 100.6,
+    "excess_percentage": 0.6,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags needed: 1 bed * 1 blanket = 1 blanket\n   - Extra meals to prepare: 1 bed * 3 meals/day = 3 extra meals\n   - Additional staff hours required: 1 bed * 24 hours = 24 extra staff hours\n   - Additional funding needed: Cost per bed * 1 bed = Cost for 1 bed\n\n2. CAPACITY PLANNING:\n   - Overflow beds to set up: 1 bed\n   - Partner shelter beds to reserve: 0 beds (as the excess capacity is relatively low)\n   - Temporary accommodations to arrange: 0 accommodations\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members needed: 1 staff member\n   - Extra volunteer hours required: 24 hours\n   - Specific roles needing additional coverage: Overnight staff\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits needed: 1 kit\n   - Extra food to order: 3 meals\n   - Medical supplies to stock: 0 additional supplies\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: Cost per bed * 1 bed\n   - Required emergency funding: Emergency fund allocation for excess capacity situations\n   - Resource allocation budget: Allocate budget for additional supplies and staffing based on excess capacity predictions."
+  },
+  {
+    "date": "2019-01-03",
+    "predicted_occupancy": 164,
+    "capacity": 160,
+    "excess": 4,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 4 beds on 2019-01-03. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 102.5,
+    "excess_percentage": 2.5,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags needed: 4 (to accommodate the excess capacity)\n   - Extra meals to prepare: 8 (assuming 2 meals per day for 4 extra occupants)\n   - Additional staff hours required: 8 hours (assuming 2 additional staff members each working a 4-hour shift)\n   - Additional funding needed: Calculated based on average cost per bed per night multiplied by the excess capacity (4 beds * average cost per bed per night)\n\n2. CAPACITY PLANNING:\n   - Overflow beds to set up: 4 (to accommodate the excess capacity)\n   - Partner shelter beds to reserve: 0 (since no partner shelter beds are mentioned in the context)\n   - Temporary accommodations to arrange: 0 (since no temporary accommodations are mentioned in the context)\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members needed: 2 (to cover the extra shifts for the excess capacity)\n   - Extra volunteer hours required: 0 (since no mention of additional volunteer hours in the context)\n   - Specific roles needing additional coverage: Overnight staff to monitor the overflow beds and additional meal preparation staff.\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits needed: 4 (to accommodate the excess capacity)\n   - Extra food to order: Calculated based on the number of extra meals required multiplied by the average cost per meal\n   - Medical supplies to stock: No specific mention of medical supplies, so assume current stock is sufficient for the excess capacity.\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: Sum of additional funding needed, extra food costs, and any other additional expenses related to the excess capacity.\n   - Required emergency funding: Calculated based on the total estimated additional costs and any potential unforeseen expenses.\n   - Resource allocation budget: Adjust the current budget to accommodate the predicted excess capacity and associated expenses."
+  },
+  {
+    "date": "2019-01-04",
+    "predicted_occupancy": 164,
+    "capacity": 160,
+    "excess": 4,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 4 beds on 2019-01-04. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 102.5,
+    "excess_percentage": 2.5,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags needed: 4 (based on the excess capacity prediction)\n   - Extra meals to prepare: 8 (assuming 2 meals per bed over capacity)\n   - Additional staff hours required: 16 hours (assuming 4 hours per additional bed)\n   - Additional funding needed: $500 (estimated cost of blankets, meals, and staff hours)\n\n2. CAPACITY PLANNING:\n   - Overflow beds to set up: 4 (to accommodate excess capacity)\n   - Partner shelter beds to reserve: 10 (to account for potential escalation)\n   - Temporary accommodations to arrange: 0 (based on current data)\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members needed: 2 (to cover extra shifts for excess capacity)\n   - Extra volunteer hours required: 8 hours (assuming 2 hours per additional bed)\n   - Specific roles needing additional coverage: Shelter monitors, kitchen staff\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits needed: 4 (to accommodate excess capacity)\n   - Extra food to order: 16 meals (to cover additional demand)\n   - Medical supplies to stock: 0 (based on current data)\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: $500 (based on resource allocation needs)\n   - Required emergency funding: $1000 (to cover unexpected escalation)\n   - Resource allocation budget: $2000 (to cover all recommended actions) \n\nThese recommendations are based on the excess capacity prediction and historical data on shelter usage patterns. It is important to closely monitor the situation and adjust resource allocation as needed to ensure the shelter can effectively meet the increased demand during the predicted period."
+  },
+  {
+    "date": "2019-01-05",
+    "predicted_occupancy": 164,
+    "capacity": 160,
+    "excess": 4,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 4 beds on 2019-01-05. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 102.5,
+    "excess_percentage": 2.5,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n- Additional blankets/sleeping bags needed: 4 (to accommodate the excess capacity)\n- Extra meals to prepare: 8 (assuming 2 meals per bed)\n- Additional staff hours required: 8 hours (assuming 1 staff member per 20 beds)\n- Additional funding needed: $500 (estimated cost for additional resources)\n\n2. CAPACITY PLANNING:\n- Overflow beds to set up: 4 (to accommodate excess capacity)\n- Partner shelter beds to reserve: 10% of capacity (16 beds)\n- Temporary accommodations to arrange: 5 beds (for emergency situations)\n\n3. STAFFING REQUIREMENTS:\n- Additional staff members needed: 1 (to cover the additional workload)\n- Extra volunteer hours required: 4 hours (assuming 1 volunteer per 40 beds)\n- Specific roles needing additional coverage: Overnight staff for monitoring excess capacity\n\n4. SUPPLY CHAIN:\n- Additional hygiene kits needed: 4 (to accommodate excess capacity)\n- Extra food to order: Sufficient for 8 extra meals\n- Medical supplies to stock: Basic first aid supplies for emergencies\n\n5. FINANCIAL PROJECTIONS:\n- Estimated additional costs: $600 (sum of additional resources and staffing costs)\n- Required emergency funding: $1000 (to cover unexpected expenses)\n- Resource allocation budget: $2000 (to ensure adequate resources for predicted capacity)"
+  },
+  {
+    "date": "2019-01-06",
+    "predicted_occupancy": 164,
+    "capacity": 160,
+    "excess": 4,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 4 beds on 2019-01-06. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 102.5,
+    "excess_percentage": 2.5,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags needed: 4 (based on excess capacity prediction)\n   - Extra meals to prepare: 4 (assuming each additional bed requires an extra meal)\n   - Additional staff hours required: 8 hours (assuming 2 additional staff members for a 4-hour shift each)\n   - Additional funding needed: Estimated at $200 (assuming $50 per additional bed for resources and staffing)\n\n2. CAPACITY PLANNING:\n   - Overflow beds to set up: 4 (to accommodate excess capacity)\n   - Partner shelter beds to reserve: 0 (not necessary based on current excess capacity prediction)\n   - Temporary accommodations to arrange: 0 (not necessary based on current excess capacity prediction)\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members needed: 2 (to cover the additional hours for the excess capacity)\n   - Extra volunteer hours required: 0 (not necessary based on current excess capacity prediction)\n   - Specific roles needing additional coverage: Overnight staff for monitoring and support\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits needed: 4 (for the additional occupants)\n   - Extra food to order: Sufficient for 4 extra meals\n   - Medical supplies to stock: 0 (not necessary based on current excess capacity prediction)\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: $200 (based on resource allocation needs)\n   - Required emergency funding: $200 (to cover unexpected expenses)\n   - Resource allocation budget: $500 (to ensure readiness for future capacity fluctuations)\n\nThese recommendations are based on the excess capacity prediction and aim to ensure the Birkdale Residence is adequately prepared to meet the increased demand during the predicted period. Adjustments can be made based on real-time data and changing circumstances."
+  },
+  {
+    "date": "2019-01-07",
+    "predicted_occupancy": 163,
+    "capacity": 160,
+    "excess": 3,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 3 beds on 2019-01-07. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 101.9,
+    "excess_percentage": 1.9,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags: 3\n   - Extra meals to prepare: 3\n   - Additional staff hours: 12 hours\n   - Additional funding needed: $500\n\n2. CAPACITY PLANNING:\n   - Overflow beds to set up: 5\n   - Partner shelter beds to reserve: 10\n   - Temporary accommodations to arrange: 3\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members needed: 2\n   - Extra volunteer hours required: 6 hours\n   - Specific roles needing additional coverage: Overnight shift, meal preparation\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits needed: 5\n   - Extra food to order: Sufficient for 10 extra meals\n   - Medical supplies to stock: for 5 additional individuals\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: $1000\n   - Required emergency funding: $1500\n   - Resource allocation budget: $2000\n\nThese recommendations are based on the predicted excess capacity and historical data. Adjustments may be needed based on actual occupancy and influx rates. It is essential to monitor the situation closely and make real-time adjustments as needed to ensure the shelter can effectively meet the increased demand during the predicted period."
+  },
+  {
+    "date": "2019-01-08",
+    "predicted_occupancy": 163,
+    "capacity": 160,
+    "excess": 3,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 3 beds on 2019-01-08. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 101.9,
+    "excess_percentage": 1.9,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags needed: 3 (to accommodate the excess capacity)\n   - Extra meals to prepare: 9 (assuming 3 extra meals for each additional bed)\n   - Additional staff hours required: 8 hours (assuming 2 extra staff members for a 4-hour shift)\n   - Additional funding needed: $500 (estimated cost for additional supplies and staff hours)\n\n2. CAPACITY PLANNING:\n   - Overflow beds to set up: 5 (to provide buffer for potential increase in demand)\n   - Partner shelter beds to reserve: 10 (to have backup options in case of capacity overflow)\n   - Temporary accommodations to arrange: 3 (for emergency situations or extreme weather conditions)\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members needed: 2 (to cover the increased occupancy)\n   - Extra volunteer hours required: 16 hours (assuming 4 volunteers for a 4-hour shift)\n   - Specific roles needing additional coverage: Front desk, kitchen, security\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits needed: 5 (to accommodate the excess capacity)\n   - Extra food to order: 15 meals (to cover the additional meals needed)\n   - Medical supplies to stock: 2 first aid kits (to ensure sufficient supplies for increased occupancy)\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: $800 (sum of additional supplies, staff hours, and accommodations)\n   - Required emergency funding: $1000 (to account for unforeseen expenses or further capacity increases)\n   - Resource allocation budget: $1500 (to cover all recommended resource allocation and capacity planning measures)"
+  },
+  {
+    "date": "2019-01-09",
+    "predicted_occupancy": 163,
+    "capacity": 160,
+    "excess": 3,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 3 beds on 2019-01-09. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 101.9,
+    "excess_percentage": 1.9,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags: 3 (to match excess capacity)\n   - Extra meals: 3 (to accommodate excess capacity)\n   - Additional staff hours: 8 hours (assuming 2 staff members for 4-hour shifts)\n   - Additional funding: $500 (estimated cost for extra resources and staff)\n\n2. CAPACITY PLANNING:\n   - Overflow beds: 5 (to provide buffer for potential escalation)\n   - Partner shelter beds: 0 (as there are no specific partners mentioned)\n   - Temporary accommodations: 0 (no mention of arranging temporary accommodations)\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members: 2 (to cover the extra shifts)\n   - Extra volunteer hours: 0 (assuming current volunteer availability is sufficient)\n   - Specific roles needing coverage: Overnight shift and meal preparation staff\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits: 3 (to match excess capacity)\n   - Extra food: 3 meals' worth (to accommodate excess capacity)\n   - Medical supplies: 0 (no specific mention of medical needs)\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: $500 (from resource allocation)\n   - Required emergency funding: $500 (to cover unexpected expenses)\n   - Resource allocation budget: $1000 (to cover all additional resources and staffing needs)"
+  },
+  {
+    "date": "2019-01-10",
+    "predicted_occupancy": 165,
+    "capacity": 160,
+    "excess": 5,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 5 beds on 2019-01-10. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 103.1,
+    "excess_percentage": 3.1,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n   - Additional blankets/sleeping bags needed: 5 beds (to cover the excess capacity)\n   - Extra meals to prepare: 165 beds (predicted occupancy) * 3 meals = 495 meals\n   - Additional staff hours required: Assuming each staff member works 8 hours, additional staff hours needed = 5 beds * 8 hours = 40 hours\n   - Additional funding needed: Cost per bed per night * 5 beds (excess capacity) * number of nights\n\n2. CAPACITY PLANNING:\n   - Overflow beds to set up: 5 beds (excess capacity)\n   - Partner shelter beds to reserve: 10 beds (assuming a 2:1 ratio of partner shelter beds to excess capacity)\n   - Temporary accommodations to arrange: 0 (based on predicted occupancy not exceeding capacity)\n\n3. STAFFING REQUIREMENTS:\n   - Additional staff members needed: 5 beds * 1 staff member per 20 beds = 0.25 staff members (round up to 1 additional staff member)\n   - Extra volunteer hours required: 40 hours (equivalent to additional staff hours)\n   - Specific roles needing additional coverage: Front desk, meal preparation, overnight monitoring\n\n4. SUPPLY CHAIN:\n   - Additional hygiene kits needed: 5 beds (excess capacity)\n   - Extra food to order: 495 meals (extra meals to prepare)\n   - Medical supplies to stock: Regular stock should be maintained, no additional supplies needed based on excess capacity\n\n5. FINANCIAL PROJECTIONS:\n   - Estimated additional costs: Cost per bed per night * 5 beds (excess capacity) * number of nights\n   - Required emergency funding: Emergency fund reserve amount for unexpected situations\n   - Resource allocation budget: Total budget for shelter operations, including contingency for excess capacity situations\n\nThese recommendations provide a quantitative and data-driven approach to managing the excess capacity prediction at Birkdale Residence, ensuring adequate resources, capacity planning, staffing requirements, and financial projections to address the situation effectively."
+  },
+  {
+    "date": "2019-01-11",
+    "predicted_occupancy": 164,
+    "capacity": 160,
+    "excess": 4,
+    "severity": "MEDIUM",
+    "reasoning": [
+      "Winter months typically see increased demand due to extreme weather conditions."
+    ],
+    "action_items": [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    "shelter_name": "Birkdale Residence",
+    "program_name": "Birkdale Residence - Bedded Program",
+    "message": "Shelter Birkdale Residence (Birkdale Residence - Bedded Program) is expected to be over capacity by 4 beds on 2019-01-11. Winter months typically see increased demand due to extreme weather conditions. Recommended actions: Increase staff coverage for the predicted period; Prepare overflow space if available; Monitor situation closely for escalation",
+    "avg_occupancy": 173.1,
+    "max_occupancy": 205,
+    "occupancy_volatility": 12.9,
+    "avg_daily_influx": 0.0,
+    "max_daily_influx": 19,
+    "seasonal_peak_factor": 1.18,
+    "capacity_utilization_rate": 102.5,
+    "excess_percentage": 2.5,
+    "llm_feedback": "1. RESOURCE ALLOCATION:\n- Additional blankets/sleeping bags needed: 4 (to accommodate the excess 4 beds)\n- Extra meals to prepare: 8 (assuming 2 meals per bed over capacity)\n- Additional staff hours required: 16 hours (assuming 4 hours per additional bed)\n- Additional funding needed: $500 (estimated cost for blankets, meals, and staff hours)\n\n2. CAPACITY PLANNING:\n- Overflow beds to set up: 4 (to match the excess capacity)\n- Partner shelter beds to reserve: 10% of predicted occupancy - 16 beds\n- Temporary accommodations to arrange: 0 (not necessary based on current excess capacity)\n\n3. STAFFING REQUIREMENTS:\n- Additional staff members needed: 2 (to cover the extra hours for the excess capacity)\n- Extra volunteer hours required: 4 hours (to assist with the additional tasks)\n- Specific roles needing additional coverage: Overnight staff, kitchen staff for meal preparation\n\n4. SUPPLY CHAIN:\n- Additional hygiene kits needed: 4\n- Extra food to order: 16 meals\n- Medical supplies to stock: No additional supplies needed based on the current situation\n\n5. FINANCIAL PROJECTIONS:\n- Estimated additional costs: $500 (based on resource allocation needs)\n- Required emergency funding: $1000 (to account for any unforeseen expenses)\n- Resource allocation budget: $1500 (to cover all recommended actions)"
+  }
+]
