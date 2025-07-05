@@ -180,12 +180,34 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.google-map {
+.leaflet-map {
   flex: 1;
   height: 100%;
   background: #e9ecef;
   border-radius: 0 0 0 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+/* Custom Marker Styles */
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Leaflet Popup Customization */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-popup-tip {
+  background: white;
 }
 
 /* Map Sidebar */
@@ -198,23 +220,21 @@
   backdrop-filter: blur(10px);
   border-radius: 0 0 20px 0;
   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 2;
 }
 
 .sidebar-header {
-  padding: 25px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 25px 30px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.8);
   border-radius: 0 0 0 20px;
 }
 
 .sidebar-header h3 {
   color: #2c3e50;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  margin: 0;
+  margin: 0 0 8px 0;
 }
 
 .shelter-count {
@@ -222,42 +242,39 @@
   font-size: 0.9rem;
   font-weight: 500;
   background: rgba(52, 73, 94, 0.1);
-  padding: 6px 12px;
-  border-radius: 15px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  display: inline-block;
 }
 
 .shelter-list {
   flex: 1;
   overflow-y: auto;
   padding: 0;
-  margin: 0;
 }
 
 .shelter-item {
-  padding: 20px 25px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .shelter-item:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(52, 73, 94, 0.05);
   transform: translateX(5px);
 }
 
 .shelter-item.critical {
   border-left: 4px solid #e74c3c;
-  background: rgba(231, 76, 60, 0.05);
 }
 
 .shelter-item.warning {
   border-left: 4px solid #f39c12;
-  background: rgba(243, 156, 18, 0.05);
 }
 
 .shelter-item.normal {
   border-left: 4px solid #27ae60;
-  background: rgba(39, 174, 96, 0.05);
 }
 
 .shelter-info h4 {
@@ -307,25 +324,20 @@
 }
 
 .influx-value {
-  color: #34495e;
-  font-size: 0.9rem;
+  color: #7f8c8d;
+  font-size: 0.85rem;
   font-weight: 500;
-  background: rgba(52, 73, 94, 0.1);
-  padding: 4px 10px;
-  border-radius: 8px;
 }
 
-/* Info Window Styles */
 .info-window {
   padding: 15px;
-  max-width: 250px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-width: 200px;
 }
 
 .info-window h3 {
   color: #2c3e50;
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0 0 10px 0;
   line-height: 1.3;
 }
@@ -345,24 +357,24 @@
 /* Responsive Design */
 @media (max-width: 1024px) {
   .map-header {
-    padding: 20px;
+    padding: 20px 25px;
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .header-content h1 {
     font-size: 1.8rem;
   }
-  
+
   .map-legend {
     gap: 15px;
   }
-  
+
   .map-container {
     flex-direction: column;
     height: calc(100vh - 150px);
   }
-  
+
   .map-sidebar {
     width: 100%;
     height: 300px;
@@ -370,47 +382,47 @@
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 0 0 20px 20px;
   }
-  
-  .google-map {
-    height: 60%;
+
+  .leaflet-map {
     border-radius: 0;
+    min-height: 400px;
   }
 }
 
 @media (max-width: 768px) {
   .map-header {
-    padding: 15px;
+    padding: 15px 20px;
   }
-  
+
   .header-content h1 {
     font-size: 1.5rem;
   }
-  
+
   .header-content p {
     font-size: 1rem;
   }
-  
+
   .map-legend {
     gap: 10px;
   }
-  
+
   .legend-item {
     font-size: 0.85rem;
     padding: 6px 12px;
   }
-  
+
   .map-sidebar {
     height: 250px;
   }
-  
+
   .sidebar-header {
-    padding: 15px;
+    padding: 20px 25px 15px;
   }
-  
+
   .shelter-item {
-    padding: 15px;
+    padding: 15px 25px;
   }
-  
+
   .shelter-info h4 {
     font-size: 1rem;
   }
