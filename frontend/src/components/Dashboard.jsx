@@ -8,6 +8,7 @@ import './Dashboard.css';
 const Dashboard = () => {
   const [shelters, setShelters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [filterBy, setFilterBy] = useState('all');
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const fetchShelterData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch('http://localhost:3001/api/predictions', {
         headers: {
           'Content-Type': 'application/json',
@@ -35,6 +37,7 @@ const Dashboard = () => {
       setShelters(data);
     } catch (err) {
       console.error('Error fetching shelter data:', err);
+      setError('Failed to load shelter data. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -57,19 +60,25 @@ const Dashboard = () => {
     });
 
   const getStatusColor = (influx) => {
-    if (influx > 150) return 'high';
-    if (influx >= 80) return 'medium';
-    return 'low';
+    if (influx > 150) return 'critical';
+    if (influx >= 80) return 'warning';
+    return 'normal';
   };
 
   const getStatusText = (influx) => {
-    if (influx > 150) return 'High Alert';
-    if (influx >= 80) return 'Moderate';
+    if (influx > 150) return 'Critical';
+    if (influx >= 80) return 'Warning';
     return 'Normal';
   };
 
+  const getStatusIcon = (influx) => {
+    if (influx > 150) return '🔴';
+    if (influx >= 80) return '🟡';
+    return '🟢';
+  };
+
   const tabs = [
-    { id: 'dashboard', name: 'Dashboard', icon: '📊' },
+    { id: 'dashboard', name: 'Overview', icon: '📊' },
     { id: 'heatmap', name: 'Heatmap', icon: '🗺️' },
     { id: 'forecast', name: 'Forecast', icon: '🔮' },
     { id: 'alerts', name: 'Alerts', icon: '🚨' }
@@ -80,90 +89,120 @@ const Dashboard = () => {
       case 'dashboard':
         return (
           <div className="dashboard-content">
-            <div className="dashboard-header">
-              <h1>Shelter Monitoring Dashboard</h1>
-              <div className="dashboard-stats">
-                <div className="stat-item">
-                  <span className="stat-number">{shelters.length}</span>
-                  <span className="stat-label">Total Shelters</span>
+            <div className="stats-overview">
+              <div className="stat-card total-shelters">
+                <div className="stat-icon">🏠</div>
+                <div className="stat-info">
+                  <h3>{shelters.length}</h3>
+                  <p>Total Shelters</p>
                 </div>
-                <div className="stat-item">
-                  <span className="stat-number">{shelters.filter(s => s.predicted_influx > 150).length}</span>
-                  <span className="stat-label">High Alert</span>
+              </div>
+              <div className="stat-card critical-alerts">
+                <div className="stat-icon">🔴</div>
+                <div className="stat-info">
+                  <h3>{shelters.filter(s => s.predicted_influx > 150).length}</h3>
+                  <p>Critical Alerts</p>
                 </div>
-                <div className="stat-item">
-                  <span className="stat-number">
-                    {Math.round(shelters.reduce((sum, s) => sum + s.predicted_influx, 0) / shelters.length)}
-                  </span>
-                  <span className="stat-label">Avg Influx</span>
+              </div>
+              <div className="stat-card avg-influx">
+                <div className="stat-icon">📈</div>
+                <div className="stat-info">
+                  <h3>{shelters.length > 0 ? Math.round(shelters.reduce((sum, s) => sum + s.predicted_influx, 0) / shelters.length) : 0}</h3>
+                  <p>Avg Influx</p>
+                </div>
+              </div>
+              <div className="stat-card total-capacity">
+                <div className="stat-icon">👥</div>
+                <div className="stat-info">
+                  <h3>{shelters.reduce((sum, s) => sum + s.predicted_influx, 0)}</h3>
+                  <p>Total Capacity</p>
                 </div>
               </div>
             </div>
 
-            <div className="dashboard-controls">
-              <div className="search-box">
-                <input
-                  type="text"
-                  placeholder="Search shelters..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div className="controls-section">
+              <div className="search-container">
+                <div className="search-box">
+                  <span className="search-icon">🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search shelters..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
               </div>
               
-              <div className="filters">
-                <select value={filterBy} onChange={(e) => setFilterBy(e.target.value)}>
-                  <option value="all">All Shelters</option>
-                  <option value="high">High Alert (&gt;150)</option>
-                  <option value="medium">Moderate (80-150)</option>
-                  <option value="low">Normal (&lt;80)</option>
-                </select>
+              <div className="filters-container">
+                <div className="filter-group">
+                  <label>Filter by Status:</label>
+                  <select value={filterBy} onChange={(e) => setFilterBy(e.target.value)}>
+                    <option value="all">All Shelters</option>
+                    <option value="high">Critical (&gt;150)</option>
+                    <option value="medium">Warning (80-150)</option>
+                    <option value="low">Normal (&lt;80)</option>
+                  </select>
+                </div>
                 
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="name">Sort by Name</option>
-                  <option value="influx">Sort by Influx</option>
-                </select>
+                <div className="filter-group">
+                  <label>Sort by:</label>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                    <option value="name">Name</option>
+                    <option value="influx">Influx (High to Low)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="shelters-grid">
-              {filteredShelters.map((shelter, index) => (
-                <div key={index} className={`shelter-card ${getStatusColor(shelter.predicted_influx)}`}>
-                  <div className="shelter-header">
-                    <h3>{shelter.name}</h3>
-                    <span className={`status-badge ${getStatusColor(shelter.predicted_influx)}`}>
-                      {getStatusText(shelter.predicted_influx)}
-                    </span>
-                  </div>
-                  
-                  <div className="shelter-details">
-                    <div className="detail-item">
-                      <span className="detail-label">Predicted Influx:</span>
-                      <span className="detail-value">{shelter.predicted_influx}</span>
+            <div className="shelters-container">
+              <div className="shelters-header">
+                <h2>Shelter Status</h2>
+                <span className="results-count">{filteredShelters.length} shelters found</span>
+              </div>
+              
+              <div className="shelters-grid">
+                {filteredShelters.map((shelter, index) => (
+                  <div key={index} className={`shelter-card ${getStatusColor(shelter.predicted_influx)}`}>
+                    <div className="shelter-header">
+                      <div className="shelter-title">
+                        <h3>{shelter.name}</h3>
+                        <span className={`status-badge ${getStatusColor(shelter.predicted_influx)}`}>
+                          {getStatusIcon(shelter.predicted_influx)} {getStatusText(shelter.predicted_influx)}
+                        </span>
+                      </div>
                     </div>
                     
-                    <div className="detail-item">
-                      <span className="detail-label">Capacity Status:</span>
-                      <span className={`capacity-status ${getStatusColor(shelter.predicted_influx)}`}>
-                        {shelter.predicted_influx > 150 ? 'Critical' : 
-                         shelter.predicted_influx >= 80 ? 'Moderate' : 'Good'}
-                      </span>
+                    <div className="shelter-metrics">
+                      <div className="metric">
+                        <span className="metric-label">Predicted Influx</span>
+                        <span className="metric-value">{shelter.predicted_influx}</span>
+                      </div>
+                      
+                      <div className="metric">
+                        <span className="metric-label">Capacity Status</span>
+                        <span className={`capacity-indicator ${getStatusColor(shelter.predicted_influx)}`}>
+                          {shelter.predicted_influx > 150 ? 'Critical' : 
+                           shelter.predicted_influx >= 80 ? 'Moderate' : 'Good'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="shelter-actions">
+                      <button className="btn-view">View Details</button>
+                      <button className="btn-location">Add Location</button>
                     </div>
                   </div>
-                  
-                  <div className="shelter-actions">
-                    <button className="btn-primary">View Details</button>
-                    <button className="btn-secondary">Add Location</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {filteredShelters.length === 0 && (
-              <div className="no-results">
-                <h3>No shelters found</h3>
-                <p>Try adjusting your search or filters</p>
+                ))}
               </div>
-            )}
+
+              {filteredShelters.length === 0 && (
+                <div className="no-results">
+                  <div className="no-results-icon">🔍</div>
+                  <h3>No shelters found</h3>
+                  <p>Try adjusting your search or filters</p>
+                </div>
+              )}
+            </div>
           </div>
         );
       case 'heatmap':
@@ -184,8 +223,26 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <h2>Loading Dashboard...</h2>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <h2>Loading Dashboard...</h2>
+          <p>Fetching shelter data</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-error">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h2>Error Loading Data</h2>
+          <p>{error}</p>
+          <button onClick={fetchShelterData} className="btn-retry">
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -194,14 +251,19 @@ const Dashboard = () => {
     <div className="dashboard">
       <div className="dashboard-header">
         <div className="header-content">
-          <h1>Toronto Shelter Analytics</h1>
-          <p>Real-time shelter monitoring and prediction system</p>
-        </div>
-        <div className="user-section">
-          <span className="welcome-text">Welcome, {user?.username}!</span>
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
+          <div className="header-title">
+            <h1>Toronto Shelter Analytics</h1>
+            <p>Real-time monitoring and predictive analytics</p>
+          </div>
+          <div className="user-section">
+            <div className="user-info">
+              <span className="user-avatar">👤</span>
+              <span className="welcome-text">Welcome, {user?.username}!</span>
+            </div>
+            <button onClick={handleLogout} className="logout-button">
+              Logout
+            </button>
+          </div>
         </div>
       </div>
       

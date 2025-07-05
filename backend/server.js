@@ -29,6 +29,11 @@ let sheltersCache = null;
 let lastSheltersCacheTime = 0;
 const SHELTERS_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
+// Cache for shelter locations
+let locationsCache = null;
+let lastLocationsCacheTime = 0;
+const LOCATIONS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
 app.use(cors());
 app.use(express.json());
 
@@ -38,6 +43,69 @@ app.use('/api/auth', authRoutes);
 // API routes
 app.get('/api', (req, res) => {
   res.json({ message: 'Server is running! Use /api/predictions to get shelter predictions.' });
+});
+
+// Get shelter locations for map
+app.get('/api/shelter-locations', (req, res) => {
+  const now = Date.now();
+  
+  // Check if we have valid cached data
+  if (locationsCache && (now - lastLocationsCacheTime) < LOCATIONS_CACHE_DURATION) {
+    console.log('Serving cached shelter locations');
+    return res.json(locationsCache);
+  }
+
+  console.log('Getting fresh shelter locations...');
+  
+  // Try to read from shelter_locations.json first
+  const locationsFile = path.join(__dirname, '../data/shelter_locations.json');
+  
+  if (fs.existsSync(locationsFile)) {
+    try {
+      const data = fs.readFileSync(locationsFile, 'utf8');
+      const locations = JSON.parse(data);
+      
+      // Cache the results
+      locationsCache = locations;
+      lastLocationsCacheTime = now;
+      
+      res.json(locations);
+    } catch (error) {
+      console.error('Error reading shelter locations:', error);
+      res.status(500).send("Error reading shelter locations");
+    }
+  } else {
+    // If no locations file exists, generate it
+    console.log('No shelter locations file found. Generating...');
+    exec('../venv/bin/python geocode_shelters.py', { cwd: __dirname }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Python script error:', error);
+        console.error('Stderr:', stderr);
+        return res.status(500).send("Failed to generate shelter locations");
+      }
+
+      // Try to read the generated file
+      setTimeout(() => {
+        if (fs.existsSync(locationsFile)) {
+          try {
+            const data = fs.readFileSync(locationsFile, 'utf8');
+            const locations = JSON.parse(data);
+            
+            // Cache the results
+            locationsCache = locations;
+            lastLocationsCacheTime = now;
+            
+            res.json(locations);
+          } catch (error) {
+            console.error('Error reading generated locations:', error);
+            res.status(500).send("Error reading generated shelter locations");
+          }
+        } else {
+          res.status(500).send("Failed to generate shelter locations file");
+        }
+      }, 2000); // Wait 2 seconds for file to be written
+    });
+  }
 });
 
 // Get available shelters
