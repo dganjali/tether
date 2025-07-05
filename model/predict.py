@@ -62,16 +62,16 @@ def prepare_data_for_prediction(shelter_name, target_date, days_ahead=7):
             row['OCCUPANCY'] / 100.0,         # Normalized occupancy
         ])
         
-        # Add more features to reach 45 total
+        # Add more features to reach 46 total
         # This is a placeholder - replace with actual features from your training
-        for i in range(39):  # 4 + 2 + 39 = 45 features
+        for i in range(40):  # 4 + 2 + 40 = 46 features
             feature_vector.append(0.0)  # Placeholder features
         
         features.append(feature_vector)
     
-    # Convert to numpy array and reshape to (1, 30, 45) for single prediction
+    # Convert to numpy array and reshape to (1, 30, 46) for single prediction
     features_array = np.array(features, dtype=np.float32)
-    features_array = features_array.reshape(1, 30, 45)
+    features_array = features_array.reshape(1, 30, 46)
     
     return features_array, recent_data['OCCUPANCY_DATE'].iloc[-1]
 
