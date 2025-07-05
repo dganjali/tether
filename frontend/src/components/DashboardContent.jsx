@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import './DashboardContent.css';
 
@@ -37,11 +37,48 @@ const DashboardContent = () => {
     }
   }, [autoRefresh]);
 
+  const calculateAnalytics = useCallback(() => {
+    const totalShelters = predictions.length;
+    let criticalShelters = 0;
+    let warningShelters = 0;
+    let normalShelters = 0;
+    let totalCapacity = 0;
+    let totalPredicted = 0;
+
+    predictions.forEach(prediction => {
+      const capacity = prediction.capacity || 100;
+      const utilization = (prediction.predicted_influx / capacity) * 100;
+      
+      totalCapacity += capacity;
+      totalPredicted += prediction.predicted_influx;
+
+      if (utilization > 100) {
+        criticalShelters++;
+      } else if (utilization > 80) {
+        warningShelters++;
+      } else {
+        normalShelters++;
+      }
+    });
+
+    const avgUtilization = totalCapacity > 0 ? ((totalPredicted / totalCapacity) * 100).toFixed(1) : 0;
+
+    setAnalytics({
+      totalShelters,
+      criticalShelters,
+      warningShelters,
+      normalShelters,
+      avgUtilization: parseFloat(avgUtilization),
+      totalCapacity,
+      totalPredicted
+    });
+  }, [predictions]);
+
   useEffect(() => {
     if (predictions.length > 0) {
       calculateAnalytics();
     }
-  }, [predictions]);
+  }, [predictions, calculateAnalytics]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -96,43 +133,6 @@ const DashboardContent = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateAnalytics = () => {
-    const totalShelters = predictions.length;
-    let criticalShelters = 0;
-    let warningShelters = 0;
-    let normalShelters = 0;
-    let totalCapacity = 0;
-    let totalPredicted = 0;
-
-    predictions.forEach(prediction => {
-      const capacity = prediction.capacity || 100;
-      const utilization = (prediction.predicted_influx / capacity) * 100;
-      
-      totalCapacity += capacity;
-      totalPredicted += prediction.predicted_influx;
-
-      if (utilization > 100) {
-        criticalShelters++;
-      } else if (utilization > 80) {
-        warningShelters++;
-      } else {
-        normalShelters++;
-      }
-    });
-
-    const avgUtilization = totalCapacity > 0 ? ((totalPredicted / totalCapacity) * 100).toFixed(1) : 0;
-
-    setAnalytics({
-      totalShelters,
-      criticalShelters,
-      warningShelters,
-      normalShelters,
-      avgUtilization: parseFloat(avgUtilization),
-      totalCapacity,
-      totalPredicted
-    });
   };
 
   const getStatusColor = (predictedInflux, capacity) => {
