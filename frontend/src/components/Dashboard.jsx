@@ -4,7 +4,7 @@ import './Dashboard.css';
 import logo from '../images/LOGO.png';
 
 const Dashboard = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
   const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
