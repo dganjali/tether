@@ -193,6 +193,7 @@ cython_debug/
 
 # React build (only exclude production builds, not source)
 frontend/build/
+build/
 
 # Testing
 /coverage
