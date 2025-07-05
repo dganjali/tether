@@ -4,10 +4,12 @@ import './YourSheltersContent.css';
 
 const YourSheltersContent = () => {
   const [userShelters, setUserShelters] = useState([]);
+  const [shelterLocations, setShelterLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingShelter, setAddingShelter] = useState(false);
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [newShelter, setNewShelter] = useState({
     name: '',
     address: '',
@@ -19,6 +21,7 @@ const YourSheltersContent = () => {
 
   useEffect(() => {
     fetchUserShelters();
+    fetchShelterLocations();
   }, []);
 
   const fetchUserShelters = async () => {
@@ -48,6 +51,20 @@ const YourSheltersContent = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchShelterLocations = async () => {
+    try {
+      const response = await fetch('/api/shelter-locations');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch shelter locations: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setShelterLocations(data);
+    } catch (err) {
+      console.error('Error fetching shelter locations:', err);
     }
   };
 
@@ -125,6 +142,23 @@ const YourSheltersContent = () => {
     }));
   };
 
+  const handleShelterSelect = (shelter) => {
+    setNewShelter({
+      name: shelter.name,
+      address: shelter.address,
+      capacity: '',
+      contactPerson: '',
+      phone: '',
+      email: ''
+    });
+    setSearchTerm('');
+  };
+
+  const filteredShelters = shelterLocations.filter(shelter =>
+    shelter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    shelter.address.toLowerCase().includes(searchTerm.toLowerCase())
+  ).slice(0, 5); // Limit to 5 results for better UX
+
   if (loading) {
     return (
       <div className="your-shelters-content">
@@ -163,6 +197,40 @@ const YourSheltersContent = () => {
         {showAddForm && (
           <div className="add-shelter-form">
             <form onSubmit={handleAddShelter}>
+              <div className="shelter-search-section">
+                <h4>Quick Add from Existing Shelters</h4>
+                <p>Search and select from our database of shelters</p>
+                
+                <div className="search-container">
+                  <input
+                    type="text"
+                    placeholder="Search shelters by name or address..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                  />
+                  
+                  {searchTerm && filteredShelters.length > 0 && (
+                    <div className="search-results">
+                      {filteredShelters.map((shelter, index) => (
+                        <div
+                          key={index}
+                          className="search-result-item"
+                          onClick={() => handleShelterSelect(shelter)}
+                        >
+                          <div className="shelter-name">{shelter.name}</div>
+                          <div className="shelter-address">{shelter.address}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-divider">
+                <span>Or Add Custom Shelter</span>
+              </div>
+
               <div className="form-grid">
                 <div className="form-group">
                   <label htmlFor="name">Shelter Name *</label>
@@ -174,6 +242,7 @@ const YourSheltersContent = () => {
                     onChange={handleInputChange}
                     required
                     className="form-control"
+                    placeholder="Enter shelter name"
                   />
                 </div>
                 
@@ -187,6 +256,7 @@ const YourSheltersContent = () => {
                     onChange={handleInputChange}
                     required
                     className="form-control"
+                    placeholder="Enter full address"
                   />
                 </div>
                 
@@ -201,6 +271,7 @@ const YourSheltersContent = () => {
                     required
                     min="1"
                     className="form-control"
+                    placeholder="Enter capacity"
                   />
                 </div>
                 
@@ -213,6 +284,7 @@ const YourSheltersContent = () => {
                     value={newShelter.contactPerson}
                     onChange={handleInputChange}
                     className="form-control"
+                    placeholder="Enter contact person name"
                   />
                 </div>
                 
@@ -225,6 +297,7 @@ const YourSheltersContent = () => {
                     value={newShelter.phone}
                     onChange={handleInputChange}
                     className="form-control"
+                    placeholder="Enter phone number"
                   />
                 </div>
                 
@@ -237,6 +310,7 @@ const YourSheltersContent = () => {
                     value={newShelter.email}
                     onChange={handleInputChange}
                     className="form-control"
+                    placeholder="Enter email address"
                   />
                 </div>
               </div>

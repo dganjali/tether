@@ -1,48 +1,55 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import './Toast.css';
 
-const Toast = ({ message, type = 'info', duration = 5000, onClose }) => {
-  const [isVisible, setIsVisible] = useState(true);
-
-  // Ensure message is a string
-  const displayMessage = typeof message === 'string' ? message : JSON.stringify(message);
-
+const Toast = ({ message, type = 'info', onClose, duration = 5000 }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(() => onClose(), 300); // Wait for fade out animation
-    }, duration);
+    if (duration > 0) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, duration);
 
-    return () => clearTimeout(timer);
+      return () => clearTimeout(timer);
+    }
   }, [duration, onClose]);
-
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(() => onClose(), 300);
-  };
 
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return '✓';
+        return '✅';
       case 'error':
-        return '✕';
+        return '❌';
       case 'warning':
-        return '⚠';
+        return '⚠️';
       case 'info':
-        return 'ℹ';
       default:
-        return 'ℹ';
+        return 'ℹ️';
+    }
+  };
+
+  const getTypeClass = () => {
+    switch (type) {
+      case 'success':
+        return 'toast-success';
+      case 'error':
+        return 'toast-error';
+      case 'warning':
+        return 'toast-warning';
+      case 'info':
+      default:
+        return 'toast-info';
     }
   };
 
   return (
-    <div className={`toast toast-${type} ${isVisible ? 'toast-visible' : 'toast-hidden'}`}>
-      <div className="toast-icon">{getIcon()}</div>
-      <div className="toast-message">{displayMessage}</div>
-      <button className="toast-close" onClick={handleClose}>
-        ×
+    <div className={`toast ${getTypeClass()}`}>
+      <div className="toast-content">
+        <span className="toast-icon">{getIcon()}</span>
+        <span className="toast-message">{message}</span>
+      </div>
+      <button className="toast-close" onClick={onClose}>
+        <span className="close-icon">×</span>
       </button>
+      <div className="toast-progress"></div>
     </div>
   );
 };
