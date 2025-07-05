@@ -142,6 +142,8 @@ temp/
 !data/shelter_occupancy.csv
 *.json
 !data/predictions.json
+!*/package.json
+!package.json
 *.parquet
 *.feather
 *.hdf5
