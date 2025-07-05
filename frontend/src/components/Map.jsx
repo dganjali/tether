@@ -70,8 +70,8 @@ const Map = () => {
       
       // Fetch both predictions and locations
       const [predictionsResponse, locationsResponse] = await Promise.all([
-        fetch('http://localhost:1000/api/predictions'),
-        fetch('http://localhost:1000/api/shelter-locations')
+        fetch('/api/predictions'),
+        fetch('/api/shelter-locations')
       ]);
       
       if (!predictionsResponse.ok) {
