@@ -11,6 +11,10 @@
     "frontend": "cd frontend && npm start",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
