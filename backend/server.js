@@ -55,30 +55,32 @@ app.get('/api/shelter-locations', (req, res) => {
     return res.json(locationsCache);
   }
 
-  console.log('Getting fresh shelter locations...');
+  console.log('Reading shelter locations from CSV...');
   
-  // Use the simple Python script to read the CSV
-  exec('../venv/bin/python simple_locations.py', { cwd: __dirname }, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Python script error:', error);
-      console.error('Stderr:', stderr);
-      return res.status(500).send("Failed to read shelter locations");
-    }
-
-    try {
-      const locations = JSON.parse(stdout);
-      
-      // Cache the results
-      locationsCache = locations;
-      lastLocationsCacheTime = now;
-      
-      res.json(locations);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      console.error('Raw output:', stdout);
-      res.status(500).send("Invalid JSON format from Python script");
-    }
-  });
+  // Read the CSV file directly using Node.js
+  const csv = require('csv-parser');
+  const fs = require('fs');
+  const results = [];
+  
+  fs.createReadStream(path.join(__dirname, '../data/shelter_locations_geocoded.csv'))
+    .pipe(csv())
+    .on('data', (data) => results.push(data))
+    .on('end', () => {
+      try {
+        // Cache the results
+        locationsCache = results;
+        lastLocationsCacheTime = now;
+        
+        res.json(results);
+      } catch (parseError) {
+        console.error('CSV parse error:', parseError);
+        res.status(500).send("Invalid CSV format");
+      }
+    })
+    .on('error', (error) => {
+      console.error('Failed to read shelter locations CSV:', error);
+      res.status(500).send("Failed to read shelter locations");
+    });
 });
 
 // Get available shelters
@@ -91,23 +93,29 @@ app.get('/api/shelters', (req, res) => {
     return res.json(sheltersCache);
   }
 
-  console.log('Getting fresh shelters list...');
-  exec('../venv/bin/python ../model/predict.py shelters', { cwd: __dirname }, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Python script error:', error);
-      console.error('Stderr:', stderr);
-      return res.status(500).send("Python script execution failed");
+  console.log('Reading shelters from predictions file...');
+  
+  // Read the predictions file and extract shelter names
+  fs.readFile(path.join(__dirname, '../data/predictions.json'), 'utf8', (err, data) => {
+    if (err) {
+      console.error('Failed to read predictions.json:', err);
+      return res.status(500).send("Failed to read shelters");
     }
 
     try {
-      const json = JSON.parse(stdout);
+      const predictions = JSON.parse(data);
+      const shelters = predictions.map(prediction => ({
+        name: prediction.name,
+        predicted_influx: prediction.predicted_influx
+      }));
+      
       // Cache the results
-      sheltersCache = json;
+      sheltersCache = shelters;
       lastSheltersCacheTime = now;
-      res.json(json);
+      res.json(shelters);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
-      res.status(500).send("Invalid JSON format from Python script");
+      res.status(500).send("Invalid JSON format in predictions file");
     }
   });
 });
@@ -179,31 +187,25 @@ app.get('/api/predictions', (req, res) => {
     return res.json(predictionsCache);
   }
 
-  console.log('Generating fresh predictions...');
-  exec('../venv/bin/python ../model/predict.py', { cwd: __dirname }, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Python script error:', error);
-      console.error('Stderr:', stderr);
-      return res.status(500).send("Python script execution failed");
+  console.log('Reading predictions from file...');
+  
+  // Read the predictions file directly
+  fs.readFile(path.join(__dirname, '../data/predictions.json'), 'utf8', (err, data) => {
+    if (err) {
+      console.error('Failed to read predictions.json:', err);
+      return res.status(500).send("Failed to read predictions");
     }
 
-    fs.readFile('../data/predictions.json', 'utf8', (err, data) => {
-      if (err) {
-        console.error('Failed to read predictions.json:', err);
-        return res.status(500).send("Failed to read predictions");
-      }
-
-      try {
-        const json = JSON.parse(data);
-        // Cache the results
-        predictionsCache = json;
-        lastCacheTime = now;
-        res.json(json);
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        res.status(500).send("Invalid JSON format in predictions file");
-      }
-    });
+    try {
+      const json = JSON.parse(data);
+      // Cache the results
+      predictionsCache = json;
+      lastCacheTime = now;
+      res.json(json);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      res.status(500).send("Invalid JSON format in predictions file");
+    }
   });
 });
 

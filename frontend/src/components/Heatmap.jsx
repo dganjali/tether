@@ -13,7 +13,7 @@ const Heatmap = () => {
   const fetchShelterData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/predictions', {
+      const response = await fetch('/api/predictions', {
         headers: {
           'Content-Type': 'application/json',
         },
