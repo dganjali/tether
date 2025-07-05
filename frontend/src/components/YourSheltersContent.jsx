@@ -4,9 +4,7 @@ import LoadingSpinner from './LoadingSpinner';
 import './YourSheltersContent.css';
 
 const YourSheltersContent = () => {
-  const { user } = useContext(AuthContext);
   const [userShelters, setUserShelters] = useState([]);
-  const [allShelters, setAllShelters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingShelter, setAddingShelter] = useState(false);
   const [error, setError] = useState(null);
@@ -22,7 +20,6 @@ const YourSheltersContent = () => {
 
   useEffect(() => {
     fetchUserShelters();
-    fetchAllShelters();
   }, []);
 
   const fetchUserShelters = async () => {
@@ -55,19 +52,7 @@ const YourSheltersContent = () => {
     }
   };
 
-  const fetchAllShelters = async () => {
-    try {
-      const response = await fetch('/api/shelters');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch shelters: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setAllShelters(data);
-    } catch (err) {
-      console.error('Error fetching all shelters:', err);
-    }
-  };
+
 
   const handleAddShelter = async (e) => {
     e.preventDefault();
