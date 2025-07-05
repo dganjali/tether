@@ -29,13 +29,28 @@ const fixDatabaseSchema = async () => {
     if (usersWithEmail.length > 0) {
       logger.warn(`Found ${usersWithEmail.length} users with email field, removing email field`);
       
-      // Remove email field from all documents
-      await usersCollection.updateMany(
-        { email: { $exists: true } },
-        { $unset: { email: "" } }
-      );
-      
-      logger.info('Successfully removed email field from all users');
+      try {
+        // First, drop the email index if it exists
+        try {
+          await usersCollection.dropIndex('email_1');
+          logger.info('Dropped email index');
+        } catch (indexError) {
+          if (indexError.code !== 27) { // Index not found
+            logger.warn('Could not drop email index:', indexError.message);
+          }
+        }
+        
+        // Remove email field from all documents
+        await usersCollection.updateMany(
+          { email: { $exists: true } },
+          { $unset: { email: "" } }
+        );
+        
+        logger.info('Successfully removed email field from all users');
+      } catch (updateError) {
+        logger.error('Failed to remove email field:', updateError.message);
+        throw updateError;
+      }
     } else {
       logger.info('No users with email field found');
     }

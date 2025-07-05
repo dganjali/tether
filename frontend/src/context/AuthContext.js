@@ -61,9 +61,32 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Signup error:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Signup failed';
+      if (error.response?.data?.error?.message) {
+        errorMessage = error.response.data.error.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      // Map common error messages to user-friendly ones
+      if (errorMessage.includes('Username already exists')) {
+        errorMessage = 'This username is already taken. Please choose a different one.';
+      } else if (errorMessage.includes('Username and password are required')) {
+        errorMessage = 'Please enter both username and password';
+      } else if (errorMessage.includes('Username must be at least 3 characters long')) {
+        errorMessage = 'Username must be at least 3 characters long';
+      } else if (errorMessage.includes('Password must be at least 6 characters long')) {
+        errorMessage = 'Password must be at least 6 characters long';
+      }
+      
       return { 
         success: false, 
-        error: error.response?.data?.error || 'Signup failed' 
+        error: errorMessage
       };
     }
   };
@@ -99,6 +122,13 @@ export const AuthProvider = ({ children }) => {
         errorMessage = error.response.data.error;
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
+      }
+      
+      // Map common error messages to user-friendly ones
+      if (errorMessage.includes('Invalid credentials')) {
+        errorMessage = 'Invalid username or password';
+      } else if (errorMessage.includes('Username and password are required')) {
+        errorMessage = 'Please enter both username and password';
       }
       
       return { 

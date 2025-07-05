@@ -31,6 +31,7 @@ router.post('/signup', asyncHandler(async (req, res) => {
   // Check if user already exists
   const existingUser = await User.findOne({ username: sanitizedUsername });
   if (existingUser) {
+    logger.warn('Username already exists during signup', { username: sanitizedUsername });
     throw new ValidationError('Username already exists');
   }
 
@@ -86,7 +87,7 @@ router.post('/signin', asyncHandler(async (req, res) => {
   // Find user
   const user = await User.findOne({ username: sanitizedUsername });
   if (!user) {
-    logger.warn('User not found', { username: sanitizedUsername });
+    logger.warn('User not found during signin', { username: sanitizedUsername });
     throw new ValidationError('Invalid credentials');
   }
 

@@ -106,7 +106,17 @@ const globalErrorHandler = (err, req, res, next) => {
   // Mongoose duplicate key error
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
-    const message = `${field} already exists`;
+    let message = `${field} already exists`;
+    
+    // Map field names to user-friendly messages
+    if (field === 'username') {
+      message = 'Username already exists';
+    } else if (field === 'email') {
+      message = 'Email already exists';
+    } else {
+      message = `${field} already exists`;
+    }
+    
     error = new ValidationError(message);
   }
 
