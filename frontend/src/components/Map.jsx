@@ -150,7 +150,6 @@ const Map = () => {
 
   const createMarkerContent = useCallback((shelter) => {
     const statusColor = getStatusColor(shelter.predicted_influx);
-    const statusText = getStatusText(shelter.predicted_influx);
     
     return `
       <div class="marker-content" style="
@@ -171,7 +170,7 @@ const Map = () => {
         ${statusColor === 'critical' || statusColor === 'warning' ? '!' : '✓'}
       </div>
     `;
-  }, []);
+  }, [getStatusColor]);
 
   const getStatusText = useCallback((influx) => {
     if (influx > 150) return 'Critical';
