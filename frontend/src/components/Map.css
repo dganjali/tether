@@ -227,6 +227,7 @@
   display: flex;
   height: calc(100vh - 100px);
   background: white;
+  position: relative;
 }
 
 /* Map Container */
@@ -244,23 +245,31 @@
   z-index: 1;
 }
 
-/* Sidebar */
-.map-sidebar {
+/* Floating Shelter List */
+.shelter-list-container {
+  position: absolute;
+  top: 20px;
+  right: 20px;
   width: 350px;
+  max-height: calc(100vh - 140px);
   background: white;
-  border-right: 2px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  z-index: 1000;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
-.sidebar-header {
+.shelter-list-header {
   padding: 20px;
   border-bottom: 1px solid #e0e0e0;
   background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
 }
 
-.sidebar-header h3 {
+.shelter-list-header h3 {
   margin: 0 0 5px 0;
   color: #373B59;
   font-size: 1.3rem;
@@ -278,6 +287,25 @@
   overflow-y: auto;
   padding: 0;
   margin: 0;
+  max-height: calc(100vh - 220px);
+}
+
+.shelter-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shelter-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.shelter-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.shelter-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .shelter-item {
@@ -439,15 +467,22 @@
     height: calc(100vh - 150px);
   }
 
-  .map-sidebar {
+  .shelter-list-container {
+    position: relative;
+    top: 0;
+    right: 0;
     width: 100%;
-    height: 200px;
-    border-right: none;
-    border-bottom: 2px solid #e0e0e0;
+    max-height: 200px;
+    border-radius: 0;
+    margin-bottom: 10px;
+  }
+
+  .shelter-list {
+    max-height: 150px;
   }
 
   .leaflet-map {
-    height: calc(100% - 200px);
+    height: calc(100% - 210px);
   }
 }
 
@@ -485,11 +520,11 @@
     padding: 4px 8px;
   }
 
-  .map-sidebar {
-    height: 150px;
+  .shelter-list-container {
+    max-height: 150px;
   }
 
-  .sidebar-header {
+  .shelter-list-header {
     padding: 15px;
   }
 

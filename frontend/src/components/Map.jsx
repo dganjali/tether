@@ -192,36 +192,6 @@ const Map = () => {
       </div>
       
       <div className="map-layout">
-        {/* Sidebar with scrollable shelter list */}
-        <div className="map-sidebar">
-          <div className="sidebar-header">
-            <h3>Shelter List</h3>
-            <span className="shelter-count">{sheltersWithCoordinates.length} shelters</span>
-          </div>
-          <div className="shelter-list">
-            {sheltersWithCoordinates.map((shelter, index) => (
-              <div 
-                key={index}
-                className={`shelter-item ${getStatusColor(shelter.predicted_influx)} ${selectedShelter?.name === shelter.name ? 'selected' : ''}`}
-                onClick={() => handleShelterClick(shelter)}
-              >
-                <div className="shelter-info">
-                  <h4>{shelter.name}</h4>
-                  <p className="shelter-address">{shelter.address}</p>
-                  <div className="shelter-status">
-                    <span className={`status-indicator ${getStatusColor(shelter.predicted_influx)}`}>
-                      {getStatusText(shelter.predicted_influx)}
-                    </span>
-                    <span className="influx-value">
-                      Predicted: {shelter.predicted_influx}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        
         {/* Map container */}
         <div className="map-container">
           <MapContainer 
@@ -252,6 +222,36 @@ const Map = () => {
               </Marker>
             ))}
           </MapContainer>
+          
+          {/* Floating shelter list */}
+          <div className="shelter-list-container">
+            <div className="shelter-list-header">
+              <h3>Shelter List</h3>
+              <span className="shelter-count">{sheltersWithCoordinates.length} shelters</span>
+            </div>
+            <div className="shelter-list">
+              {sheltersWithCoordinates.map((shelter, index) => (
+                <div 
+                  key={index}
+                  className={`shelter-item ${getStatusColor(shelter.predicted_influx)} ${selectedShelter?.name === shelter.name ? 'selected' : ''}`}
+                  onClick={() => handleShelterClick(shelter)}
+                >
+                  <div className="shelter-info">
+                    <h4>{shelter.name}</h4>
+                    <p className="shelter-address">{shelter.address}</p>
+                    <div className="shelter-status">
+                      <span className={`status-indicator ${getStatusColor(shelter.predicted_influx)}`}>
+                        {getStatusText(shelter.predicted_influx)}
+                      </span>
+                      <span className="influx-value">
+                        Predicted: {shelter.predicted_influx}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
