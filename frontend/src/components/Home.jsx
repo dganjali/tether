@@ -50,7 +50,7 @@ const Home = () => {
               </Link>
               <Link to="/map" className="btn btn-outline">
                 <span className="btn-icon">🗺️</span>
-                Map
+                View Map
               </Link>
             </div>
           </div>
@@ -97,72 +97,131 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="features-section">
+      {/* Main Content - Flowing Design */}
+      <div className="main-content">
         <div className="container">
-          <div className="section-header">
-            <h2>Powerful Features</h2>
-            <p>Comprehensive tools for shelter management and analytics</p>
-          </div>
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <span>📊</span>
-              </div>
-              <h3>Real-time Dashboard</h3>
-              <p>Monitor current shelter occupancy, trends, and key metrics with live updates and interactive visualizations.</p>
-              <div className="feature-highlights">
-                <span>Live Updates</span>
-                <span>Interactive Charts</span>
-                <span>Key Metrics</span>
-              </div>
+          {/* System Overview */}
+          <div className="content-section">
+            <div className="section-intro">
+              <h2>Comprehensive Shelter Management Platform</h2>
+              <p className="section-description">
+                Our advanced system combines real-time monitoring, predictive analytics, and intelligent 
+                resource management to create a comprehensive solution for Toronto's shelter network. 
+                Built with cutting-edge technology, we provide unprecedented insights that enable 
+                proactive rather than reactive responses to shelter needs.
+              </p>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <span>🗺️</span>
-              </div>
-              <h3>Interactive Map</h3>
-              <p>Visualize shelter locations and occupancy levels across Toronto with our advanced mapping system.</p>
-              <div className="feature-highlights">
-                <span>Geographic View</span>
-                <span>Capacity Overlay</span>
-                <span>Location Tracking</span>
-              </div>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <span>🔮</span>
-              </div>
-              <h3>Predictive Analytics</h3>
-              <p>AI-powered forecasts to predict shelter demand and optimize resource allocation effectively.</p>
-              <div className="feature-highlights">
-                <span>ML Models</span>
-                <span>Weather Integration</span>
-                <span>Trend Analysis</span>
-              </div>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <span>🚨</span>
-              </div>
-              <h3>Smart Alerts</h3>
-              <p>Get notified about critical situations and capacity issues with intelligent alerting system.</p>
-              <div className="feature-highlights">
-                <span>Real-time Alerts</span>
-                <span>Custom Thresholds</span>
-                <span>Multi-channel</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* About Section */}
-      <div className="about-section">
-        <div className="container">
-          <div className="about-content">
-            <div className="about-text">
-              <h2>About Our System</h2>
+            {/* Key Features Grid */}
+            <div className="features-showcase">
+              <div className="feature-item">
+                <div className="feature-header">
+                  <div className="feature-icon">📊</div>
+                  <h3>Real-time Dashboard</h3>
+                </div>
+                <p>
+                  Monitor current shelter occupancy, trends, and key metrics with live updates and 
+                  interactive visualizations. Our dashboard provides instant access to critical 
+                  information, enabling quick decision-making and resource allocation.
+                </p>
+                <div className="feature-details">
+                  <span>Live Updates</span>
+                  <span>Interactive Charts</span>
+                  <span>Key Metrics</span>
+                  <span>Custom Alerts</span>
+                </div>
+              </div>
+
+              <div className="feature-item">
+                <div className="feature-header">
+                  <div className="feature-icon">🗺️</div>
+                  <h3>Interactive Map</h3>
+                </div>
+                <p>
+                  Visualize shelter locations and occupancy levels across Toronto with our advanced 
+                  mapping system. Geographic data integration provides spatial context for better 
+                  understanding of shelter distribution and capacity management.
+                </p>
+                <div className="feature-details">
+                  <span>Geographic View</span>
+                  <span>Capacity Overlay</span>
+                  <span>Location Tracking</span>
+                  <span>Route Optimization</span>
+                </div>
+              </div>
+
+              <div className="feature-item">
+                <div className="feature-header">
+                  <div className="feature-icon">🔮</div>
+                  <h3>Predictive Analytics</h3>
+                </div>
+                <p>
+                  AI-powered forecasts predict shelter demand and optimize resource allocation effectively. 
+                  Our machine learning models analyze historical patterns, weather conditions, and 
+                  socio-economic factors to deliver accurate predictions.
+                </p>
+                <div className="feature-details">
+                  <span>ML Models</span>
+                  <span>Weather Integration</span>
+                  <span>Trend Analysis</span>
+                  <span>Demand Forecasting</span>
+                </div>
+              </div>
+
+              <div className="feature-item">
+                <div className="feature-header">
+                  <div className="feature-icon">🚨</div>
+                  <h3>Smart Alerts</h3>
+                </div>
+                <p>
+                  Get notified about critical situations and capacity issues with intelligent alerting 
+                  system. Customizable thresholds and multi-channel notifications ensure you never miss 
+                  important updates.
+                </p>
+                <div className="feature-details">
+                  <span>Real-time Alerts</span>
+                  <span>Custom Thresholds</span>
+                  <span>Multi-channel</span>
+                  <span>Escalation Rules</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Technology Stack */}
+            <div className="tech-overview">
+              <h3>Advanced Technology Stack</h3>
+              <p>
+                Built with cutting-edge technologies for maximum reliability and performance. 
+                Our platform leverages modern cloud infrastructure, real-time processing capabilities, 
+                and responsive design principles.
+              </p>
+              <div className="tech-grid">
+                <div className="tech-item">
+                  <div className="tech-icon">🤖</div>
+                  <h4>Machine Learning</h4>
+                  <p>Advanced algorithms for predictive modeling</p>
+                </div>
+                <div className="tech-item">
+                  <div className="tech-icon">⚡</div>
+                  <h4>Real-time Processing</h4>
+                  <p>Instant data updates and live monitoring</p>
+                </div>
+                <div className="tech-item">
+                  <div className="tech-icon">🌐</div>
+                  <h4>Cloud Infrastructure</h4>
+                  <p>Scalable and reliable cloud-based system</p>
+                </div>
+                <div className="tech-item">
+                  <div className="tech-icon">📱</div>
+                  <h4>Responsive Design</h4>
+                  <p>Works seamlessly across all devices</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Impact Section */}
+            <div className="impact-section">
+              <h3>Making a Real Difference</h3>
               <p>
                 The Toronto Shelter Analytics & Prediction System represents a cutting-edge approach 
                 to social service management. Our platform combines advanced machine learning algorithms 
@@ -179,80 +238,60 @@ const Home = () => {
                 rather than reactive responses to shelter needs.
               </p>
             </div>
-            <div className="about-stats">
-              <div className="about-stat">
+
+            {/* Stats Section */}
+            <div className="stats-showcase">
+              <div className="stat-item">
                 <div className="stat-circle">
                   <span className="stat-number">24/7</span>
                 </div>
-                <h3>Real-time Monitoring</h3>
+                <h4>Real-time Monitoring</h4>
                 <p>Continuous surveillance and updates</p>
               </div>
-              <div className="about-stat">
+              <div className="stat-item">
                 <div className="stat-circle">
                   <span className="stat-number">AI</span>
                 </div>
-                <h3>Predictive Analytics</h3>
+                <h4>Predictive Analytics</h4>
                 <p>Machine learning powered insights</p>
               </div>
-              <div className="about-stat">
+              <div className="stat-item">
                 <div className="stat-circle">
                   <span className="stat-number">100%</span>
                 </div>
-                <h3>City Coverage</h3>
+                <h4>City Coverage</h4>
                 <p>Complete Toronto shelter network</p>
               </div>
+              <div className="stat-item">
+                <div className="stat-circle">
+                  <span className="stat-number">99.9%</span>
+                </div>
+                <h4>Uptime</h4>
+                <p>Reliable cloud infrastructure</p>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Technology Section */}
-      <div className="tech-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Advanced Technology Stack</h2>
-            <p>Built with cutting-edge technologies for maximum reliability and performance</p>
-          </div>
-          <div className="tech-grid">
-            <div className="tech-item">
-              <div className="tech-icon">🤖</div>
-              <h3>Machine Learning</h3>
-              <p>Advanced algorithms for predictive modeling</p>
-            </div>
-            <div className="tech-item">
-              <div className="tech-icon">⚡</div>
-              <h3>Real-time Processing</h3>
-              <p>Instant data updates and live monitoring</p>
-            </div>
-            <div className="tech-item">
-              <div className="tech-icon">🌐</div>
-              <h3>Cloud Infrastructure</h3>
-              <p>Scalable and reliable cloud-based system</p>
-            </div>
-            <div className="tech-item">
-              <div className="tech-icon">📱</div>
-              <h3>Responsive Design</h3>
-              <p>Works seamlessly across all devices</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="cta-section">
-        <div className="container">
-          <div className="cta-content">
-            <h2>Ready to Transform Shelter Management?</h2>
-            <p>Join our platform to access comprehensive shelter analytics and predictions that make a real difference.</p>
-            <div className="cta-buttons">
-              <Link to="/signup" className="btn btn-primary">
-                <span className="btn-icon">🚀</span>
-                Start Free Trial
-              </Link>
-              <Link to="/signin" className="btn btn-outline">
-                <span className="btn-icon">🔐</span>
-                Sign In
-              </Link>
+            {/* Call to Action */}
+            <div className="cta-section">
+              <h3>Ready to Transform Shelter Management?</h3>
+              <p>
+                Join our platform to access comprehensive shelter analytics and predictions that make 
+                a real difference in the lives of those who need shelter most.
+              </p>
+              <div className="cta-buttons">
+                <Link to="/signup" className="btn btn-primary">
+                  <span className="btn-icon">🚀</span>
+                  Get Started
+                </Link>
+                <Link to="/signin" className="btn btn-outline">
+                  <span className="btn-icon">🔐</span>
+                  Sign In
+                </Link>
+                <Link to="/map" className="btn btn-secondary">
+                  <span className="btn-icon">🗺️</span>
+                  View Map
+                </Link>
+              </div>
             </div>
           </div>
         </div>
