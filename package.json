@@ -5,7 +5,7 @@
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "build": "cd frontend && npm install && npx react-scripts build",
+    "build": "npm install && cd backend && npm install && cd ../frontend && npm install && npm run build",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "cd backend && npm start",
     "frontend": "cd frontend && npm start",
