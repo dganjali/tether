@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import React, { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import './YourSheltersContent.css';
 
