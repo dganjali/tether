@@ -7,6 +7,8 @@ const cors = require('cors');
 const path = require('path');
 
 const authRoutes = require('./routes/auth');
+const userShelterRoutes = require('./routes/userShelters');
+const alertRoutes = require('./routes/alerts');
 const { 
   globalErrorHandler, 
   notFoundHandler, 
@@ -88,6 +90,8 @@ if (fs.existsSync(frontendBuildPath)) {
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user-shelters', userShelterRoutes);
+app.use('/api/alerts', alertRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

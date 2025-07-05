@@ -50,6 +50,12 @@
   border-bottom: 1px solid #eee;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .prediction-header h3 {
   margin: 0;
   color: #333;
@@ -65,6 +71,35 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.add-to-shelters-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3);
+}
+
+.add-to-shelters-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+}
+
+.add-to-shelters-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .prediction-stats {

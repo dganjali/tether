@@ -1,6 +1,6 @@
 .dashboard-tabs {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 20px;
 }
 
@@ -8,12 +8,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.95);
+  background: white;
   padding: 20px 30px;
-  border-radius: 15px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   margin-bottom: 30px;
-  backdrop-filter: blur(10px);
+  border: 1px solid #e9ecef;
 }
 
 .dashboard-logo {
@@ -46,17 +46,17 @@
 }
 
 .tabs-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 15px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  backdrop-filter: blur(10px);
+  border: 1px solid #e9ecef;
 }
 
 .tabs-header {
   display: flex;
-  background: rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .tab-button {
@@ -73,25 +73,18 @@
 }
 
 .tab-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #e9ecef;
   color: #333;
 }
 
 .tab-button.active {
   color: #667eea;
   background: white;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  border-bottom: 2px solid #667eea;
 }
 
-.tab-button.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-}
+
 
 .tab-content {
   padding: 30px;

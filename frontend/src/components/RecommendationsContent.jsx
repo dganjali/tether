@@ -112,7 +112,7 @@ const RecommendationsContent = () => {
   return (
     <div className="recommendations-content">
       <div className="content-header">
-        <h2>🤖 AI-Powered Recommendations</h2>
+        <h2>AI-Powered Recommendations</h2>
         <p>Get intelligent resource allocation recommendations based on predicted influx</p>
       </div>
 
@@ -212,12 +212,12 @@ const RecommendationsContent = () => {
         </div>
       )}
 
-      {predictions.length === 0 && (
-        <div className="no-data">
-          <h3>📭 No Shelter Data Available</h3>
-          <p>No shelter data is currently available to generate recommendations.</p>
-        </div>
-      )}
+              {predictions.length === 0 && (
+          <div className="no-data">
+            <h3>No Shelter Data Available</h3>
+            <p>No shelter data is currently available to generate recommendations.</p>
+          </div>
+        )}
     </div>
   );
 };

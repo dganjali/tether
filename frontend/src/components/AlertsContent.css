@@ -1,0 +1,283 @@
+.alerts-content {
+  padding: 20px 0;
+}
+
+.content-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.content-header h2 {
+  color: #333;
+  font-size: 28px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.content-header p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #f5c6cb;
+}
+
+.dismiss-btn {
+  background: none;
+  border: none;
+  color: #721c24;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  margin-left: 10px;
+}
+
+.alerts-section {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-btn {
+  background: #f8f9fa;
+  color: #666;
+  border: 1px solid #dee2e6;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.filter-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.no-alerts {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-alerts h4 {
+  color: #666;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.no-alerts p {
+  color: #999;
+  font-size: 14px;
+  margin: 0;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.alert-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  border-left: 4px solid #6c757d;
+}
+
+.alert-card.critical {
+  border-left-color: #dc3545;
+  background: #fff5f5;
+}
+
+.alert-card.warning {
+  border-left-color: #ffc107;
+  background: #fffbf0;
+}
+
+.alert-card.info {
+  border-left-color: #17a2b8;
+  background: #f0f8ff;
+}
+
+.alert-card.acknowledged {
+  opacity: 0.7;
+}
+
+.alert-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.alert-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-icon {
+  font-size: 18px;
+}
+
+.alert-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.acknowledge-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.acknowledge-btn:hover {
+  background: #218838;
+  transform: scale(1.05);
+}
+
+.dismiss-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.dismiss-btn:hover {
+  background: #5a6268;
+  transform: scale(1.1);
+}
+
+.alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alert-message {
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.alert-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.alert-shelter {
+  font-weight: 500;
+  color: #667eea;
+}
+
+.alert-time {
+  color: #999;
+  font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .filter-controls {
+    flex-wrap: wrap;
+  }
+  
+  .alert-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .alert-actions {
+    align-self: flex-end;
+  }
+  
+  .alert-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .content-header h2 {
+    font-size: 24px;
+  }
+} 
