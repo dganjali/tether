@@ -1,75 +1,98 @@
 import pandas as pd
-import json
 import requests
 import time
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+import json
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 def geocode_address(address, city="Toronto", province="ON"):
     """
-    Geocode an address using Nominatim (free geocoding service)
+    Geocode an address using Google Geocoding API
     """
-    geolocator = Nominatim(user_agent="toronto_shelter_app")
+    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+    if not api_key:
+        print("Warning: GOOGLE_MAPS_API_KEY not found in environment variables")
+        return None, None
     
     # Construct full address
     full_address = f"{address}, {city}, {province}, Canada"
     
+    url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {
+        'address': full_address,
+        'key': api_key
+    }
+    
     try:
-        location = geolocator.geocode(full_address)
-        if location:
-            return {
-                "lat": location.latitude,
-                "lng": location.longitude
-            }
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        if data['status'] == 'OK':
+            location = data['results'][0]['geometry']['location']
+            return location['lat'], location['lng']
         else:
-            print(f"Could not geocode: {full_address}")
-            return None
-    except (GeocoderTimedOut, GeocoderUnavailable) as e:
-        print(f"Geocoding error for {full_address}: {e}")
-        return None
+            print(f"Geocoding failed for {full_address}: {data['status']}")
+            return None, None
+            
+    except Exception as e:
+        print(f"Error geocoding {full_address}: {e}")
+        return None, None
 
 def main():
     # Read the CSV file
-    print("Reading shelter occupancy data...")
-    df = pd.read_csv('../data/shelter_occupancy.csv')
+    csv_path = '../data/shelter_locations.csv'
+    df = pd.read_csv(csv_path)
     
-    # Get unique shelter addresses
-    unique_shelters = df[['SHELTER_NAME', 'SHELTER_ADDRESS', 'SHELTER_CITY', 'SHELTER_PROVINCE']].drop_duplicates()
+    print(f"Geocoding {len(df)} shelter addresses...")
+    print("This may take a few minutes due to API rate limits...")
     
-    print(f"Found {len(unique_shelters)} unique shelters")
-    
-    # Geocode each shelter
-    shelters_with_coords = []
-    
-    for index, row in unique_shelters.iterrows():
-        shelter_name = row['SHELTER_NAME']
-        address = row['SHELTER_ADDRESS']
-        city = row['SHELTER_CITY']
-        province = row['SHELTER_PROVINCE']
+    # Process each shelter
+    for index, row in df.iterrows():
+        shelter_name = row['name']
+        address = row['address']
+        city = row['city']
+        province = row['province']
         
-        print(f"Geocoding: {shelter_name} - {address}")
+        print(f"Processing {index + 1}/{len(df)}: {shelter_name}")
         
-        coords = geocode_address(address, city, province)
+        # Skip if address is the same as name (placeholder addresses)
+        if address == shelter_name or address == 'Address not available':
+            print(f"  Skipping {shelter_name} - no valid address")
+            continue
         
-        if coords:
-            shelters_with_coords.append({
-                "name": shelter_name,
-                "address": address,
-                "city": city,
-                "province": province,
-                "lat": coords["lat"],
-                "lng": coords["lng"]
-            })
+        # Geocode the address
+        lat, lng = geocode_address(address, city, province)
         
-        # Add delay to respect rate limits
-        time.sleep(1)
+        if lat and lng:
+            df.at[index, 'lat'] = lat
+            df.at[index, 'lng'] = lng
+            print(f"  ✅ {shelter_name}: ({lat}, {lng})")
+        else:
+            print(f"  ❌ {shelter_name}: Failed to geocode")
+        
+        # Rate limiting - wait between requests
+        time.sleep(0.1)  # 100ms delay between requests
     
-    # Save to JSON file
-    output_file = '../data/shelter_locations.json'
-    with open(output_file, 'w') as f:
-        json.dump(shelters_with_coords, f, indent=2)
+    # Save the updated CSV
+    output_path = '../data/shelter_locations_geocoded.csv'
+    df.to_csv(output_path, index=False)
     
-    print(f"Saved {len(shelters_with_coords)} shelter locations to {output_file}")
+    print(f"\n✅ Geocoding complete!")
+    print(f"📁 Updated file saved to: {output_path}")
+    
+    # Print summary
+    successful = df[df['lat'] != 43.6475].shape[0]  # Count non-default coordinates
+    total = len(df)
+    print(f"📊 Successfully geocoded: {successful}/{total} shelters")
+    
+    # Show some examples
+    print("\n📍 Sample geocoded locations:")
+    for index, row in df.head(5).iterrows():
+        if row['lat'] != 43.6475:  # Only show successfully geocoded ones
+            print(f"  {row['name']}: ({row['lat']}, {row['lng']})")
 
 if __name__ == "__main__":
     main() 

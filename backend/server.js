@@ -57,55 +57,28 @@ app.get('/api/shelter-locations', (req, res) => {
 
   console.log('Getting fresh shelter locations...');
   
-  // Try to read from shelter_locations.json first
-  const locationsFile = path.join(__dirname, '../data/shelter_locations.json');
-  
-  if (fs.existsSync(locationsFile)) {
+  // Use the simple Python script to read the CSV
+  exec('../venv/bin/python simple_locations.py', { cwd: __dirname }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('Python script error:', error);
+      console.error('Stderr:', stderr);
+      return res.status(500).send("Failed to read shelter locations");
+    }
+
     try {
-      const data = fs.readFileSync(locationsFile, 'utf8');
-      const locations = JSON.parse(data);
+      const locations = JSON.parse(stdout);
       
       // Cache the results
       locationsCache = locations;
       lastLocationsCacheTime = now;
       
       res.json(locations);
-    } catch (error) {
-      console.error('Error reading shelter locations:', error);
-      res.status(500).send("Error reading shelter locations");
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.error('Raw output:', stdout);
+      res.status(500).send("Invalid JSON format from Python script");
     }
-  } else {
-    // If no locations file exists, generate it
-    console.log('No shelter locations file found. Generating...');
-    exec('../venv/bin/python geocode_shelters.py', { cwd: __dirname }, (error, stdout, stderr) => {
-      if (error) {
-        console.error('Python script error:', error);
-        console.error('Stderr:', stderr);
-        return res.status(500).send("Failed to generate shelter locations");
-      }
-
-      // Try to read the generated file
-      setTimeout(() => {
-        if (fs.existsSync(locationsFile)) {
-          try {
-            const data = fs.readFileSync(locationsFile, 'utf8');
-            const locations = JSON.parse(data);
-            
-            // Cache the results
-            locationsCache = locations;
-            lastLocationsCacheTime = now;
-            
-            res.json(locations);
-          } catch (error) {
-            console.error('Error reading generated locations:', error);
-            res.status(500).send("Error reading generated shelter locations");
-          }
-        } else {
-          res.status(500).send("Failed to generate shelter locations file");
-        }
-      }, 2000); // Wait 2 seconds for file to be written
-    });
-  }
+  });
 });
 
 // Get available shelters

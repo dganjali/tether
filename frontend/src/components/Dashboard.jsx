@@ -23,7 +23,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:3001/api/predictions', {
+      const response = await fetch('http://localhost:1000/api/predictions', {
         headers: {
           'Content-Type': 'application/json',
         },
