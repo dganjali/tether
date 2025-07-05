@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import FormField from './FormField';
+import LoadingSpinner from './LoadingSpinner';
 import './Auth.css';
 import logo from '../images/LOGO.png';
 
@@ -9,25 +12,49 @@ const SignIn = () => {
     username: '',
     password: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { signin } = useAuth();
+  const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    }
+    
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
     setLoading(true);
 
-    if (!formData.username || !formData.password) {
-      setError('Please fill in all fields');
+    if (!validateForm()) {
       setLoading(false);
       return;
     }
@@ -35,9 +62,10 @@ const SignIn = () => {
     const result = await signin(formData.username, formData.password);
     
     if (result.success) {
+      showSuccess('Successfully signed in!');
       navigate('/dashboard');
     } else {
-      setError(result.error);
+      showError(result.error || 'Sign in failed');
     }
     
     setLoading(false);
@@ -55,35 +83,34 @@ const SignIn = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="error-message">{error}</div>}
+          {loading && <LoadingSpinner size="small" text="Signing in..." />}
           
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Enter your username"
-              required
-              disabled={loading}
-            />
-          </div>
+          <FormField
+            label="Username"
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="Enter your username"
+            required
+            disabled={loading}
+            error={errors.username}
+            autoComplete="username"
+          />
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-              disabled={loading}
-            />
-          </div>
+          <FormField
+            label="Password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+            required
+            disabled={loading}
+            error={errors.password}
+            showPasswordToggle={true}
+            autoComplete="current-password"
+          />
 
           <button 
             type="submit" 

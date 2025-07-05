@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import FormField from './FormField';
+import LoadingSpinner from './LoadingSpinner';
 import './Auth.css';
 import logo from '../images/LOGO.png';
 
@@ -10,44 +13,59 @@ const SignUp = () => {
     password: '',
     confirmPassword: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
+  const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.trim().length < 3) {
+      newErrors.username = 'Username must be at least 3 characters long';
+    }
+    
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+    }
+    
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
     setLoading(true);
 
-    // Validation
-    if (!formData.username || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.username.length < 3) {
-      setError('Username must be at least 3 characters long');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    if (!validateForm()) {
       setLoading(false);
       return;
     }
@@ -55,9 +73,10 @@ const SignUp = () => {
     const result = await signup(formData.username, formData.password);
     
     if (result.success) {
+      showSuccess('Account created successfully!');
       navigate('/dashboard');
     } else {
-      setError(result.error);
+      showError(result.error || 'Sign up failed');
     }
     
     setLoading(false);
@@ -75,49 +94,51 @@ const SignUp = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="error-message">{error}</div>}
+          {loading && <LoadingSpinner size="small" text="Creating account..." />}
           
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Choose a username (min 3 characters)"
-              required
-              disabled={loading}
-            />
-          </div>
+          <FormField
+            label="Username"
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="Choose a username (min 3 characters)"
+            required
+            disabled={loading}
+            error={errors.username}
+            minLength={3}
+            maxLength={30}
+            autoComplete="username"
+          />
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Choose a password (min 6 characters)"
-              required
-              disabled={loading}
-            />
-          </div>
+          <FormField
+            label="Password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Choose a password (min 6 characters)"
+            required
+            disabled={loading}
+            error={errors.password}
+            minLength={6}
+            showPasswordToggle={true}
+            autoComplete="new-password"
+          />
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-              disabled={loading}
-            />
-          </div>
+          <FormField
+            label="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="Confirm your password"
+            required
+            disabled={loading}
+            error={errors.confirmPassword}
+            showPasswordToggle={true}
+            autoComplete="new-password"
+          />
 
           <button 
             type="submit" 
