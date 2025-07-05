@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Heatmap from './Heatmap';
+import Forecast from './Forecast';
+import Alerts from './Alerts';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -164,11 +167,11 @@ const Dashboard = () => {
           </div>
         );
       case 'heatmap':
-        return <div className="heatmap-content">Heatmap content here</div>;
+        return <Heatmap />;
       case 'forecast':
-        return <div className="forecast-content">Forecast content here</div>;
+        return <Forecast />;
       case 'alerts':
-        return <div className="alerts-content">Alerts content here</div>;
+        return <Alerts />;
       default:
         return <div className="dashboard-content">Dashboard content here</div>;
     }

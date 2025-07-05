@@ -7,9 +7,6 @@ import Home from './components/Home';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import Dashboard from './components/Dashboard';
-import Heatmap from './components/Heatmap';
-import Alerts from './components/Alerts';
-import Forecast from './components/Forecast';
 
 function App() {
   return (
