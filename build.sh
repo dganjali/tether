@@ -38,4 +38,10 @@ cd backend
 npm install
 cd ..
 
+# Install ML-LLM system requirements
+echo "Installing ML-LLM system requirements..."
+cd backend/ML-LLM-hybrid-recommendation-system
+pip install -r requirements.txt
+cd ../..
+
 echo "=== Build Complete ===" 

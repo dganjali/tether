@@ -50,6 +50,15 @@ const LOCATIONS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from the React build directory
+const frontendBuildPath = path.join(__dirname, '../frontend/build');
+if (fs.existsSync(frontendBuildPath)) {
+  console.log('✅ Serving static files from:', frontendBuildPath);
+  app.use(express.static(frontendBuildPath));
+} else {
+  console.warn('⚠️  Frontend build directory not found:', frontendBuildPath);
+}
+
 // Authentication routes
 app.use('/api/auth', authRoutes);
 
@@ -156,40 +165,6 @@ app.get('/api/shelters', (req, res) => {
   });
 });
 
-// Get forecast for a specific shelter (alternative endpoint)
-app.get('/api/forecast', (req, res) => {
-  const shelter = req.query.shelter;
-  const days = req.query.days || 7;
-  
-  if (!shelter) {
-    return res.status(400).json({ error: "Shelter parameter is required" });
-  }
-  
-  console.log(`Getting forecast for shelter: ${shelter}, days: ${days}`);
-  exec(`../venv/bin/python ../model/predict.py forecast "${shelter}" ${days}`, { cwd: __dirname }, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Python script error:', error);
-      console.error('Stderr:', stderr);
-      return res.status(500).json({ error: "Python script execution failed" });
-    }
-
-    console.log('Python stdout length:', stdout.length);
-    console.log('Python stdout (first 200 chars):', stdout.substring(0, 200));
-    
-    try {
-      // Trim any whitespace and newlines
-      const cleanOutput = stdout.trim();
-      const json = JSON.parse(cleanOutput);
-      res.json(json);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      console.error('Raw output length:', stdout.length);
-      console.error('Raw output:', stdout);
-      res.status(500).json({ error: "Invalid JSON format from Python script" });
-    }
-  });
-});
-
 // Get forecast for a specific shelter
 app.get('/api/forecast/:shelter', (req, res) => {
   const shelter = decodeURIComponent(req.params.shelter);
@@ -213,6 +188,203 @@ app.get('/api/forecast/:shelter', (req, res) => {
     }
   });
 });
+
+// Get AI-powered recommendations based on predicted influx
+app.get('/api/recommendations', (req, res) => {
+  const shelter = req.query.shelter;
+  const predictedInflux = req.query.influx;
+  const capacity = req.query.capacity;
+  
+  if (!shelter || !predictedInflux || !capacity) {
+    return res.status(400).json({ 
+      error: "Missing required parameters: shelter, influx, and capacity are required" 
+    });
+  }
+  
+  console.log(`Getting recommendations for shelter: ${shelter}, influx: ${predictedInflux}, capacity: ${capacity}`);
+  
+  // Calculate excess capacity
+  const excess = Math.max(0, parseInt(predictedInflux) - parseInt(capacity));
+  const severity = excess <= 2 ? "LOW" : excess <= 5 ? "MEDIUM" : "HIGH";
+  const excessPercentage = capacity > 0 ? ((excess / parseInt(capacity)) * 100).toFixed(1) : 0;
+  
+  // Generate recommendations using the ML-LLM system
+  const recommendationData = {
+    shelter_name: shelter,
+    predicted_occupancy: parseInt(predictedInflux),
+    capacity: parseInt(capacity),
+    excess: excess,
+    severity: severity,
+    excess_percentage: excessPercentage,
+    capacity_utilization_rate: capacity > 0 ? ((parseInt(predictedInflux) / parseInt(capacity)) * 100).toFixed(1) : 0,
+    date: new Date().toISOString().split('T')[0]
+  };
+  
+  // Generate LLM feedback
+  const llmScriptPath = path.join(__dirname, '../ML-LLM-hybrid-recommendation-system/llm_feedback.py');
+  
+  // Check if the LLM script exists
+  if (!fs.existsSync(llmScriptPath)) {
+    console.log('LLM script not found, using fallback recommendations');
+    return res.json({
+      ...recommendationData,
+      llm_feedback: generateBasicRecommendations(excess, severity),
+      reasoning: generateReasoning(severity),
+      action_items: generateActionItems(severity)
+    });
+  }
+  
+  exec(`python3 "${llmScriptPath}" "${JSON.stringify(recommendationData)}"`, { 
+    cwd: __dirname,
+    env: { ...process.env, PYTHONPATH: path.join(__dirname, '../ML-LLM-hybrid-recommendation-system') }
+  }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('LLM feedback error:', error);
+      console.error('Stderr:', stderr);
+      // Return basic recommendations if LLM fails
+      return res.json({
+        ...recommendationData,
+        llm_feedback: generateBasicRecommendations(excess, severity),
+        reasoning: generateReasoning(severity),
+        action_items: generateActionItems(severity)
+      });
+    }
+
+    try {
+      const llmFeedback = stdout.trim();
+      res.json({
+        ...recommendationData,
+        llm_feedback: llmFeedback,
+        reasoning: generateReasoning(severity),
+        action_items: generateActionItems(severity)
+      });
+    } catch (parseError) {
+      console.error('LLM feedback parse error:', parseError);
+      res.json({
+        ...recommendationData,
+        llm_feedback: generateBasicRecommendations(excess, severity),
+        reasoning: generateReasoning(severity),
+        action_items: generateActionItems(severity)
+      });
+    }
+  });
+});
+
+// Helper functions for generating recommendations
+function generateBasicRecommendations(excess, severity) {
+  const recommendations = {
+    LOW: `1. RESOURCE ALLOCATION:
+   - Additional blankets/sleeping bags needed: ${excess}
+   - Extra meals to prepare: ${excess * 3}
+   - Additional staff hours required: ${excess * 8}
+   - Additional funding needed: $${excess * 50}
+
+2. CAPACITY PLANNING:
+   - Overflow beds to set up: ${excess}
+   - Partner shelter beds to reserve: ${Math.max(0, excess - 2)}
+   - Temporary accommodations to arrange: 0
+
+3. STAFFING REQUIREMENTS:
+   - Additional staff members needed: ${Math.ceil(excess / 5)}
+   - Extra volunteer hours required: ${excess * 4}
+   - Specific roles needing additional coverage: Overnight staff
+
+4. SUPPLY CHAIN:
+   - Additional hygiene kits needed: ${excess}
+   - Extra food to order: ${excess * 3} meals
+   - Medical supplies to stock: Basic first aid supplies
+
+5. FINANCIAL PROJECTIONS:
+   - Estimated additional costs: $${excess * 100}
+   - Required emergency funding: $${excess * 200}
+   - Resource allocation budget: $${excess * 300}`,
+    
+    MEDIUM: `1. RESOURCE ALLOCATION:
+   - Additional blankets/sleeping bags needed: ${excess}
+   - Extra meals to prepare: ${excess * 3}
+   - Additional staff hours required: ${excess * 12}
+   - Additional funding needed: $${excess * 75}
+
+2. CAPACITY PLANNING:
+   - Overflow beds to set up: ${excess + 2}
+   - Partner shelter beds to reserve: ${excess + 5}
+   - Temporary accommodations to arrange: ${Math.ceil(excess / 2)}
+
+3. STAFFING REQUIREMENTS:
+   - Additional staff members needed: ${Math.ceil(excess / 3)}
+   - Extra volunteer hours required: ${excess * 6}
+   - Specific roles needing additional coverage: Overnight staff, kitchen staff
+
+4. SUPPLY CHAIN:
+   - Additional hygiene kits needed: ${excess + 2}
+   - Extra food to order: ${excess * 4} meals
+   - Medical supplies to stock: Enhanced first aid supplies
+
+5. FINANCIAL PROJECTIONS:
+   - Estimated additional costs: $${excess * 150}
+   - Required emergency funding: $${excess * 300}
+   - Resource allocation budget: $${excess * 450}`,
+    
+    HIGH: `1. RESOURCE ALLOCATION:
+   - Additional blankets/sleeping bags needed: ${excess}
+   - Extra meals to prepare: ${excess * 3}
+   - Additional staff hours required: ${excess * 16}
+   - Additional funding needed: $${excess * 100}
+
+2. CAPACITY PLANNING:
+   - Overflow beds to set up: ${excess + 5}
+   - Partner shelter beds to reserve: ${excess + 10}
+   - Temporary accommodations to arrange: ${excess}
+
+3. STAFFING REQUIREMENTS:
+   - Additional staff members needed: ${Math.ceil(excess / 2)}
+   - Extra volunteer hours required: ${excess * 8}
+   - Specific roles needing additional coverage: All staff roles
+
+4. SUPPLY CHAIN:
+   - Additional hygiene kits needed: ${excess + 5}
+   - Extra food to order: ${excess * 5} meals
+   - Medical supplies to stock: Comprehensive medical supplies
+
+5. FINANCIAL PROJECTIONS:
+   - Estimated additional costs: $${excess * 200}
+   - Required emergency funding: $${excess * 400}
+   - Resource allocation budget: $${excess * 600}`
+  };
+  
+  return recommendations[severity] || recommendations.LOW;
+}
+
+function generateReasoning(severity) {
+  const reasoning = {
+    LOW: ["Capacity is slightly exceeded, requiring minimal additional resources."],
+    MEDIUM: ["Moderate capacity overflow detected, requiring increased resource allocation and staffing."],
+    HIGH: ["Significant capacity overflow detected, requiring emergency protocols and maximum resource allocation."]
+  };
+  
+  return reasoning[severity] || reasoning.LOW;
+}
+
+function generateActionItems(severity) {
+  const actionItems = {
+    LOW: [
+      "Monitor occupancy trends closely",
+      "Prepare contingency plans if situation worsens"
+    ],
+    MEDIUM: [
+      "Increase staff coverage for the predicted period",
+      "Prepare overflow space if available",
+      "Monitor situation closely for escalation"
+    ],
+    HIGH: [
+      "Immediate activation of emergency overflow protocols",
+      "Contact partner shelters for temporary bed arrangements",
+      "Consider opening temporary warming centers if weather-related"
+    ]
+  };
+  
+  return actionItems[severity] || actionItems.LOW;
+}
 
 app.get('/api/predictions', (req, res) => {
   const now = Date.now();
@@ -260,13 +432,27 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+// Catch-all handler for React Router - serve index.html for any non-API route
+app.get('*', (req, res) => {
+  // Don't serve index.html for API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Endpoint not found' });
+  }
+  
+  // Serve index.html for all other routes (React Router)
+  const indexPath = path.join(__dirname, '../frontend/build/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ error: 'Frontend not built' });
+  }
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔗 API base: http://localhost:${PORT}/api`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📁 Frontend build path: ${frontendBuildPath}`);
+  console.log(`📁 Frontend build exists: ${fs.existsSync(frontendBuildPath)}`);
 });
