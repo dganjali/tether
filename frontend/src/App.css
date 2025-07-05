@@ -10,7 +10,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8f9fa;
+  background-color: white;
+  color: #373B59;
 }
 
 .App {
@@ -24,15 +25,15 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: white;
+  color: #373B59;
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid white;
+  border: 4px solid #e0e0e0;
+  border-top: 4px solid #D03737;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -50,7 +51,7 @@ body {
 }
 
 .dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #373B59;
   color: white;
   padding: 20px;
   display: flex;
@@ -123,7 +124,7 @@ body {
 }
 
 .tab-button.active {
-  background: #667eea;
+  background: #D03737;
   color: white;
 }
 
@@ -162,11 +163,10 @@ body {
 }
 
 .app-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: white;
+  border-bottom: 2px solid #e0e0e0;
   padding: 20px 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .header-content {
@@ -177,7 +177,7 @@ body {
 }
 
 .header-content h1 {
-  color: #333;
+  color: #373B59;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 8px;

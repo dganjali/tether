@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
+import logo from '../images/LOGO.png';
 
 const Home = () => {
   return (
@@ -12,6 +13,9 @@ const Home = () => {
         </div>
         <div className="hero-content">
           <div className="hero-text">
+            <div className="hero-logo">
+              <img src={logo} alt="Logo" className="home-logo" />
+            </div>
             <h1 className="hero-title">
               Toronto Shelter Analytics
               <span className="hero-subtitle"> & Prediction System</span>

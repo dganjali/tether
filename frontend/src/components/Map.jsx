@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './Map.css';
+import logo from '../images/LOGO.png';
 
 // Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -16,6 +18,8 @@ const Map = () => {
   const [shelters, setShelters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedShelter, setSelectedShelter] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchShelterData();
@@ -87,7 +91,7 @@ const Map = () => {
 
   const createCustomIcon = useCallback((influx) => {
     const statusColor = getStatusColor(influx);
-    const color = statusColor === 'critical' ? '#ff4444' : statusColor === 'warning' ? '#ffaa00' : '#44aa44';
+    const color = statusColor === 'critical' ? '#D03737' : statusColor === 'warning' ? '#f39c12' : '#27ae60';
     const symbol = statusColor === 'critical' || statusColor === 'warning' ? '!' : '✓';
     
     return L.divIcon({
@@ -115,6 +119,14 @@ const Map = () => {
       popupAnchor: [0, -15]
     });
   }, [getStatusColor]);
+
+  const handleShelterClick = (shelter) => {
+    setSelectedShelter(shelter);
+  };
+
+  const handleBackClick = () => {
+    navigate('/');
+  };
 
   const sheltersWithCoordinates = shelters.filter(shelter => shelter.lat && shelter.lng);
 
@@ -147,10 +159,21 @@ const Map = () => {
 
   return (
     <div className="map-page">
+      {/* Header with back button */}
       <div className="map-header">
-        <div className="header-content">
-          <h1>🗺️ Toronto Shelter Map</h1>
-          <p>Interactive map showing all shelter locations and their current status</p>
+        <div className="header-left">
+          <button onClick={handleBackClick} className="back-button">
+            ← Back
+          </button>
+          <div className="header-content">
+            <div className="logo-container">
+              <img src={logo} alt="Logo" className="header-logo" />
+            </div>
+            <div className="title-container">
+              <h1>Toronto Shelter Map</h1>
+              <p>Interactive map showing all shelter locations and their current status</p>
+            </div>
+          </div>
         </div>
         <div className="map-legend">
           <div className="legend-item">
@@ -168,66 +191,67 @@ const Map = () => {
         </div>
       </div>
       
-      <div className="map-container">
-        <MapContainer 
-          center={[43.6532, -79.3832]} 
-          zoom={11} 
-          style={{ height: '100%', width: '100%' }}
-          className="leaflet-map"
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          {sheltersWithCoordinates.map((shelter, index) => (
-            <Marker
-              key={index}
-              position={[shelter.lat, shelter.lng]}
-              icon={createCustomIcon(shelter.predicted_influx)}
-            >
-              <Popup>
-                <div className="info-window">
-                  <h3>{shelter.name}</h3>
-                  <p><strong>Address:</strong> {shelter.address}</p>
-                  <p><strong>Predicted Influx:</strong> {shelter.predicted_influx}</p>
-                  <p><strong>Status:</strong> {getStatusText(shelter.predicted_influx)}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-        
+      <div className="map-layout">
+        {/* Sidebar with scrollable shelter list */}
         <div className="map-sidebar">
           <div className="sidebar-header">
-            <h3>🏠 Shelter List</h3>
-            <span className="shelter-count">
-              {sheltersWithCoordinates.length} of {shelters.length} shelters
-            </span>
+            <h3>Shelter List</h3>
+            <span className="shelter-count">{sheltersWithCoordinates.length} shelters</span>
           </div>
-          
           <div className="shelter-list">
-            {sheltersWithCoordinates.length > 0 ? (
-              sheltersWithCoordinates.map((shelter, index) => (
-                <div key={index} className={`shelter-item ${getStatusColor(shelter.predicted_influx)}`}>
-                  <div className="shelter-info">
-                    <h4>{shelter.name}</h4>
-                    <p className="shelter-address">{shelter.address}</p>
-                    <p className="shelter-status">
-                      <span className={`status-indicator ${getStatusColor(shelter.predicted_influx)}`}>
-                        {getStatusText(shelter.predicted_influx)}
-                      </span>
-                      <span className="influx-value">Influx: {shelter.predicted_influx}</span>
-                    </p>
+            {sheltersWithCoordinates.map((shelter, index) => (
+              <div 
+                key={index}
+                className={`shelter-item ${getStatusColor(shelter.predicted_influx)} ${selectedShelter?.name === shelter.name ? 'selected' : ''}`}
+                onClick={() => handleShelterClick(shelter)}
+              >
+                <div className="shelter-info">
+                  <h4>{shelter.name}</h4>
+                  <p className="shelter-address">{shelter.address}</p>
+                  <div className="shelter-status">
+                    <span className={`status-indicator ${getStatusColor(shelter.predicted_influx)}`}>
+                      {getStatusText(shelter.predicted_influx)}
+                    </span>
+                    <span className="influx-value">
+                      Predicted: {shelter.predicted_influx}
+                    </span>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#7f8c8d' }}>
-                <p>No shelters with coordinates found</p>
               </div>
-            )}
+            ))}
           </div>
+        </div>
+        
+        {/* Map container */}
+        <div className="map-container">
+          <MapContainer 
+            center={[43.6532, -79.3832]} 
+            zoom={11} 
+            style={{ height: '100%', width: '100%' }}
+            className="leaflet-map"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {sheltersWithCoordinates.map((shelter, index) => (
+              <Marker
+                key={index}
+                position={[shelter.lat, shelter.lng]}
+                icon={createCustomIcon(shelter.predicted_influx)}
+              >
+                <Popup>
+                  <div className="info-window">
+                    <h3>{shelter.name}</h3>
+                    <p><strong>Address:</strong> {shelter.address}</p>
+                    <p><strong>Predicted Influx:</strong> {shelter.predicted_influx}</p>
+                    <p><strong>Status:</strong> {getStatusText(shelter.predicted_influx)}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         </div>
       </div>
     </div>

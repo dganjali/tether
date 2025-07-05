@@ -19,7 +19,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #373B59 0%, #D03737 100%);
   z-index: 1;
 }
 
@@ -47,6 +47,17 @@
 
 .hero-text {
   color: white;
+}
+
+.hero-logo {
+  margin-bottom: 20px;
+}
+
+.home-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .hero-title {
@@ -116,15 +127,15 @@
 }
 
 .btn-primary {
-  background: #4CAF50;
+  background: #D03737;
   color: white;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 15px rgba(208, 55, 55, 0.3);
 }
 
 .btn-primary:hover {
-  background: #45a049;
+  background: #b02a2a;
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 8px 25px rgba(208, 55, 55, 0.4);
 }
 
 .btn-secondary {
