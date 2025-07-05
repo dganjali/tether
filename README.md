@@ -5,6 +5,7 @@ A full-stack web application for monitoring Toronto shelter occupancy and predic
 ## Features
 
 - **Dashboard**: Real-time shelter occupancy monitoring
+- **Actionable Recommendations**: Data-driven precise suggestions to implement in anticipation of an influx
 - **Heatmap**: Visual representation of shelter capacity across Toronto
 - **Forecast**: 7-day occupancy predictions for individual shelters using TensorFlow
 - **Alerts**: System notifications and warnings
