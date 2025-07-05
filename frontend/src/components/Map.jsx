@@ -148,6 +148,18 @@ const Map = () => {
     }
   };
 
+  const getStatusText = useCallback((influx) => {
+    if (influx > 150) return 'Critical';
+    if (influx >= 80) return 'Warning';
+    return 'Normal';
+  }, []);
+
+  const getStatusColor = useCallback((influx) => {
+    if (influx > 150) return 'critical';
+    if (influx >= 80) return 'warning';
+    return 'normal';
+  }, []);
+
   const createMarkerContent = useCallback((shelter) => {
     const statusColor = getStatusColor(shelter.predicted_influx);
     
@@ -171,18 +183,6 @@ const Map = () => {
       </div>
     `;
   }, [getStatusColor]);
-
-  const getStatusText = useCallback((influx) => {
-    if (influx > 150) return 'Critical';
-    if (influx >= 80) return 'Warning';
-    return 'Normal';
-  }, []);
-
-  const getStatusColor = useCallback((influx) => {
-    if (influx > 150) return 'critical';
-    if (influx >= 80) return 'warning';
-    return 'normal';
-  }, []);
 
   useEffect(() => {
     if (map && shelters.length > 0) {
