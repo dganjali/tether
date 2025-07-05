@@ -149,6 +149,35 @@ app.get('/api/predictions', (req, res) => {
   });
 });
 
+// Get heatmap data for all shelters
+app.get('/api/heatmap', (req, res) => {
+  const targetDate = req.query.date; // Optional date parameter
+  
+  console.log('Generating heatmap data...');
+  
+  let command = '../venv/bin/python ../model/predict_heatmap.py heatmap';
+  if (targetDate) {
+    command += ` ${targetDate}`;
+  }
+  
+  exec(command, { cwd: __dirname }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('Python script error:', error);
+      console.error('Stderr:', stderr);
+      return res.status(500).send("Python script execution failed");
+    }
+
+    try {
+      const json = JSON.parse(stdout);
+      res.json(json);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.error('Raw output:', stdout);
+      res.status(500).send("Invalid JSON format from Python script");
+    }
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

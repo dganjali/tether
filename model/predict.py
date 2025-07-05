@@ -19,6 +19,97 @@ def load_model():
         print(f"Error loading model: {e}", file=sys.stderr)
         return None
 
+def create_features_from_data(shelter_data):
+    """Create proper features from shelter data"""
+    features = []
+    
+    for _, row in shelter_data.iterrows():
+        feature_vector = []
+        
+        # Parse date properly
+        if isinstance(row['OCCUPANCY_DATE'], str):
+            date = pd.to_datetime(row['OCCUPANCY_DATE'])
+        else:
+            date = row['OCCUPANCY_DATE']
+        
+        # Time-based features
+        feature_vector.extend([
+            date.weekday(),           # Day of week (0-6)
+            date.month,               # Month (1-12)
+            date.day,                 # Day of month (1-31)
+            date.year,                # Year
+            date.dayofyear,           # Day of year (1-365)
+            date.quarter,             # Quarter (1-4)
+            date.is_month_start,      # Is start of month (0/1)
+            date.is_month_end,        # Is end of month (0/1)
+            date.is_quarter_start,    # Is start of quarter (0/1)
+            date.is_quarter_end,      # Is end of quarter (0/1)
+        ])
+        
+        # Occupancy features
+        occupancy = float(row['OCCUPANCY']) if pd.notna(row['OCCUPANCY']) else 0.0
+        capacity = float(row['CAPACITY']) if pd.notna(row['CAPACITY']) else 1.0
+        
+        feature_vector.extend([
+            occupancy,                    # Raw occupancy
+            capacity,                     # Raw capacity
+            occupancy / max(capacity, 1), # Occupancy rate
+            max(0, capacity - occupancy), # Available capacity
+        ])
+        
+        # Sector encoding (one-hot encoding for common sectors)
+        sector = str(row['SECTOR']).lower() if pd.notna(row['SECTOR']) else 'unknown'
+        sectors = ['women', 'men', 'families', 'co-ed', 'youth', 'seniors']
+        for s in sectors:
+            feature_vector.append(1.0 if s in sector else 0.0)
+        
+        # Program features
+        program = str(row['PROGRAM_NAME']).lower() if pd.notna(row['PROGRAM_NAME']) else ''
+        feature_vector.extend([
+            1.0 if 'family' in program else 0.0,
+            1.0 if 'women' in program else 0.0,
+            1.0 if 'men' in program else 0.0,
+            1.0 if 'youth' in program else 0.0,
+            1.0 if 'emergency' in program else 0.0,
+            1.0 if 'transitional' in program else 0.0,
+        ])
+        
+        # Seasonal features
+        feature_vector.extend([
+            np.sin(2 * np.pi * date.dayofyear / 365.25),  # Seasonal sine
+            np.cos(2 * np.pi * date.dayofyear / 365.25),  # Seasonal cosine
+            np.sin(2 * np.pi * date.weekday() / 7),         # Weekly sine
+            np.cos(2 * np.pi * date.weekday() / 7),         # Weekly cosine
+        ])
+        
+        # Lag features (previous day's occupancy if available)
+        feature_vector.append(occupancy)  # Current occupancy as lag feature
+        
+        # Statistical features
+        feature_vector.extend([
+            occupancy / 100.0,        # Normalized occupancy
+            capacity / 1000.0,        # Normalized capacity
+            min(1.0, occupancy / 100.0),  # Capped occupancy
+        ])
+        
+        # Additional features to reach expected dimension
+        # These are derived from existing features
+        feature_vector.extend([
+            occupancy * date.weekday() / 100.0,  # Interaction feature
+            capacity * date.month / 100.0,       # Interaction feature
+            occupancy / max(capacity, 1) * date.weekday() / 7.0,  # Rate interaction
+        ])
+        
+        # Pad or truncate to exactly 45 features
+        if len(feature_vector) < 45:
+            feature_vector += [0.0] * (45 - len(feature_vector))
+        elif len(feature_vector) > 45:
+            feature_vector = feature_vector[:45]
+        
+        features.append(feature_vector)
+    
+    return features
+
 def prepare_data_for_prediction(shelter_name, target_date, days_ahead=7):
     """Prepare data for prediction for a specific shelter and target date"""
     # Load the data
@@ -41,37 +132,26 @@ def prepare_data_for_prediction(shelter_name, target_date, days_ahead=7):
     recent_data = shelter_data.tail(30)
     
     # Create features for each time step
-    # This is a placeholder - you'll need to adjust based on your model's actual feature requirements
-    features = []
-    for _, row in recent_data.iterrows():
-        # Create a feature vector with 42 features (placeholder)
-        # You'll need to replace this with the actual features your model was trained on
-        feature_vector = []
-        
-        # Basic time features
-        feature_vector.extend([
-            row['OCCUPANCY_DATE'].weekday(),  # Day of week (0-6)
-            row['OCCUPANCY_DATE'].month,      # Month (1-12)
-            row['OCCUPANCY_DATE'].day,        # Day of month (1-31)
-            row['OCCUPANCY_DATE'].year,       # Year
-        ])
-        
-        # Occupancy features
-        feature_vector.extend([
-            row['OCCUPANCY'],                 # Current occupancy
-            row['OCCUPANCY'] / 100.0,         # Normalized occupancy
-        ])
-        
-        # Add more features to reach 46 total
-        # This is a placeholder - replace with actual features from your training
-        for i in range(40):  # 4 + 2 + 40 = 46 features
-            feature_vector.append(0.0)  # Placeholder features
-        
-        features.append(feature_vector)
+    features = create_features_from_data(recent_data)
     
-    # Convert to numpy array and reshape to (1, 30, 46) for single prediction
+    # Check feature dimensions
+    feature_count = len(features[0]) if features else 0
+    print(f"Debug: Created {feature_count} features for {len(features)} time steps", file=sys.stderr)
+    
+    # Convert to numpy array and reshape to (1, 30, feature_count) for single prediction
     features_array = np.array(features, dtype=np.float32)
-    features_array = features_array.reshape(1, 30, 46)
+    
+    # Ensure we have the right shape
+    if features_array.shape[0] != 30:
+        # Pad or truncate to exactly 30 time steps
+        if features_array.shape[0] < 30:
+            # Pad with the last row
+            padding = np.tile(features_array[-1:], (30 - features_array.shape[0], 1))
+            features_array = np.vstack([features_array, padding])
+        else:
+            features_array = features_array[-30:]
+    
+    features_array = features_array.reshape(1, 30, -1)
     
     return features_array, recent_data['OCCUPANCY_DATE'].iloc[-1]
 
