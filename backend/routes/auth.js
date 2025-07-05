@@ -66,8 +66,14 @@ router.post('/signup', asyncHandler(async (req, res) => {
 router.post('/signin', asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
+  logger.info('Signin attempt', { username: username ? 'provided' : 'missing' });
+
   // Input validation
   if (!username || !password) {
+    logger.warn('Signin validation failed', { 
+      hasUsername: !!username, 
+      hasPassword: !!password 
+    });
     throw new ValidationError('Username and password are required');
   }
 
@@ -75,15 +81,21 @@ router.post('/signin', asyncHandler(async (req, res) => {
   const sanitizedUsername = username.trim().toLowerCase();
   const sanitizedPassword = password.trim();
 
+  logger.info('Looking for user', { username: sanitizedUsername });
+
   // Find user
   const user = await User.findOne({ username: sanitizedUsername });
   if (!user) {
+    logger.warn('User not found', { username: sanitizedUsername });
     throw new ValidationError('Invalid credentials');
   }
+
+  logger.info('User found, checking password');
 
   // Check password
   const isMatch = await user.comparePassword(sanitizedPassword);
   if (!isMatch) {
+    logger.warn('Password mismatch', { username: sanitizedUsername });
     throw new ValidationError('Invalid credentials');
   }
 

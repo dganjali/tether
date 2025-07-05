@@ -45,6 +45,13 @@ const sendErrorResponse = (res, error) => {
   const statusCode = error.statusCode || 500;
   const message = error.message || 'Internal server error';
   
+  console.log('Sending error response:', {
+    statusCode,
+    message,
+    path: res.req?.originalUrl,
+    method: res.req?.method
+  });
+  
   const errorResponse = {
     error: {
       message,
@@ -61,6 +68,7 @@ const sendErrorResponse = (res, error) => {
     errorResponse.error.details = error;
   }
 
+  console.log('Error response object:', errorResponse);
   res.status(statusCode).json(errorResponse);
 };
 

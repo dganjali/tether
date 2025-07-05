@@ -61,10 +61,13 @@ const SignIn = () => {
 
     const result = await signin(formData.username, formData.password);
     
+    console.log('Signin result:', result);
+    
     if (result.success) {
       showSuccess('Successfully signed in!');
       navigate('/dashboard');
     } else {
+      console.error('Signin failed:', result.error);
       showError(result.error || 'Sign in failed');
     }
     

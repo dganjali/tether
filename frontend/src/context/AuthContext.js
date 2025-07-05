@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Configure axios defaults
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
 const AuthContext = createContext();
 
 export { AuthContext };
@@ -66,10 +70,14 @@ export const AuthProvider = ({ children }) => {
 
   const signin = async (username, password) => {
     try {
+      console.log('Attempting signin with:', { username });
+      
       const response = await axios.post('/api/auth/signin', {
         username,
         password
       });
+      
+      console.log('Signin response:', response.data);
       
       const { token: newToken, user: newUser } = response.data;
       localStorage.setItem('token', newToken);
@@ -79,9 +87,23 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Signin error:', error);
+      console.error('Error response:', error.response?.data);
+      
+      console.error('Error response structure:', error.response?.data);
+      
+      let errorMessage = 'Signin failed';
+      if (error.response?.data?.error?.message) {
+        errorMessage = error.response.data.error.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       return { 
         success: false, 
-        error: error.response?.data?.error || 'Signin failed' 
+        error: errorMessage
       };
     }
   };

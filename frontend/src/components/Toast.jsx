@@ -4,6 +4,9 @@ import './Toast.css';
 const Toast = ({ message, type = 'info', duration = 5000, onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
 
+  // Ensure message is a string
+  const displayMessage = typeof message === 'string' ? message : JSON.stringify(message);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
@@ -36,7 +39,7 @@ const Toast = ({ message, type = 'info', duration = 5000, onClose }) => {
   return (
     <div className={`toast toast-${type} ${isVisible ? 'toast-visible' : 'toast-hidden'}`}>
       <div className="toast-icon">{getIcon()}</div>
-      <div className="toast-message">{message}</div>
+      <div className="toast-message">{displayMessage}</div>
       <button className="toast-close" onClick={handleClose}>
         ×
       </button>
