@@ -31,7 +31,17 @@ We'll deploy the entire application as a single **Web Service** on Render:
 - **Branch:** `main` (or your default branch)
 
 **Build & Deploy Settings:**
+- **Build Command:** `./build.sh`
+- **Start Command:** `npm start`
+- **Root Directory:** Leave empty (root of repository)
+
+**Alternative Build Commands (if the above doesn't work):**
 - **Build Command:** `npm run render-build`
+- **Start Command:** `npm start`
+- **Root Directory:** Leave empty (root of repository)
+
+**If you still get errors, try this:**
+- **Build Command:** `bash build.sh`
 - **Start Command:** `npm start`
 - **Root Directory:** Leave empty (root of repository)
 

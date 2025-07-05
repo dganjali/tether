@@ -127,8 +127,9 @@ public
 tmp/
 temp/
 
-# Machine Learning Models (large files)
+# Machine Learning Models (large files) - EXCEPT model.h5
 *.h5
+!model.h5
 *.pkl
 *.joblib
 *.pth
@@ -136,13 +137,14 @@ temp/
 *.onnx
 *.pb
 
-# Data files (large datasets)
+# Data files (large datasets) - EXCEPT important data files
 *.csv
+!data/shelter_occupancy.csv
 *.json
+!data/predictions.json
 *.parquet
 *.feather
 *.hdf5
-*.h5
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -187,12 +189,8 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# React build
-build/
+# React build (only exclude production builds, not source)
 frontend/build/
-
-# Production build
-/frontend/build
 
 # Testing
 /coverage
