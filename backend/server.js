@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { exec } = require('child_process');
 const fs = require('fs');
 const cors = require('cors');
+const path = require('path');
 
 const authRoutes = require('./routes/auth');
 
@@ -34,8 +35,8 @@ app.use(express.json());
 // Authentication routes
 app.use('/api/auth', authRoutes);
 
-// Root route
-app.get('/', (req, res) => {
+// API routes
+app.get('/api', (req, res) => {
   res.json({ message: 'Server is running! Use /api/predictions to get shelter predictions.' });
 });
 
@@ -163,6 +164,14 @@ app.get('/api/predictions', (req, res) => {
       }
     });
   });
+});
+
+// Serve static files from the React build
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
 app.listen(PORT, () => {
