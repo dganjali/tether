@@ -1,0 +1,44 @@
+The data set provides a listing of all the active shelters serving the City of Toronto area. Included in the dataset is the name of the shelter, program name, sector served (i.e. men, women, youth, families) addresses, funded program capacity, and the number of people that occupied those spaces at 4:00 AM the next morning. For example, the occupancy count of January 1st would be taken on January 2nd at 4 AM.
+
+The reporting in this dataset has now been updated as a new open data set. This updated data set includes all overnight service programs administered by the Shelter, Support and Housing Administration division (e.g. 24-hour respites and COVID-19 hotel shelter programs) rather than just shelter programs.
+
+
+  Column	Description
+_id	
+Unique row identifier for Open Data database
+
+OCCUPANCY_DATE	
+Date of the data
+
+ORGANIZATION_NAME	
+Organization Name. The registered name of the non-profit entity responsible for the shelter operation.
+
+SHELTER_NAME	
+Name of the shelter site. The shelter name generally delineates the subgroup within the organization that is responsible for the shelter. For example the City of Toronto is the organization responsible for the shelters named: Women's Residence, Family Residence, Seaton House etc.
+
+SHELTER_ADDRESS	
+Address of the shelter
+
+SHELTER_CITY	
+City of the shelter
+
+SHELTER_PROVINCE	
+Province of the shelter
+
+SHELTER_POSTAL_CODE	
+Postal code of the shelter
+
+FACILITY_NAME	
+Name of the facility. In some cases shelters share the same name but the actual service is provided in multiple facilities. For example Women's Residence has 3 facilities: the Alexandra Hotel, 63 Bellwoods and 674 Dundas Street West
+
+PROGRAM_NAME	
+Name of the program within the facility. Some shelters offer different programs or services within the same facility. For example Seaton House offers emergency shelter on certain floors of 339 George Street but other floors within the same facility are dedicated to longer staying clients. In this example, the program name is the "Long Term" program.
+
+SECTOR	
+Clientele of the shelter. Sector can be women, men, youth, co-ed, or family.
+
+OCCUPANCY	
+Number of homeless clients in the program at 4:00 AM. Occupancy is a point in time number at 4 AM of the next day. For example, the occupancy count of January 1st would be taken on January 2nd at 4 AM.
+
+CAPACITY	
+Maximum number of spaces available for homeless clients within the program.The term "spaces available" can mean a bed or a mat/cot. In the family sector it is possible to exceed available capacity depending on the bed configuration of each room. For example a family of five, who have small children, can elect to be accommodated in a room with four beds. This situation would keep the family united but would exceed the set capacity of the database.
