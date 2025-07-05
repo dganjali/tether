@@ -13,7 +13,11 @@ const Alerts = () => {
   const fetchShelterData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/predictions');
+      const response = await fetch('http://localhost:3001/api/predictions', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

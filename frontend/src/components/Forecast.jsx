@@ -19,7 +19,11 @@ const Forecast = () => {
     
     try {
       console.log('Fetching shelters...');
-      const response = await fetch('http://localhost:3001/api/shelters');
+      const response = await fetch('http://localhost:3001/api/shelters', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -51,7 +55,11 @@ const Forecast = () => {
     setForecast(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/forecast?shelter=${encodeURIComponent(selectedShelter)}&days=7`);
+      const response = await fetch(`http://localhost:3001/api/forecast?shelter=${encodeURIComponent(selectedShelter)}&days=7`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
       
       if (data.error) {
