@@ -8,7 +8,7 @@ import Breadcrumbs from './components/Breadcrumbs';
 import Home from './components/Home';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
-import Dashboard from './components/Dashboard';
+import DashboardTabs from './components/DashboardTabs';
 import Map from './components/Map';
 import MapTest from './components/MapTest';
 
@@ -29,7 +29,7 @@ function App() {
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <DashboardTabs />
                   </ProtectedRoute>
                 } 
               />

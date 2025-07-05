@@ -441,11 +441,17 @@ app.get('/api/predictions', (req, res) => {
     try {
       const json = JSON.parse(data);
       
+      // Add default capacity values to predictions
+      const predictionsWithCapacity = json.map(prediction => ({
+        ...prediction,
+        capacity: prediction.capacity || Math.max(100, Math.round(prediction.predicted_influx * 1.2)) // Default capacity based on predicted influx
+      }));
+      
       // Cache the results
-      predictionsCache = json;
+      predictionsCache = predictionsWithCapacity;
       lastCacheTime = now;
       
-      res.json(json);
+      res.json(predictionsWithCapacity);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       res.status(500).json({ error: "Invalid JSON format in predictions file" });
