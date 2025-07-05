@@ -10,40 +10,51 @@ const Map = () => {
 
   useEffect(() => {
     // Check if Google Maps API key is available
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
       setError('Google Maps API key is not configured. Please check your environment variables.');
       return;
     }
 
-    // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
-      initializeMap();
-      return;
-    }
+    // Load Google Maps API using the modern approach
+    const loadGoogleMaps = async () => {
+      try {
+        // Check if already loaded
+        if (window.google && window.google.maps) {
+          console.log('Google Maps API already loaded');
+          initializeMap();
+          return;
+        }
 
-    // Load Google Maps API
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      console.log('Google Maps API loaded successfully');
-      initializeMap();
-    };
-    script.onerror = () => {
-      console.error('Failed to load Google Maps API');
-      setError('Failed to load Google Maps. Please check your internet connection and API key.');
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      // Clean up script if component unmounts before loading
-      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
-      if (existingScript) {
-        document.head.removeChild(existingScript);
+        // Load the API using the modern pattern
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.innerHTML = `
+          (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=\`https://maps.\${c}apis.com/maps/api/js?\`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+          ({key: "${apiKey}", v: "weekly"});
+        `;
+        
+        document.head.appendChild(script);
+        
+        // Wait for Google Maps to load
+        const waitForGoogleMaps = () => {
+          if (window.google && window.google.maps) {
+            console.log('Google Maps API loaded successfully');
+            initializeMap();
+          } else {
+            setTimeout(waitForGoogleMaps, 100);
+          }
+        };
+        
+        waitForGoogleMaps();
+        
+      } catch (error) {
+        console.error('Error loading Google Maps:', error);
+        setError('Failed to load Google Maps. Please check your API key and internet connection.');
       }
     };
+
+    loadGoogleMaps();
   }, []);
 
   useEffect(() => {
@@ -102,7 +113,7 @@ const Map = () => {
     }
   };
 
-  const initializeMap = () => {
+  const initializeMap = async () => {
     try {
       // Check if Google Maps is available
       if (!window.google || !window.google.maps) {
@@ -117,19 +128,16 @@ const Map = () => {
         return;
       }
 
+      // Import the maps library using modern approach
+      const { Map } = await window.google.maps.importLibrary("maps");
+
       // Toronto coordinates
       const toronto = { lat: 43.6532, lng: -79.3832 };
       
-      const mapInstance = new window.google.maps.Map(mapElement, {
-        zoom: 11,
+      const mapInstance = new Map(mapElement, {
         center: toronto,
-        styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
+        zoom: 11,
+        mapId: 'DEMO_MAP_ID', // Optional: for custom styling
       });
 
       setMap(mapInstance);
@@ -140,25 +148,29 @@ const Map = () => {
     }
   };
 
-  const getMarkerIcon = useCallback((influx) => {
-    if (influx > 150) return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="15" r="12" fill="#ff4444" stroke="#fff" stroke-width="2"/>
-        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!</text>
-      </svg>
-    `);
-    if (influx >= 80) return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="15" r="12" fill="#ffaa00" stroke="#fff" stroke-width="2"/>
-        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!</text>
-      </svg>
-    `);
-    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="15" r="12" fill="#44aa44" stroke="#fff" stroke-width="2"/>
-        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">✓</text>
-      </svg>
-    `);
+  const createMarkerContent = useCallback((shelter) => {
+    const statusColor = getStatusColor(shelter.predicted_influx);
+    const statusText = getStatusText(shelter.predicted_influx);
+    
+    return `
+      <div class="marker-content" style="
+        background: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        font-weight: bold;
+        font-size: 12px;
+        color: white;
+        background-color: ${statusColor === 'critical' ? '#ff4444' : statusColor === 'warning' ? '#ffaa00' : '#44aa44'};
+      ">
+        ${statusColor === 'critical' || statusColor === 'warning' ? '!' : '✓'}
+      </div>
+    `;
   }, []);
 
   const getStatusText = useCallback((influx) => {
@@ -175,60 +187,73 @@ const Map = () => {
 
   useEffect(() => {
     if (map && shelters.length > 0) {
-      try {
-        // Clear existing markers
-        markers.forEach(marker => marker.setMap(null));
-        
-        const newMarkers = shelters
-          .filter(shelter => shelter.lat && shelter.lng) // Only show shelters with coordinates
-          .map(shelter => {
-            try {
-              const position = {
-                lat: shelter.lat,
-                lng: shelter.lng
-              };
+      const createMarkers = async () => {
+        try {
+          // Clear existing markers
+          markers.forEach(marker => marker.map = null);
+          
+          // Import the marker library using modern approach
+          const { AdvancedMarkerElement } = await window.google.maps.importLibrary("marker");
+          const { InfoWindow } = await window.google.maps.importLibrary("core");
+          
+          const newMarkers = shelters
+            .filter(shelter => shelter.lat && shelter.lng) // Only show shelters with coordinates
+            .map(shelter => {
+              try {
+                const position = {
+                  lat: shelter.lat,
+                  lng: shelter.lng
+                };
 
-              const marker = new window.google.maps.Marker({
-                position: position,
-                map: map,
-                title: shelter.name,
-                icon: {
-                  url: getMarkerIcon(shelter.predicted_influx),
-                  scaledSize: new window.google.maps.Size(30, 30)
-                }
-              });
+                // Create marker content element
+                const markerContent = document.createElement('div');
+                markerContent.innerHTML = createMarkerContent(shelter);
+                const markerElement = markerContent.firstElementChild;
 
-              const infoWindow = new window.google.maps.InfoWindow({
-                content: `
-                  <div class="info-window">
-                    <h3>${shelter.name}</h3>
-                    <p><strong>Address:</strong> ${shelter.address}</p>
-                    <p><strong>Predicted Influx:</strong> ${shelter.predicted_influx}</p>
-                    <p><strong>Status:</strong> ${getStatusText(shelter.predicted_influx)}</p>
-                  </div>
-                `
-              });
+                // Create advanced marker
+                const marker = new AdvancedMarkerElement({
+                  position: position,
+                  map: map,
+                  title: shelter.name,
+                  content: markerElement
+                });
 
-              marker.addListener('click', () => {
-                infoWindow.open(map, marker);
-              });
+                // Create info window
+                const infoWindow = new InfoWindow({
+                  content: `
+                    <div class="info-window">
+                      <h3>${shelter.name}</h3>
+                      <p><strong>Address:</strong> ${shelter.address}</p>
+                      <p><strong>Predicted Influx:</strong> ${shelter.predicted_influx}</p>
+                      <p><strong>Status:</strong> ${getStatusText(shelter.predicted_influx)}</p>
+                    </div>
+                  `
+                });
 
-              return marker;
-            } catch (error) {
-              console.error(`Error creating marker for ${shelter.name}:`, error);
-              return null;
-            }
-          })
-          .filter(marker => marker !== null); // Remove any failed markers
+                // Add click listener
+                marker.addListener('click', () => {
+                  infoWindow.open(map, marker);
+                });
 
-        setMarkers(newMarkers);
-        console.log(`Successfully created ${newMarkers.length} markers`);
-      } catch (error) {
-        console.error('Error creating markers:', error);
-        setError('Failed to create map markers. Please try refreshing the page.');
-      }
+                return marker;
+              } catch (error) {
+                console.error(`Error creating marker for ${shelter.name}:`, error);
+                return null;
+              }
+            })
+            .filter(marker => marker !== null); // Remove any failed markers
+
+          setMarkers(newMarkers);
+          console.log(`Successfully created ${newMarkers.length} markers`);
+        } catch (error) {
+          console.error('Error creating markers:', error);
+          setError('Failed to create map markers. Please try refreshing the page.');
+        }
+      };
+
+      createMarkers();
     }
-  }, [map, shelters, markers, getMarkerIcon, getStatusText]);
+  }, [map, shelters, markers, createMarkerContent, getStatusText]);
 
   const sheltersWithCoordinates = shelters.filter(shelter => shelter.lat && shelter.lng);
 
