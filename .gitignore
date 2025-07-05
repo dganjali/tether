@@ -11,9 +11,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -113,11 +111,9 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -130,23 +126,12 @@ temp/
 # Machine Learning Models (large files) - EXCEPT model.h5
 *.h5
 !model.h5
-*.pkl
-*.joblib
-*.pth
-*.pt
-*.onnx
-*.pb
 
 # Data files (large datasets) - EXCEPT important data files
-*.csv
 !data/shelter_occupancy.csv
-*.json
 !data/predictions.json
 !*/package.json
 !package.json
-*.parquet
-*.feather
-*.hdf5
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -198,6 +183,4 @@ build/
 # Testing
 /coverage
 
-# Misc
-*.tgz
-*.tar.gz 
+# Misc 
