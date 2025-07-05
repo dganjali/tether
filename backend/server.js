@@ -11,13 +11,26 @@ const authRoutes = require('./routes/auth');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+// Check for required environment variables
+if (!process.env.JWT_SECRET) {
+  console.warn('WARNING: JWT_SECRET environment variable is not set. Authentication will not work properly.');
+  process.env.JWT_SECRET = 'fallback-secret-key-change-in-production';
+}
+
+// Connect to MongoDB with better error handling
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    console.log('⚠️  Server will start without database functionality');
+  });
+} else {
+  console.warn('⚠️  MONGODB_URI environment variable is not set. Database functionality will be disabled.');
+}
 
 // Cache for predictions
 let predictionsCache = null;
@@ -39,6 +52,15 @@ app.use(express.json());
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
 
 // API routes
 app.get('/api', (req, res) => {
@@ -62,7 +84,14 @@ app.get('/api/shelter-locations', (req, res) => {
   const fs = require('fs');
   const results = [];
   
-  fs.createReadStream(path.join(__dirname, '../data/shelter_locations_geocoded.csv'))
+  const csvPath = path.join(__dirname, '../data/shelter_locations_geocoded.csv');
+  
+  if (!fs.existsSync(csvPath)) {
+    console.error('Shelter locations CSV file not found:', csvPath);
+    return res.status(500).json({ error: 'Shelter locations file not found' });
+  }
+  
+  fs.createReadStream(csvPath)
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', () => {
@@ -74,12 +103,12 @@ app.get('/api/shelter-locations', (req, res) => {
         res.json(results);
       } catch (parseError) {
         console.error('CSV parse error:', parseError);
-        res.status(500).send("Invalid CSV format");
+        res.status(500).json({ error: "Invalid CSV format" });
       }
     })
     .on('error', (error) => {
       console.error('Failed to read shelter locations CSV:', error);
-      res.status(500).send("Failed to read shelter locations");
+      res.status(500).json({ error: "Failed to read shelter locations" });
     });
 });
 
@@ -96,10 +125,17 @@ app.get('/api/shelters', (req, res) => {
   console.log('Reading shelters from predictions file...');
   
   // Read the predictions file and extract shelter names
-  fs.readFile(path.join(__dirname, '../data/predictions.json'), 'utf8', (err, data) => {
+  const predictionsPath = path.join(__dirname, '../data/predictions.json');
+  
+  if (!fs.existsSync(predictionsPath)) {
+    console.error('Predictions file not found:', predictionsPath);
+    return res.status(500).json({ error: 'Predictions file not found' });
+  }
+  
+  fs.readFile(predictionsPath, 'utf8', (err, data) => {
     if (err) {
       console.error('Failed to read predictions.json:', err);
-      return res.status(500).send("Failed to read shelters");
+      return res.status(500).json({ error: "Failed to read shelters" });
     }
 
     try {
@@ -115,7 +151,7 @@ app.get('/api/shelters', (req, res) => {
       res.json(shelters);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
-      res.status(500).send("Invalid JSON format in predictions file");
+      res.status(500).json({ error: "Invalid JSON format in predictions file" });
     }
   });
 });
@@ -126,7 +162,7 @@ app.get('/api/forecast', (req, res) => {
   const days = req.query.days || 7;
   
   if (!shelter) {
-    return res.status(400).send("Shelter parameter is required");
+    return res.status(400).json({ error: "Shelter parameter is required" });
   }
   
   console.log(`Getting forecast for shelter: ${shelter}, days: ${days}`);
@@ -134,7 +170,7 @@ app.get('/api/forecast', (req, res) => {
     if (error) {
       console.error('Python script error:', error);
       console.error('Stderr:', stderr);
-      return res.status(500).send("Python script execution failed");
+      return res.status(500).json({ error: "Python script execution failed" });
     }
 
     console.log('Python stdout length:', stdout.length);
@@ -149,7 +185,7 @@ app.get('/api/forecast', (req, res) => {
       console.error('JSON parse error:', parseError);
       console.error('Raw output length:', stdout.length);
       console.error('Raw output:', stdout);
-      res.status(500).send("Invalid JSON format from Python script");
+      res.status(500).json({ error: "Invalid JSON format from Python script" });
     }
   });
 });
@@ -164,7 +200,7 @@ app.get('/api/forecast/:shelter', (req, res) => {
     if (error) {
       console.error('Python script error:', error);
       console.error('Stderr:', stderr);
-      return res.status(500).send("Python script execution failed");
+      return res.status(500).json({ error: "Python script execution failed" });
     }
 
     try {
@@ -173,7 +209,7 @@ app.get('/api/forecast/:shelter', (req, res) => {
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       console.error('Raw output:', stdout);
-      res.status(500).send("Invalid JSON format from Python script");
+      res.status(500).json({ error: "Invalid JSON format from Python script" });
     }
   });
 });
@@ -190,33 +226,47 @@ app.get('/api/predictions', (req, res) => {
   console.log('Reading predictions from file...');
   
   // Read the predictions file directly
-  fs.readFile(path.join(__dirname, '../data/predictions.json'), 'utf8', (err, data) => {
+  const predictionsPath = path.join(__dirname, '../data/predictions.json');
+  
+  if (!fs.existsSync(predictionsPath)) {
+    console.error('Predictions file not found:', predictionsPath);
+    return res.status(500).json({ error: 'Predictions file not found' });
+  }
+  
+  fs.readFile(predictionsPath, 'utf8', (err, data) => {
     if (err) {
       console.error('Failed to read predictions.json:', err);
-      return res.status(500).send("Failed to read predictions");
+      return res.status(500).json({ error: "Failed to read predictions" });
     }
 
     try {
       const json = JSON.parse(data);
+      
       // Cache the results
       predictionsCache = json;
       lastCacheTime = now;
+      
       res.json(json);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
-      res.status(500).send("Invalid JSON format in predictions file");
+      res.status(500).json({ error: "Invalid JSON format in predictions file" });
     }
   });
 });
 
-// Serve static files from the React build
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🔗 API base: http://localhost:${PORT}/api`);
 });

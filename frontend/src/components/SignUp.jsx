@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
+import logo from '../images/LOGO.png';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -66,8 +67,11 @@ const SignUp = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>Sign Up</h1>
-          <p>Create your account to access Toronto Shelter Analytics</p>
+          <div className="auth-logo">
+            <img src={logo} alt="Logo" className="auth-logo-img" />
+          </div>
+          <h1>Create Account</h1>
+          <p>Join Toronto Shelter Analytics to access advanced insights</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -83,6 +87,7 @@ const SignUp = () => {
               onChange={handleChange}
               placeholder="Choose a username (min 3 characters)"
               required
+              disabled={loading}
             />
           </div>
 
@@ -96,6 +101,7 @@ const SignUp = () => {
               onChange={handleChange}
               placeholder="Choose a password (min 6 characters)"
               required
+              disabled={loading}
             />
           </div>
 
@@ -109,12 +115,13 @@ const SignUp = () => {
               onChange={handleChange}
               placeholder="Confirm your password"
               required
+              disabled={loading}
             />
           </div>
 
           <button 
             type="submit" 
-            className="auth-button"
+            className={`auth-button ${loading ? 'loading' : ''}`}
             disabled={loading}
           >
             {loading ? 'Creating Account...' : 'Sign Up'}
