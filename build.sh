@@ -38,10 +38,32 @@ cd backend
 npm install
 cd ..
 
-# Install ML-LLM system requirements
-echo "Installing ML-LLM system requirements..."
-cd backend/ML-LLM-hybrid-recommendation-system
-pip install -r requirements.txt
-cd ../..
+# Install ML-LLM system requirements (only if Python is available)
+echo "Checking for Python and installing ML-LLM system requirements..."
+if command -v python3 &> /dev/null; then
+    echo "Python3 found, installing ML requirements..."
+    cd backend/ML-LLM-hybrid-recommendation-system
+    if [ -f "requirements.txt" ]; then
+        pip3 install -r requirements.txt
+    else
+        echo "WARNING: requirements.txt not found in ML-LLM-hybrid-recommendation-system"
+    fi
+    cd ../..
+elif command -v python &> /dev/null; then
+    echo "Python found, installing ML requirements..."
+    cd backend/ML-LLM-hybrid-recommendation-system
+    if [ -f "requirements.txt" ]; then
+        pip install -r requirements.txt
+    else
+        echo "WARNING: requirements.txt not found in ML-LLM-hybrid-recommendation-system"
+    fi
+    cd ../..
+else
+    echo "WARNING: Python not found. ML features may not work properly."
+fi
 
-echo "=== Build Complete ===" 
+echo "=== Build Complete ==="
+echo "Build artifacts:"
+echo "- Frontend build: frontend/build/"
+echo "- Backend: backend/"
+echo "- Root dependencies: node_modules/" 

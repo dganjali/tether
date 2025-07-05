@@ -7,29 +7,53 @@ const cors = require('cors');
 const path = require('path');
 
 const authRoutes = require('./routes/auth');
+const { 
+  globalErrorHandler, 
+  notFoundHandler, 
+  asyncHandler,
+  handleDatabaseError,
+  handleFileSystemError,
+  handlePythonScriptError,
+  ValidationError,
+  NotFoundError,
+  FileSystemError,
+  PythonScriptError
+} = require('./utils/errorHandler');
+const logger = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Check for required environment variables
 if (!process.env.JWT_SECRET) {
-  console.warn('WARNING: JWT_SECRET environment variable is not set. Authentication will not work properly.');
+  logger.warn('JWT_SECRET environment variable is not set. Authentication will not work properly.');
   process.env.JWT_SECRET = 'fallback-secret-key-change-in-production';
 }
 
 // Connect to MongoDB with better error handling
 if (process.env.MONGODB_URI) {
+  const startTime = Date.now();
   mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log('✅ Connected to MongoDB'))
+  .then(() => {
+    const duration = Date.now() - startTime;
+    logger.info('Connected to MongoDB', { duration: `${duration}ms` });
+    logger.logDatabaseOperation('connect', 'mongodb', duration, true);
+  })
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err.message);
-    console.log('⚠️  Server will start without database functionality');
+    const duration = Date.now() - startTime;
+    const dbError = handleDatabaseError(err);
+    logger.error('MongoDB connection failed', { 
+      error: err.message, 
+      duration: `${duration}ms`,
+      code: err.code 
+    });
+    logger.logDatabaseOperation('connect', 'mongodb', duration, false);
   });
 } else {
-  console.warn('⚠️  MONGODB_URI environment variable is not set. Database functionality will be disabled.');
+  logger.warn('MONGODB_URI environment variable is not set. Database functionality will be disabled.');
 }
 
 // Cache for predictions
@@ -50,13 +74,16 @@ const LOCATIONS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 app.use(cors());
 app.use(express.json());
 
+// Add request logging middleware
+app.use(logger.logRequest.bind(logger));
+
 // Serve static files from the React build directory
 const frontendBuildPath = path.join(__dirname, '../frontend/build');
 if (fs.existsSync(frontendBuildPath)) {
-  console.log('✅ Serving static files from:', frontendBuildPath);
+  logger.info('Serving static files from frontend build', { path: frontendBuildPath });
   app.use(express.static(frontendBuildPath));
 } else {
-  console.warn('⚠️  Frontend build directory not found:', frontendBuildPath);
+  logger.warn('Frontend build directory not found', { path: frontendBuildPath });
 }
 
 // Authentication routes
@@ -426,25 +453,26 @@ app.get('/api/predictions', (req, res) => {
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
+// Global error handling middleware (must be before catch-all)
+app.use(globalErrorHandler);
+
+// 404 handler for API routes
+app.use('/api/*', notFoundHandler);
 
 // Catch-all handler for React Router - serve index.html for any non-API route
 app.get('*', (req, res) => {
-  // Don't serve index.html for API routes
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'Endpoint not found' });
-  }
-  
   // Serve index.html for all other routes (React Router)
   const indexPath = path.join(__dirname, '../frontend/build/index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(404).json({ error: 'Frontend not built' });
+    res.status(404).json({ 
+      error: 'Frontend not built',
+      expectedPath: indexPath,
+      buildExists: fs.existsSync(path.join(__dirname, '../frontend/build')),
+      buildContents: fs.existsSync(path.join(__dirname, '../frontend/build')) ? 
+        fs.readdirSync(path.join(__dirname, '../frontend/build')) : []
+    });
   }
 });
 
