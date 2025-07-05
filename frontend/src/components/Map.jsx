@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Map.css';
 
 const Map = () => {
@@ -89,6 +89,39 @@ const Map = () => {
     setMap(mapInstance);
   };
 
+  const getMarkerIcon = useCallback((influx) => {
+    if (influx > 150) return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="12" fill="#ff4444" stroke="#fff" stroke-width="2"/>
+        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!</text>
+      </svg>
+    `);
+    if (influx >= 80) return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="12" fill="#ffaa00" stroke="#fff" stroke-width="2"/>
+        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!</text>
+      </svg>
+    `);
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="12" fill="#44aa44" stroke="#fff" stroke-width="2"/>
+        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">✓</text>
+      </svg>
+    `);
+  }, []);
+
+  const getStatusText = useCallback((influx) => {
+    if (influx > 150) return 'Critical';
+    if (influx >= 80) return 'Warning';
+    return 'Normal';
+  }, []);
+
+  const getStatusColor = useCallback((influx) => {
+    if (influx > 150) return 'critical';
+    if (influx >= 80) return 'warning';
+    return 'normal';
+  }, []);
+
   useEffect(() => {
     if (map && shelters.length > 0) {
       // Clear existing markers
@@ -132,40 +165,7 @@ const Map = () => {
 
       setMarkers(newMarkers);
     }
-  }, [map, shelters]);
-
-  const getMarkerIcon = (influx) => {
-    if (influx > 150) return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="15" r="12" fill="#ff4444" stroke="#fff" stroke-width="2"/>
-        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!</text>
-      </svg>
-    `);
-    if (influx >= 80) return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="15" r="12" fill="#ffaa00" stroke="#fff" stroke-width="2"/>
-        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">!</text>
-      </svg>
-    `);
-    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="15" cy="15" r="12" fill="#44aa44" stroke="#fff" stroke-width="2"/>
-        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">✓</text>
-      </svg>
-    `);
-  };
-
-  const getStatusText = (influx) => {
-    if (influx > 150) return 'Critical';
-    if (influx >= 80) return 'Warning';
-    return 'Normal';
-  };
-
-  const getStatusColor = (influx) => {
-    if (influx > 150) return 'critical';
-    if (influx >= 80) return 'warning';
-    return 'normal';
-  };
+  }, [map, shelters, markers, getMarkerIcon, getStatusText]);
 
   const sheltersWithCoordinates = shelters.filter(shelter => shelter.lat && shelter.lng);
 
