@@ -1,10 +1,22 @@
+require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
 const { exec } = require('child_process');
 const fs = require('fs');
 const cors = require('cors');
 
+const authRoutes = require('./routes/auth');
+
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 // Cache for predictions
 let predictionsCache = null;
@@ -17,6 +29,10 @@ let lastSheltersCacheTime = 0;
 const SHELTERS_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 app.use(cors());
+app.use(express.json());
+
+// Authentication routes
+app.use('/api/auth', authRoutes);
 
 // Root route
 app.get('/', (req, res) => {
