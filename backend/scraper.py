@@ -62,8 +62,9 @@ class ResourceFinder:
         """
         self.serper_api_key = serper_api_key
         
-        # Available services
+        # Available services with shelter priority
         self.available_services = {
+            'shelter': ['shelter', 'emergency housing', 'crisis housing', 'overnight accommodation', 'homeless shelter'],
             'showers': ['shower', 'bathroom', 'hygiene', 'clean'],
             'meals': ['meal', 'food', 'dinner', 'lunch', 'breakfast', 'nutrition'],
             'mental_health': ['mental health', 'counseling', 'therapy', 'psychiatrist', 'psychologist'],
@@ -113,11 +114,11 @@ class ResourceFinder:
         """
         all_results = []
         
-        # Only 3 focused queries for speed
+        # Focus on shelters and emergency housing
         search_queries = [
-            f"homeless shelters {location}",
-            f"homeless services {location}",
-            f"emergency shelters {location}"
+            f"homeless shelters emergency housing {location}",
+            f"emergency shelters overnight accommodation {location}",
+            f"homeless shelters crisis housing {location}"
         ]
         
         logger.info(f"Executing {len(search_queries)} search queries")
@@ -221,6 +222,15 @@ class ResourceFinder:
             # Check if any requested services are provided
             if not any(service in matching_services for service in selected_services):
                 continue
+            
+            # Prioritize shelter-related results
+            text_lower = text_to_analyze.lower()
+            shelter_keywords = ['shelter', 'emergency housing', 'crisis housing', 'homeless shelter', 'overnight']
+            has_shelter_keywords = any(keyword in text_lower for keyword in shelter_keywords)
+            
+            # Boost score for shelter-related results
+            if has_shelter_keywords:
+                match_score *= 1.5
             
             # Calculate match score
             service_overlap = len(set(matching_services) & set(selected_services))
