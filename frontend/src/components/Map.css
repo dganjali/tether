@@ -1,7 +1,10 @@
+/* Dramatically reworked CSS for the map component */
 .map-container {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #f8f9fa, #e2e8f0);
+  font-family: 'Inter', sans-serif;
 }
 
 .map-loading,
@@ -68,17 +71,16 @@
 }
 
 .map-header {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: #4f46e5;
   color: white;
-  padding: 2rem;
+  padding: 20px;
   text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .map-header h1 {
   font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  letter-spacing: -0.025em;
+  margin: 0;
 }
 
 .map-header p {
@@ -89,16 +91,15 @@
 }
 
 .map-content {
-  display: grid;
-  grid-template-columns: 400px 1fr;
-  min-height: calc(100vh - 120px);
-  background: white;
+  display: flex;
+  flex: 1;
 }
 
 .map-sidebar {
-  background: #f9fafb;
-  border-right: 1px solid #e5e7eb;
-  overflow-y: auto;
+  width: 300px;
+  background: #f8f9fa;
+  border-right: 1px solid #e2e8f0;
+  padding: 20px;
 }
 
 .sidebar-header {
@@ -121,7 +122,20 @@
 }
 
 .shelter-list {
-  padding: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.shelter-list li {
+  padding: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.shelter-list li:hover {
+  background: #e2e8f0;
 }
 
 .shelter-item {
@@ -225,11 +239,9 @@
 }
 
 .map-view {
-  background: #f8fafc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  flex: 1;
+  background: white;
+  border-left: 1px solid #e2e8f0;
 }
 
 .map-placeholder {
@@ -519,4 +531,4 @@
     flex-direction: column;
     gap: 0.75rem;
   }
-} 
+}

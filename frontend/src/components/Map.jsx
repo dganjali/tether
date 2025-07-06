@@ -157,30 +157,29 @@ const Map = () => {
 
   return (
     <div className="map-container">
-      <div className="map-header">
-        <h1>Shelter Map</h1>
-        <p>View shelters and their current availability</p>
-      </div>
-
+      <header className="map-header">
+        <h1>Interactive Shelter Map</h1>
+        <p>Explore shelter locations and availability</p>
+      </header>
       <div className="map-content">
         <div className="map-sidebar">
-          <div className="sidebar-header">
-            <h2>Nearby Shelters</h2>
-            <span className="shelter-count">{shelters.length} shelters found</span>
-          </div>
-          
-          <div className="shelter-list">
+          <h2>Nearby Shelters</h2>
+          <ul className="shelter-list">
             {shelters.map((shelter) => (
-              <div 
+              <li 
                 key={shelter.id}
                 className={`shelter-item ${selectedShelter?.id === shelter.id ? 'selected' : ''}`}
                 onClick={() => handleShelterClick(shelter)}
+                role="button"
+                aria-haspopup="true"
+                aria-expanded={selectedShelter?.id === shelter.id}
               >
-                <div className="shelter-header">
+                <div className="shelter-info">
                   <h3 className="shelter-name">{shelter.name}</h3>
                   <div 
                     className="occupancy-badge"
                     style={{ backgroundColor: getOccupancyColor(shelter.occupancy, shelter.capacity) }}
+                    aria-label={`Occupancy: ${shelter.occupancy} of ${shelter.capacity} beds`}
                   >
                     {getOccupancyText(shelter.occupancy, shelter.capacity)}
                   </div>
@@ -197,7 +196,7 @@ const Map = () => {
                   <span className="occupancy-text">
                     {shelter.occupancy}/{shelter.capacity} beds
                   </span>
-                  <div className="occupancy-bar">
+                  <div className="occupancy-bar" aria-hidden="true">
                     <div 
                       className="occupancy-fill"
                       style={{ 
@@ -207,13 +206,12 @@ const Map = () => {
                     ></div>
                   </div>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
-
         <div className="map-view">
-          <div className="map-placeholder">
+          <div className="map-placeholder" aria-hidden="true">
             <div className="map-icon">🗺️</div>
             <h3>Interactive Map</h3>
             <p>Select a shelter from the list to view details</p>
@@ -243,6 +241,7 @@ const Map = () => {
               <button 
                 className="close-button"
                 onClick={closeShelterDetails}
+                aria-label="Close shelter details"
               >
                 ×
               </button>
@@ -302,4 +301,4 @@ const Map = () => {
   );
 };
 
-export default Map; 
+export default Map;
