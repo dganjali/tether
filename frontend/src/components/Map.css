@@ -563,6 +563,9 @@
   }
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -615,6 +618,15 @@
   .controls-right {
     gap: 12px;
 =======
+  .map-actions {
+    gap: 8px;
+  }
+  
+  .resource-finder-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  
   .map-actions {
     gap: 8px;
   }
