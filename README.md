@@ -1,6 +1,8 @@
-# TetherAI - Intelligent Shelter Management Platform
+# TetherAI - Predictive-Intelligent Homeless Shelter Management Platform
+## Empowering Shelters, Supporting Communities.
+### Daniel Ganjali, Arjan Waraich, Abhijay Shandilya, Emerson Ni
 
-TetherAI is a comprehensive shelter management platform that combines machine learning predictions with AI-powered recommendations to optimize resource allocation and improve shelter operations in Toronto.
+TetherAI is a comprehensive shelter management platform that combines deep-learning architectures with AI-analyzed recommendations to optimize resource allocation, location, improvement of local shelter operations here in Toronto.
 
 ## Table of Contents
 
@@ -27,12 +29,14 @@ TetherAI provides real-time shelter occupancy predictions and intelligent resour
 
 ### Key Capabilities
 
-- Real-time shelter occupancy predictions
+- Precise, real-time shelter occupancy predictions
 - AI-powered resource allocation recommendations
 - Interactive dashboard with analytics
 - User authentication and personalized shelter tracking
 - Alert system for critical capacity issues
-- Weather data integration for predictive modeling
+- Weather, qualitative trend, sector type, & geographic data integration for predictive modeling
+- Intelligent Web-scraping for relevant user-services, radially optimized to nearest shelter
+- Match Score System for User Need + Shelter Services Fit
 
 ## Features
 
