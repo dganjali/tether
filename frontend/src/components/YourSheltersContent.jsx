@@ -19,9 +19,24 @@ const YourSheltersContent = () => {
     email: ''
   });
 
+  // Data recording states
+  const [showDataRecording, setShowDataRecording] = useState(false);
+  const [recordingData, setRecordingData] = useState({
+    shelterName: '',
+    currentOccupancy: '',
+    capacity: '',
+    notes: ''
+  });
+  const [recordedData, setRecordedData] = useState([]);
+  const [predictions, setPredictions] = useState([]);
+  const [selectedShelterForChart, setSelectedShelterForChart] = useState('');
+  const [showVisualization, setShowVisualization] = useState(false);
+
   useEffect(() => {
     fetchUserShelters();
     fetchShelterLocations();
+    fetchRecordedData();
+    fetchPredictions();
   }, []);
 
   const fetchUserShelters = async () => {
@@ -68,7 +83,34 @@ const YourSheltersContent = () => {
     }
   };
 
+  const fetchRecordedData = async () => {
+    try {
+      const response = await fetch('/api/recorded-data', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRecordedData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching recorded data:', err);
+    }
+  };
 
+  const fetchPredictions = async () => {
+    try {
+      const response = await fetch('/api/predictions');
+      if (response.ok) {
+        const data = await response.json();
+        setPredictions(data);
+      }
+    } catch (err) {
+      console.error('Error fetching predictions:', err);
+    }
+  };
 
   const handleAddShelter = async (e) => {
     e.preventDefault();
@@ -158,6 +200,153 @@ const YourSheltersContent = () => {
     shelter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     shelter.address.toLowerCase().includes(searchTerm.toLowerCase())
   ).slice(0, 5); // Limit to 5 results for better UX
+
+  const handleRecordData = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch('/api/recorded-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          shelterName: recordingData.shelterName,
+          currentOccupancy: parseInt(recordingData.currentOccupancy),
+          capacity: parseInt(recordingData.capacity),
+          notes: recordingData.notes
+        })
+      });
+      
+      if (response.ok) {
+        alert('Data recorded successfully!');
+        setRecordingData({
+          shelterName: '',
+          currentOccupancy: '',
+          capacity: '',
+          notes: ''
+        });
+        setShowDataRecording(false);
+        fetchRecordedData(); // Refresh the data
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to record data');
+      }
+    } catch (err) {
+      console.error('Error recording data:', err);
+      alert(`Failed to record data: ${err.message}`);
+    }
+  };
+
+  const handleQuickRecord = (shelterName, capacity) => {
+    setRecordingData({
+      shelterName: shelterName,
+      currentOccupancy: '',
+      capacity: capacity.toString(),
+      notes: ''
+    });
+    setShowDataRecording(true);
+  };
+
+  const getShelterData = (shelterName) => {
+    const prediction = predictions.find(p => p.name === shelterName);
+    const recorded = recordedData.filter(r => r.shelterName === shelterName);
+    
+    return {
+      prediction,
+      recorded,
+      hasData: prediction || recorded.length > 0
+    };
+  };
+
+  const renderBarChart = (shelterName) => {
+    const data = getShelterData(shelterName);
+    if (!data.hasData) return <p>No data available for this shelter</p>;
+
+    const maxValue = Math.max(
+      data.prediction?.predicted_influx || 0,
+      data.prediction?.capacity || 0,
+      ...data.recorded.map(r => Math.max(r.currentOccupancy, r.capacity))
+    );
+
+    return (
+      <div className="bar-chart">
+        <div className="chart-header">
+          <h4>{shelterName} - Occupancy Data</h4>
+          <div className="chart-legend">
+            <span className="legend-item">
+              <span className="legend-color predicted"></span>
+              Predicted (7 days)
+            </span>
+            <span className="legend-item">
+              <span className="legend-color recorded"></span>
+              Recorded
+            </span>
+            <span className="legend-item">
+              <span className="legend-color capacity"></span>
+              Capacity
+            </span>
+          </div>
+        </div>
+        
+        <div className="chart-container">
+          {data.prediction && (
+            <div className="chart-bar-group">
+              <div className="bar-label">Predicted (7 days)</div>
+              <div className="bar-container">
+                <div 
+                  className="bar predicted"
+                  style={{ 
+                    width: `${(data.prediction.predicted_influx / maxValue) * 100}%`,
+                    height: '30px'
+                  }}
+                >
+                  <span className="bar-value">{data.prediction.predicted_influx}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {data.recorded.map((record, index) => (
+            <div key={index} className="chart-bar-group">
+              <div className="bar-label">
+                Recorded ({new Date(record.timestamp).toLocaleDateString()})
+              </div>
+              <div className="bar-container">
+                <div 
+                  className="bar recorded"
+                  style={{ 
+                    width: `${(record.currentOccupancy / maxValue) * 100}%`,
+                    height: '30px'
+                  }}
+                >
+                  <span className="bar-value">{record.currentOccupancy}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {data.prediction && (
+            <div className="chart-bar-group">
+              <div className="bar-label">Capacity</div>
+              <div className="bar-container">
+                <div 
+                  className="bar capacity"
+                  style={{ 
+                    width: `${(data.prediction.capacity / maxValue) * 100}%`,
+                    height: '30px'
+                  }}
+                >
+                  <span className="bar-value">{data.prediction.capacity}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -346,13 +535,32 @@ const YourSheltersContent = () => {
               <div key={shelter._id} className="shelter-card">
                 <div className="shelter-header">
                   <h4>{shelter.name}</h4>
-                  <button
-                    onClick={() => handleRemoveShelter(shelter._id)}
-                    className="remove-btn"
-                    title="Remove shelter"
-                  >
-                    ×
-                  </button>
+                  <div className="shelter-actions">
+                    <button
+                      onClick={() => handleQuickRecord(shelter.name, shelter.capacity)}
+                      className="record-btn"
+                      title="Record Data"
+                    >
+                      Record
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedShelterForChart(shelter.name);
+                        setShowVisualization(true);
+                      }}
+                      className="visualize-btn"
+                      title="View Data Visualization"
+                    >
+                      Chart
+                    </button>
+                    <button
+                      onClick={() => handleRemoveShelter(shelter._id)}
+                      className="remove-btn"
+                      title="Remove shelter"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="shelter-details">
@@ -392,6 +600,120 @@ const YourSheltersContent = () => {
           </div>
         )}
       </div>
+
+      {/* Data Recording Section */}
+      {showDataRecording && (
+        <div className="data-recording-section">
+          <div className="recording-header">
+            <h3>Record Shelter Data</h3>
+            <button 
+              onClick={() => setShowDataRecording(false)}
+              className="close-btn"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="recording-form-container">
+            <form onSubmit={handleRecordData} className="recording-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="shelterName">Shelter Name *</label>
+                  <input
+                    type="text"
+                    id="shelterName"
+                    value={recordingData.shelterName}
+                    onChange={(e) => setRecordingData(prev => ({ ...prev, shelterName: e.target.value }))}
+                    placeholder="Enter shelter name"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="currentOccupancy">Current Occupancy *</label>
+                  <input
+                    type="number"
+                    id="currentOccupancy"
+                    value={recordingData.currentOccupancy}
+                    onChange={(e) => setRecordingData(prev => ({ ...prev, currentOccupancy: e.target.value }))}
+                    placeholder="Current number of occupants"
+                    min="0"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="capacity">Capacity *</label>
+                  <input
+                    type="number"
+                    id="capacity"
+                    value={recordingData.capacity}
+                    onChange={(e) => setRecordingData(prev => ({ ...prev, capacity: e.target.value }))}
+                    placeholder="Total capacity"
+                    min="1"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="notes">Notes (Optional)</label>
+                <textarea
+                  id="notes"
+                  value={recordingData.notes}
+                  onChange={(e) => setRecordingData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Additional notes or observations"
+                  rows="3"
+                />
+              </div>
+              
+              <div className="form-actions">
+                <button type="submit" className="submit-btn">
+                  Record Data
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setRecordingData({
+                    shelterName: '',
+                    currentOccupancy: '',
+                    capacity: '',
+                    notes: ''
+                  })}
+                  className="clear-btn"
+                >
+                  Clear Form
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Data Visualization Section */}
+      {showVisualization && (
+        <div className="visualization-section">
+          <div className="visualization-header">
+            <h3>Data Visualization</h3>
+            <button 
+              onClick={() => setShowVisualization(false)}
+              className="close-btn"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="visualization-content">
+            {selectedShelterForChart ? (
+              renderBarChart(selectedShelterForChart)
+            ) : (
+              <div className="no-shelter-selected">
+                <h4>Select a shelter to view data visualization</h4>
+                <p>Choose a shelter from your managed shelters to see recorded vs predicted data.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
