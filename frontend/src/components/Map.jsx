@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './Map.css';
@@ -21,7 +20,6 @@ const Map = () => {
   const [selectedShelter, setSelectedShelter] = useState(null);
   const [isShelterListVisible, setIsShelterListVisible] = useState(true);
   const mapRef = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchShelterData();
