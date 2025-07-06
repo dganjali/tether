@@ -561,17 +561,7 @@
     .map-legend {
     gap: 10px;
   }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-  
+
   .legend-item {
     font-size: 0.75rem;
   }
@@ -618,6 +608,15 @@
   .controls-right {
     gap: 12px;
 =======
+  .map-actions {
+    gap: 8px;
+  }
+  
+  .resource-finder-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  
   .map-actions {
     gap: 8px;
   }
