@@ -118,19 +118,36 @@ class ResourceFinder:
         Raises:
             Exception: If geocoding fails
         """
-        # Check if it's a Canadian postal code first
+        # Try different search strategies for postal codes
+        search_queries = [location]
+        
+        # If it looks like a postal code, try different formats
         if re.match(r'^[A-Z]\d[A-Z]\s?\d[A-Z]\s?\d$', location, re.IGNORECASE):
+            # Canadian postal code format
             clean_postal = location.replace(' ', '').upper()
-            
-            # Try with explicit Canada context first
+            search_queries.extend([
+                f"{clean_postal[:3]} {clean_postal[3:]}",
+                f"{clean_postal[:3]}-{clean_postal[3:]}",
+                f"postal code {clean_postal}",
+                f"zip code {clean_postal}"
+            ])
+        elif re.match(r'^\d{5}(-\d{4})?$', location):
+            # US ZIP code format
+            search_queries.extend([
+                f"ZIP {location}",
+                f"postal code {location}",
+                f"zip code {location}"
+            ])
+        
+        # Try each search query
+        for query in search_queries:
             try:
                 url = "https://nominatim.openstreetmap.org/search"
                 params = {
-                    'q': f"{clean_postal}, Canada",
+                    'q': query,
                     'format': 'json',
                     'limit': 1,
-                    'addressdetails': 1,
-                    'countrycodes': 'ca'
+                    'addressdetails': 1
                 }
                 
                 headers = {
@@ -147,98 +164,14 @@ class ResourceFinder:
                     lat = float(result['lat'])
                     lng = float(result['lon'])
                     
-                    # Verify it's actually in Canada (latitude should be positive for Canada)
-                    if lat > 0 and -141 < lng < -52:
-                        logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) with Canada context")
-                        return lat, lng
+                    logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) using query: {query}")
+                    return lat, lng
                 
             except Exception as e:
-                logger.warning(f"Geocoding with Canada context failed: {e}")
-            
-            # Try different Canadian postal code formats
-            search_queries = [
-                f"{clean_postal[:3]} {clean_postal[3:]}, Canada",
-                f"{clean_postal[:3]}-{clean_postal[3:]}, Canada",
-                f"postal code {clean_postal}, Canada",
-                f"{clean_postal}, Toronto, Canada",
-                f"{clean_postal}, Ontario, Canada"
-            ]
-            
-            for query in search_queries:
-                try:
-                    url = "https://nominatim.openstreetmap.org/search"
-                    params = {
-                        'q': query,
-                        'format': 'json',
-                        'limit': 1,
-                        'addressdetails': 1,
-                        'countrycodes': 'ca'
-                    }
-                    
-                    headers = {
-                        'User-Agent': 'ResourceFinder/1.0 (homeless services locator)'
-                    }
-                    
-                    response = requests.get(url, params=params, headers=headers)
-                    response.raise_for_status()
-                    
-                    data = response.json()
-                    
-                    if data:
-                        result = data[0]
-                        lat = float(result['lat'])
-                        lng = float(result['lon'])
-                        
-                        # Verify it's actually in Canada
-                        if lat > 0 and -141 < lng < -52:
-                            logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) using query: {query}")
-                            return lat, lng
-                    
-                except Exception as e:
-                    logger.warning(f"Geocoding failed for query '{query}': {e}")
-                    continue
+                logger.warning(f"Geocoding failed for query '{query}': {e}")
+                continue
         
-        # For US ZIP codes
-        elif re.match(r'^\d{5}(-\d{4})?$', location):
-            search_queries = [
-                f"ZIP {location}, USA",
-                f"postal code {location}, USA",
-                f"zip code {location}, USA"
-            ]
-            
-            for query in search_queries:
-                try:
-                    url = "https://nominatim.openstreetmap.org/search"
-                    params = {
-                        'q': query,
-                        'format': 'json',
-                        'limit': 1,
-                        'addressdetails': 1,
-                        'countrycodes': 'us'
-                    }
-                    
-                    headers = {
-                        'User-Agent': 'ResourceFinder/1.0 (homeless services locator)'
-                    }
-                    
-                    response = requests.get(url, params=params, headers=headers)
-                    response.raise_for_status()
-                    
-                    data = response.json()
-                    
-                    if data:
-                        result = data[0]
-                        lat = float(result['lat'])
-                        lng = float(result['lon'])
-                        
-                        logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) using query: {query}")
-                        return lat, lng
-                    
-                except Exception as e:
-                    logger.warning(f"Geocoding failed for query '{query}': {e}")
-                    continue
-        
-        # For general locations, try with country bias
+        # If all queries fail, try with country bias
         try:
             url = "https://nominatim.openstreetmap.org/search"
             params = {
@@ -272,7 +205,6 @@ class ResourceFinder:
         # Final fallback: use known coordinates for common postal codes
         postal_code_coords = {
             'M5S 0C9': (43.6532, -79.3832),  # Toronto
-            'M5N 2X1': (43.6532, -79.3832),  # Toronto (approximate)
             'V6B 1A1': (49.2827, -123.1207),  # Vancouver
             'H2Y 1C6': (45.5017, -73.5673),   # Montreal
             'T2P 1J9': (51.0447, -114.0719),  # Calgary
@@ -285,10 +217,37 @@ class ResourceFinder:
             logger.info(f"Using fallback coordinates for '{location}': {coords}")
             return coords
         
-        # If it looks like a Canadian postal code but not in our list, use Toronto as fallback
+        # If it looks like a Canadian postal code but not in our list, try with "Canada"
         if re.match(r'^[A-Z]\d[A-Z]\s?\d[A-Z]\s?\d$', location, re.IGNORECASE):
-            logger.warning(f"Could not geocode Canadian postal code '{location}', using Toronto fallback")
-            return (43.6532, -79.3832)  # Toronto coordinates
+            try:
+                url = "https://nominatim.openstreetmap.org/search"
+                params = {
+                    'q': f"{location}, Canada",
+                    'format': 'json',
+                    'limit': 1,
+                    'addressdetails': 1,
+                    'countrycodes': 'ca'
+                }
+                
+                headers = {
+                    'User-Agent': 'ResourceFinder/1.0 (homeless services locator)'
+                }
+                
+                response = requests.get(url, params=params, headers=headers)
+                response.raise_for_status()
+                
+                data = response.json()
+                
+                if data:
+                    result = data[0]
+                    lat = float(result['lat'])
+                    lng = float(result['lon'])
+                    
+                    logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) with Canada context")
+                    return lat, lng
+                
+            except Exception as e:
+                logger.warning(f"Geocoding with Canada context failed: {e}")
         
         raise Exception(f"No results found for location: {location} after trying multiple search strategies")
     
