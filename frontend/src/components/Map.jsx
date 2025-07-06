@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Map.css';
 
 const Map = () => {
@@ -6,7 +6,6 @@ const Map = () => {
   const [error, setError] = useState('');
   const [shelters, setShelters] = useState([]);
   const [selectedShelter, setSelectedShelter] = useState(null);
-  const mapRef = useRef(null);
 
   useEffect(() => {
     // Simulate loading map data
