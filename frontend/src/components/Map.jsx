@@ -1,29 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
 import { useNavigate, Link } from 'react-router-dom';
->>>>>>> Stashed changes
-=======
-import { useNavigate, Link } from 'react-router-dom';
->>>>>>> Stashed changes
-=======
-import { useNavigate, Link } from 'react-router-dom';
->>>>>>> Stashed changes
-=======
-import { useNavigate, Link } from 'react-router-dom';
->>>>>>> Stashed changes
-=======
-import { useNavigate, Link } from 'react-router-dom';
->>>>>>> Stashed changes
-=======
-import { useNavigate, Link } from 'react-router-dom';
->>>>>>> Stashed changes
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './Map.css';
