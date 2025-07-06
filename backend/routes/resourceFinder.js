@@ -29,7 +29,7 @@ router.get('/available-services', asyncHandler(async (req, res) => {
 
 // Find resources endpoint
 router.post('/find-resources', asyncHandler(async (req, res) => {
-  const { location, selectedServices, useLLM = false, enhanceScraping = true } = req.body;
+  const { location, selectedServices, useLLM = false, enhanceScraping = false } = req.body;
   
   logger.info('Finding resources', { 
     location, 
@@ -51,19 +51,41 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
     const pythonScript = path.join(__dirname, '../scraper.py');
     const servicesArg = selectedServices.join(',');
     
-    const command = `python3 "${pythonScript}" "${location}" "${servicesArg}" ${useLLM} ${enhanceScraping}`;
+    // Escape location and services for shell safety
+    const escapedLocation = location.replace(/"/g, '\\"');
+    const escapedServices = servicesArg.replace(/"/g, '\\"');
+    
+    const command = `python3 "${pythonScript}" "${escapedLocation}" "${escapedServices}" ${useLLM} ${enhanceScraping}`;
     
     logger.info('Executing Python scraper', { command });
     
     exec(command, { 
-      timeout: 60000, // 60 second timeout
+      timeout: 120000, // 2 minute timeout (increased from 60s)
       env: {
         ...process.env,
-        PYTHONPATH: path.join(__dirname, '..')
-      }
+        PYTHONPATH: path.join(__dirname, '..'),
+        // Ensure environment variables are passed
+        SERPER_API_KEY: process.env.SERPER_API_KEY,
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY
+      },
+      maxBuffer: 1024 * 1024 * 10 // 10MB buffer for large outputs
     }, (error, stdout, stderr) => {
       if (error) {
-        logger.error('Python scraper error', { error: error.message, stderr });
+        logger.error('Python scraper error', { 
+          error: error.message, 
+          stderr,
+          code: error.code,
+          signal: error.signal
+        });
+        
+        // Handle timeout specifically
+        if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
+          return res.status(408).json({ 
+            success: false, 
+            error: 'Request timed out. Please try again with fewer services or a more specific location.' 
+          });
+        }
+        
         return res.status(500).json({ 
           success: false, 
           error: 'Failed to find resources. Please try again.' 
@@ -71,6 +93,17 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
       }
       
       try {
+        // Check if stdout is empty
+        if (!stdout || stdout.trim() === '') {
+          logger.warn('Python script returned empty output');
+          return res.status(200).json({
+            success: true,
+            results: [],
+            total: 0,
+            message: 'No resources found for the given criteria.'
+          });
+        }
+        
         // Parse the JSON output from the Python script
         const results = JSON.parse(stdout);
         
@@ -89,7 +122,7 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
       } catch (parseError) {
         logger.error('Failed to parse Python script output', { 
           error: parseError.message, 
-          stdout, 
+          stdout: stdout.substring(0, 500), // Log first 500 chars
           stderr 
         });
         res.status(500).json({ 

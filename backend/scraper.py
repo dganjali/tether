@@ -294,7 +294,7 @@ class ResourceFinder:
     
     def search_services(self, location: str, selected_services: List[str]) -> List[Dict]:
         """
-        Search for services using Serper.dev API with broader area search.
+        Search for services using Serper.dev API with optimized search strategy.
         
         Args:
             location: User's location
@@ -313,42 +313,27 @@ class ResourceFinder:
             logger.warning(f"Could not geocode location, using location string: {e}")
             user_coords = None
         
-        # Create multiple search strategies
+        # Create optimized search queries - fewer but more targeted
         search_queries = []
         
-        # Strategy 1: Direct service searches in the area
+        # Strategy 1: Direct service searches in the area (reduced queries)
         for service in selected_services:
             if service not in self.available_services:
                 continue
             
-            # Multiple query variations for better coverage
+            # Fewer but more targeted queries
             queries = [
-                f"homeless shelter {service} services near {location}",
-                f"{service} homeless shelter {location}",
-                f"homeless services {service} {location}",
-                f"shelter {service} {location}"
+                f"homeless shelter {service} services {location}",
+                f"{service} homeless shelter {location}"
             ]
             search_queries.extend(queries)
         
-        # Strategy 2: General homeless shelter searches in the area
+        # Strategy 2: General homeless shelter searches (reduced)
         general_queries = [
-            f"homeless shelters near {location}",
-            f"homeless services {location}",
-            f"shelters {location}",
-            f"homeless assistance {location}",
-            f"homeless support {location}"
+            f"homeless shelters {location}",
+            f"homeless services {location}"
         ]
         search_queries.extend(general_queries)
-        
-        # Strategy 3: If we have coordinates, search in broader area
-        if user_coords and location:
-            # Search in a 20km radius with different city names
-            nearby_queries = [
-                f"homeless shelters within 20km of {location}",
-                f"homeless services near {location}",
-                f"homeless shelters {location} area"
-            ]
-            search_queries.extend(nearby_queries)
         
         # Remove duplicates while preserving order
         seen_queries = set()
@@ -371,8 +356,8 @@ class ResourceFinder:
                 
                 payload = {
                     'q': query,
-                    'num': 15,  # Get more results per query
-                    'gl': 'ca' if location and 'M5S' in location else 'us'  # Country bias
+                    'num': 10,  # Reduced from 15 to 10
+                    'gl': 'ca' if location and ('M5S' in location or 'Toronto' in location) else 'us'
                 }
                 
                 response = requests.post(url, headers=headers, json=payload)
@@ -389,8 +374,8 @@ class ResourceFinder:
                 
                 logger.info(f"Query {i+1}/{len(unique_queries)}: Found {len(data.get('organic', []))} results")
                 
-                # Rate limiting
-                time.sleep(0.8)
+                # Reduced rate limiting
+                time.sleep(0.5)
                 
             except Exception as e:
                 logger.error(f"Search error for query '{query}': {e}")
@@ -755,48 +740,69 @@ class ResourceFinder:
     
     def enhance_results_with_details(self, results: List[Dict]) -> List[Dict]:
         """
-        Enhance search results with intelligent information extraction from shelter websites.
+        Enhance search results with detailed website scraping (optimized version).
         
         Args:
             results: List of search results
             
         Returns:
-            Enhanced results with detailed information
+            Enhanced results with additional details
         """
+        if not results:
+            return results
+        
+        # Sort results by relevance first to prioritize the best ones
+        results.sort(key=lambda x: self._analyze_content_quality(x), reverse=True)
+        
+        # Only enhance the top 15 most relevant results to save time
+        top_results = results[:15]
+        logger.info(f"Enhancing top {len(top_results)} most relevant results")
+        
         enhanced_results = []
         
-        for result in results:
-            url = result.get('link', '')
-            if not url:
-                continue
-            
-            # Intelligent website classification
-            if not self._is_likely_shelter_website(url, result.get('title', ''), result.get('snippet', '')):
-                continue
-            
+        for i, result in enumerate(top_results):
             try:
-                details = self.scrape_shelter_details(url)
-                result['detailed_services'] = details.get('services', [])
-                result['address'] = details.get('address')
-                result['phone'] = details.get('phone')
-                result['email'] = details.get('email')
-                result['hours'] = details.get('hours')
-                result['capacity'] = details.get('capacity')
-                result['eligibility'] = details.get('eligibility')
-                result['special_programs'] = details.get('special_programs')
-                result['accessibility'] = details.get('accessibility')
+                url = result.get('link', '')
+                title = result.get('title', '')
+                snippet = result.get('snippet', '')
                 
-                # Add intelligent content analysis
-                result['content_quality_score'] = self._analyze_content_quality(result)
-                result['service_completeness'] = self._calculate_service_completeness(details)
+                # Skip if not likely a shelter website
+                if not self._is_likely_shelter_website(url, title, snippet):
+                    logger.info(f"Skipping non-shelter website: {title}")
+                    enhanced_results.append(result)
+                    continue
+                
+                # Scrape details with timeout
+                details = self.scrape_shelter_details(url)
+                
+                if details:
+                    # Merge scraped details with original result
+                    result.update(details)
+                    
+                    # Calculate quality score
+                    quality_score = self._calculate_service_completeness(details)
+                    result['quality_score'] = quality_score
+                    
+                    logger.info(f"Enhanced result: {title} - Services: {details.get('detailed_services', [])} - Quality: {quality_score}")
+                else:
+                    result['quality_score'] = 0.0
+                    logger.info(f"Failed to enhance: {title}")
                 
                 enhanced_results.append(result)
                 
-                logger.info(f"Enhanced result: {result.get('title', 'Unknown')} - Services: {details.get('services', [])} - Quality: {result.get('content_quality_score', 0)}")
+                # Add small delay between scrapes to be respectful
+                time.sleep(0.3)
                 
             except Exception as e:
-                logger.warning(f"Failed to enhance result {url}: {e}")
+                logger.warning(f"Failed to enhance result {i}: {e}")
                 enhanced_results.append(result)
+                continue
+        
+        # Add remaining results without enhancement
+        enhanced_results.extend(results[15:])
+        
+        # Sort by quality score
+        enhanced_results.sort(key=lambda x: x.get('quality_score', 0), reverse=True)
         
         return enhanced_results
     
@@ -922,16 +928,16 @@ class ResourceFinder:
     def find_resources(self, location: str, selected_services: List[str], 
                       use_llm: bool = False, enhance_with_scraping: bool = True) -> List[ServiceResult]:
         """
-        Main method to find resources based on location and service needs.
+        Find homeless services and resources based on location and needs (optimized version).
         
         Args:
             location: User's location (address, city, postal code)
             selected_services: List of service types needed
-            use_llm: Whether to use LLM for analysis
-            enhance_with_scraping: Whether to scrape detailed information from websites
+            use_llm: Whether to use LLM analysis (optional)
+            enhance_with_scraping: Whether to enhance with website scraping
             
         Returns:
-            List of ServiceResult objects, sorted by relevance and distance
+            List of ServiceResult objects
         """
         logger.info(f"Starting resource search for location: {location}")
         logger.info(f"Selected services: {selected_services}")
@@ -944,7 +950,7 @@ class ResourceFinder:
             logger.error(f"Failed to get coordinates: {e}")
             return []
         
-        # Step 2: Search for services with broader area coverage
+        # Step 2: Search for services with optimized strategy
         search_results = self.search_services(location, selected_services)
         
         if not search_results:
@@ -953,15 +959,16 @@ class ResourceFinder:
         
         logger.info(f"Found {len(search_results)} initial search results")
         
-        # Step 3: Enhance results with detailed scraping (optional)
+        # Step 3: Enhance results with detailed scraping (optional, limited)
         if enhance_with_scraping:
             logger.info("Enhancing results with detailed website scraping...")
             search_results = self.enhance_results_with_details(search_results)
         
-        # Step 4: Process and filter results
+        # Step 4: Process and filter results (limit to top 20 for performance)
         processed_results = []
+        max_results = 20  # Limit results for performance
         
-        for result in search_results:
+        for i, result in enumerate(search_results[:max_results]):
             # Extract text for keyword matching
             text_to_analyze = f"{result.get('title', '')} {result.get('snippet', '')}"
             
@@ -976,14 +983,15 @@ class ResourceFinder:
             if not any(service in matching_services for service in selected_services):
                 continue  # Skip results that don't provide any requested services
             
-            # Calculate distance using address from scraping or URL
+            # Calculate distance only for top results to save time
             distance = None
-            address = result.get('address') or self.extract_address_from_url(result.get('link', ''))
-            if address and user_coords:
-                try:
-                    distance = self.calculate_distance(user_coords, address)
-                except Exception as e:
-                    logger.warning(f"Distance calculation failed for {address}: {e}")
+            if i < 10:  # Only calculate distance for top 10 results
+                address = result.get('address') or self.extract_address_from_url(result.get('link', ''))
+                if address and user_coords:
+                    try:
+                        distance = self.calculate_distance(user_coords, address)
+                    except Exception as e:
+                        logger.warning(f"Distance calculation failed for {address}: {e}")
             
             # Calculate match score based on service overlap
             service_overlap = len(set(matching_services) & set(selected_services))
@@ -992,7 +1000,7 @@ class ResourceFinder:
             # LLM analysis (optional)
             llm_summary = None
             llm_score = None
-            if use_llm and self.llm_enabled:
+            if use_llm and self.llm_enabled and i < 5:  # Only for top 5 results
                 llm_summary, llm_score = self.analyze_with_llm(result, selected_services)
                 if llm_score:
                     match_score = (match_score + llm_score / 10) / 2  # Combine scores
