@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+<<<<<<< Updated upstream
+=======
+import { useNavigate, Link } from 'react-router-dom';
+>>>>>>> Stashed changes
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './Map.css';
@@ -198,6 +202,12 @@ const Map = () => {
             </svg>
             {isShelterListVisible ? 'Hide List' : 'Show List'}
           </button>
+        </div>
+        <div className="map-actions">
+          <Link to="/resource-finder" className="resource-finder-btn">
+            <span className="btn-icon">🔍</span>
+            Resource Finder
+          </Link>
         </div>
       </div>
       

@@ -11,6 +11,7 @@ import SignUp from './components/SignUp';
 import DashboardTabs from './components/DashboardTabs';
 import Map from './components/Map';
 import MapTest from './components/MapTest';
+import ResourceFinder from './components/ResourceFinder';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/map" element={<Map />} />
               <Route path="/maptest" element={<MapTest />} />
+              <Route path="/resource-finder" element={<ResourceFinder />} />
               <Route 
                 path="/dashboard" 
                 element={

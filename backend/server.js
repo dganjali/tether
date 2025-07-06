@@ -541,6 +541,88 @@ app.get('/api/predictions', (req, res) => {
   });
 });
 
+// Resource Finder API endpoint
+app.post('/api/find-resources', async (req, res) => {
+  try {
+    const { location, selectedServices, useLLM = false, enhanceScraping = true } = req.body;
+    
+    if (!location || !selectedServices || selectedServices.length === 0) {
+      return res.status(400).json({ 
+        error: 'Location and at least one service are required' 
+      });
+    }
+
+    // Call the Python scraper script
+    const { spawn } = require('child_process');
+    const pythonProcess = spawn('python3', [
+      'scraper.py',
+      '--location', location,
+      '--services', selectedServices.join(','),
+      '--use-llm', useLLM.toString(),
+      '--enhance-scraping', enhanceScraping.toString(),
+      '--output-json'
+    ]);
+
+    let dataString = '';
+    let errorString = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      dataString += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      errorString += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('Python script error:', errorString);
+        return res.status(500).json({ 
+          error: 'Failed to find resources',
+          details: errorString 
+        });
+      }
+
+      try {
+        // Parse the JSON output from the Python script
+        const results = JSON.parse(dataString);
+        res.json({ 
+          success: true, 
+          results: results,
+          count: results.length 
+        });
+      } catch (parseError) {
+        console.error('Failed to parse Python output:', parseError);
+        res.status(500).json({ 
+          error: 'Failed to parse results',
+          details: dataString 
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('Resource finder error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// Get available services
+app.get('/api/available-services', (req, res) => {
+  const availableServices = {
+    'showers': 'Showers & Hygiene',
+    'meals': 'Meals & Food',
+    'mental_health': 'Mental Health Services',
+    'medical': 'Medical Care',
+    'laundry': 'Laundry Services',
+    'wifi': 'WiFi & Internet Access'
+  };
+  
+  res.json({ services: availableServices });
+});
+
 // Global error handling middleware (must be before catch-all)
 app.use(globalErrorHandler);
 

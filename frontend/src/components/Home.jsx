@@ -52,6 +52,10 @@ const Home = () => {
                 <span className="btn-icon">🗺️</span>
                 View Map
               </Link>
+              <Link to="/resource-finder" className="btn btn-outline">
+                <span className="btn-icon">🔍</span>
+                Resource Finder
+              </Link>
             </div>
           </div>
           <div className="hero-visual">

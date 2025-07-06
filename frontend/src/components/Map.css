@@ -184,7 +184,48 @@
   gap: 6px;
   font-size: 0.875rem;
   font-weight: 500;
+<<<<<<< Updated upstream
   color: #64748b;
+=======
+  padding: 6px 12px;
+  background: #f8f9fa;
+}
+
+.map-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.resource-finder-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.resource-finder-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  color: white;
+  text-decoration: none;
+}
+
+.resource-finder-btn .btn-icon {
+  font-size: 1rem;
+}
+  border-radius: 15px;
+  border: 1px solid #e0e0e0;
+>>>>>>> Stashed changes
 }
 
 .legend-dot {
@@ -510,6 +551,17 @@
   .legend-section {
     gap: 8px;
   }
+<<<<<<< Updated upstream
+=======
+
+  .title-container p {
+    font-size: 0.85rem;
+  }
+
+    .map-legend {
+    gap: 10px;
+  }
+>>>>>>> Stashed changes
   
   .legend-item {
     font-size: 0.75rem;
@@ -553,8 +605,22 @@
     font-size: 0.8rem;
   }
   
+<<<<<<< Updated upstream
   .controls-right {
     gap: 12px;
+=======
+  .map-actions {
+    gap: 8px;
+  }
+  
+  .resource-finder-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .shelter-list-container {
+    max-height: 150px;
+>>>>>>> Stashed changes
   }
   
   .toggle-btn {
