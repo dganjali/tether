@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './FormField.css';
+import './styles.css';
 
 const FormField = ({
   label,
@@ -35,10 +35,14 @@ const FormField = ({
   const inputType = type === 'password' && showPasswordToggle && showPassword ? 'text' : type;
 
   return (
-    <div className={`form-field ${error ? 'form-field-error' : ''} ${isFocused ? 'form-field-focused' : ''}`}>
-      <label htmlFor={name} className="form-label">
+    <div
+      className={`form-field ${error ? 'form-field-error' : ''} ${isFocused ? 'form-field-focused' : ''}`}
+      role="group"
+      aria-labelledby={`${name}-label`}
+    >
+      <label id={`${name}-label`} htmlFor={name} className="form-label">
         {label}
-        {required && <span className="required-asterisk">*</span>}
+        {required && <span className="required-asterisk" aria-hidden="true">*</span>}
       </label>
       
       <div className="input-container">
@@ -55,32 +59,26 @@ const FormField = ({
           minLength={minLength}
           maxLength={maxLength}
           pattern={pattern}
-          onFocus={handleFocus}
           onBlur={handleBlur}
+          onFocus={handleFocus}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${name}-error` : undefined}
           className={`form-input ${error ? 'input-error' : ''} ${disabled ? 'input-disabled' : ''}`}
         />
-        
-        {type === 'password' && showPasswordToggle && (
+        {showPasswordToggle && type === 'password' && (
           <button
             type="button"
-            className="password-toggle"
+            className="toggle-password-button"
             onClick={() => setShowPassword(!showPassword)}
-            tabIndex={-1}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
-            {showPassword ? '👁️' : '👁️‍🗨️'}
+            {showPassword ? '🙈' : '👁️'}
           </button>
         )}
       </div>
-      
-      {error && <div className="error-message">{error}</div>}
-      
-      {maxLength && (
-        <div className="character-count">
-          {value.length}/{maxLength}
-        </div>
-      )}
+      {error && <p id={`${name}-error`} className="form-error" role="alert">{error}</p>}
     </div>
   );
 };
 
-export default FormField; 
+export default FormField;

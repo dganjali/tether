@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './styles.css';
 
 const MapTest = () => {
   const [status, setStatus] = useState('Loading...');
@@ -7,7 +8,6 @@ const MapTest = () => {
   useEffect(() => {
     const testGoogleMaps = async () => {
       try {
-        // Check if API key is available
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
           setError('Google Maps API key not found in environment variables');
@@ -16,33 +16,20 @@ const MapTest = () => {
 
         setStatus('API key found, testing Google Maps...');
 
-        // Test if Google Maps is already loaded
         if (window.google && window.google.maps) {
           setStatus('Google Maps API is already loaded and working! ✅');
           return;
         }
 
-        // Load Google Maps API using modern approach
         const script = document.createElement('script');
-        script.type = 'module';
-        script.innerHTML = `
-          (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=\`https://maps.\${c}apis.com/maps/api/js?\`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
-          ({key: "${apiKey}", v: "weekly"});
-        `;
-        
-        document.head.appendChild(script);
-        
-        // Wait for Google Maps to load
-        const waitForGoogleMaps = () => {
-          if (window.google && window.google.maps) {
-            setStatus('Google Maps API loaded successfully! ✅');
-          } else {
-            setTimeout(waitForGoogleMaps, 100);
-          }
-        };
-        
-        waitForGoogleMaps();
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => setError('Failed to load Google Maps API');
 
+        window.initMap = () => setStatus('Google Maps API loaded successfully! ✅');
+
+        document.head.appendChild(script);
       } catch (err) {
         setError(`Error testing Google Maps: ${err.message}`);
       }
@@ -52,22 +39,15 @@ const MapTest = () => {
   }, []);
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+    <div className="map-test-container flex flex-column text-center">
       <h2>Google Maps API Test</h2>
-      <div style={{ marginBottom: '10px' }}>
-        <strong>Status:</strong> {status}
-      </div>
-      {error && (
-        <div style={{ color: 'red', marginBottom: '10px' }}>
-          <strong>Error:</strong> {error}
-        </div>
+      {error ? (
+        <p className="text-bold" style={{ color: 'red' }}>{error}</p>
+      ) : (
+        <p>{status}</p>
       )}
-      <div style={{ marginTop: '20px' }}>
-        <h3>Environment Variables:</h3>
-        <p><strong>GOOGLE_MAPS_API_KEY:</strong> {process.env.GOOGLE_MAPS_API_KEY ? 'Set' : 'Not set'}</p>
-      </div>
     </div>
   );
 };
 
-export default MapTest; 
+export default MapTest;

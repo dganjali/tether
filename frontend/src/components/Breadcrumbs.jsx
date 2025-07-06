@@ -24,13 +24,13 @@ const Breadcrumbs = () => {
     return (
       <span key={name} className="breadcrumb-item">
         {isLast ? (
-          <span className="breadcrumb-current">{getBreadcrumbName(name)}</span>
+          <span className="breadcrumb-current" aria-current="page">{getBreadcrumbName(name)}</span>
         ) : (
-          <Link to={routeTo} className="breadcrumb-link">
+          <Link to={routeTo} className="breadcrumb-link" aria-label={`Navigate to ${getBreadcrumbName(name)}`}>
             {getBreadcrumbName(name)}
           </Link>
         )}
-        {!isLast && <span className="breadcrumb-separator">/</span>}
+        {!isLast && <span className="breadcrumb-separator" aria-hidden="true">/</span>}
       </span>
     );
   });
@@ -41,13 +41,13 @@ const Breadcrumbs = () => {
 
   return (
     <nav className="breadcrumbs" aria-label="Breadcrumb">
-      <Link to="/" className="breadcrumb-home">
+      <Link to="/" className="breadcrumb-home" aria-label="Navigate to Home">
         🏠 Home
       </Link>
-      {breadcrumbs.length > 0 && <span className="breadcrumb-separator">/</span>}
+      {breadcrumbs.length > 0 && <span className="breadcrumb-separator" aria-hidden="true">/</span>}
       {breadcrumbs}
     </nav>
   );
 };
 
-export default Breadcrumbs; 
+export default Breadcrumbs;

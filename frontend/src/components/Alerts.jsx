@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Alerts.css';
+import './styles.css';
 
 const Alerts = () => {
   const [shelters, setShelters] = useState([]);
@@ -49,103 +49,46 @@ const Alerts = () => {
     })
     .sort((a, b) => b.predicted_influx - a.predicted_influx);
 
-  const criticalAlerts = shelters.filter(s => s.predicted_influx > 100).length;
-  const highAlerts = shelters.filter(s => s.predicted_influx > 50 && s.predicted_influx <= 100).length;
-  const mediumAlerts = shelters.filter(s => s.predicted_influx > 20 && s.predicted_influx <= 50).length;
-
-  if (loading) {
-    return (
-      <div className="alerts-loading">
-        <div className="loading-spinner"></div>
-        <h2>Loading Alerts...</h2>
-      </div>
-    );
-  }
-
   return (
-    <div className="alerts-container">
-      <div className="alerts-header">
-        <h1>Influx Alerts</h1>
-        <div className="alerts-summary">
-          <div className="summary-item critical">
-            <span className="summary-icon">🚨</span>
-            <span className="summary-number">{criticalAlerts}</span>
-            <span className="summary-label">Critical</span>
-          </div>
-          <div className="summary-item high">
-            <span className="summary-icon">⚠️</span>
-            <span className="summary-number">{highAlerts}</span>
-            <span className="summary-label">High</span>
-          </div>
-          <div className="summary-item medium">
-            <span className="summary-icon">⚡</span>
-            <span className="summary-number">{mediumAlerts}</span>
-            <span className="summary-label">Medium</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="alerts-controls">
-        <select value={alertFilter} onChange={(e) => setAlertFilter(e.target.value)}>
-          <option value="all">All Alerts</option>
-          <option value="critical">Critical (&gt;100)</option>
-          <option value="high">High (50-100)</option>
-          <option value="medium">Medium (20-50)</option>
-          <option value="low">Low (&lt;20)</option>
+    <div className="alerts-container flex flex-column">
+      <header>
+        <h1>Alerts</h1>
+        <select
+          value={alertFilter}
+          onChange={(e) => setAlertFilter(e.target.value)}
+          aria-label="Filter alerts by level"
+        >
+          <option value="all">All</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
         </select>
-      </div>
+      </header>
 
-      <div className="alerts-list">
-        {filteredAlerts.map((shelter, index) => {
-          const alertInfo = getAlertLevel(shelter.predicted_influx);
-          return (
-            <div key={index} className={`alert-item ${alertInfo.level}`}>
-              <div className="alert-icon">
-                {alertInfo.icon}
-              </div>
-              
-              <div className="alert-content">
-                <div className="alert-header">
-                  <h3>{shelter.name}</h3>
-                  <span className={`alert-badge ${alertInfo.level}`}>
-                    {alertInfo.level.toUpperCase()}
-                  </span>
-                </div>
-                
-                <div className="alert-details">
-                  <p><strong>Predicted Influx:</strong> {shelter.predicted_influx}</p>
-                  <p><strong>Alert Level:</strong> {alertInfo.level}</p>
-                  <p><strong>Time:</strong> {new Date().toLocaleTimeString()}</p>
-                </div>
-                
-                <div className="alert-actions">
-                  <button className="btn-primary">View Details</button>
-                  <button className="btn-secondary">Dismiss</button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filteredAlerts.length === 0 && (
-        <div className="no-alerts">
-          <h3>No alerts found</h3>
-          <p>All shelters are operating within normal capacity</p>
-        </div>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <ul className="alerts-list" role="list">
+          {filteredAlerts.map((shelter, index) => {
+            const { level, color, icon } = getAlertLevel(shelter.predicted_influx);
+            return (
+              <li
+                key={index}
+                className="alert-item card"
+                style={{ borderLeft: `5px solid ${color}` }}
+                role="listitem"
+                aria-label={`Shelter ${shelter.name}, Alert Level: ${level}`}
+              >
+                <h3>{shelter.name}</h3>
+                <p>{icon} Predicted Influx: {shelter.predicted_influx}</p>
+              </li>
+            );
+          })}
+        </ul>
       )}
-
-      <div className="alerts-footer">
-        <div className="footer-stats">
-          <p>Last updated: {new Date().toLocaleString()}</p>
-          <p>Total alerts: {filteredAlerts.length}</p>
-        </div>
-        <button className="btn-primary" onClick={fetchShelterData}>
-          Refresh Alerts
-        </button>
-      </div>
     </div>
   );
 };
 
-export default Alerts; 
+export default Alerts;

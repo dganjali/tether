@@ -1,14 +1,14 @@
 import React from 'react';
-import './LoadingSpinner.css';
+import './styles.css';
 
 const LoadingSpinner = ({ size = 'medium', text = 'Loading...', type = 'spinner' }) => {
   const sizeClass = `spinner-${size}`;
   const typeClass = `spinner-${type}`;
 
   return (
-    <div className={`loading-container ${sizeClass}`}>
+    <div className={`loading-container flex flex-column ${sizeClass}`} aria-live="polite" aria-busy="true">
       {type === 'spinner' && (
-        <div className={`loading-spinner ${typeClass}`}>
+        <div className={`loading-spinner ${typeClass}`} role="status">
           <div className="spinner-ring"></div>
           <div className="spinner-ring"></div>
           <div className="spinner-ring"></div>
@@ -16,7 +16,7 @@ const LoadingSpinner = ({ size = 'medium', text = 'Loading...', type = 'spinner'
       )}
       
       {type === 'dots' && (
-        <div className={`loading-dots ${typeClass}`}>
+        <div className={`loading-dots ${typeClass}`} role="status">
           <div className="dot"></div>
           <div className="dot"></div>
           <div className="dot"></div>
@@ -24,7 +24,7 @@ const LoadingSpinner = ({ size = 'medium', text = 'Loading...', type = 'spinner'
       )}
       
       {type === 'pulse' && (
-        <div className={`loading-pulse ${typeClass}`}>
+        <div className={`loading-pulse ${typeClass}`} role="status">
           <div className="pulse-circle"></div>
         </div>
       )}
@@ -36,4 +36,4 @@ const LoadingSpinner = ({ size = 'medium', text = 'Loading...', type = 'spinner'
   );
 };
 
-export default LoadingSpinner; 
+export default LoadingSpinner;

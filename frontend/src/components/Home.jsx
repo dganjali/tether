@@ -5,7 +5,7 @@ import logo from '../images/LOGO.png';
 
 const Home = () => {
   return (
-    <div className="home">
+    <div className="home flex flex-column">
       {/* Hero Section */}
       <div className="hero-section">
         <div className="hero-background">
@@ -14,7 +14,7 @@ const Home = () => {
         <div className="hero-content">
           <div className="hero-text">
             <div className="hero-logo">
-              <img src={logo} alt="Logo" className="home-logo" />
+              <img src={logo} alt="Toronto Shelter Analytics Logo" className="home-logo" />
             </div>
             <h1 className="hero-title">
               Toronto Shelter Analytics
@@ -26,76 +26,32 @@ const Home = () => {
               no one is left without shelter.
             </p>
             <div className="hero-stats">
-              <div className="hero-stat">
+              <div className="hero-stat" role="region" aria-label="Shelters Monitored">
                 <span className="stat-number">80+</span>
                 <span className="stat-label">Shelters Monitored</span>
               </div>
-              <div className="hero-stat">
+              <div className="hero-stat" role="region" aria-label="Real-time Updates">
                 <span className="stat-number">24/7</span>
                 <span className="stat-label">Real-time Updates</span>
               </div>
-              <div className="hero-stat">
+              <div className="hero-stat" role="region" aria-label="Predictive Analytics">
                 <span className="stat-number">AI</span>
                 <span className="stat-label">Predictive Analytics</span>
               </div>
             </div>
             <div className="hero-buttons">
-              <Link to="/signin" className="btn btn-primary">
-                <span className="btn-icon">🔐</span>
+              <Link to="/signin" className="btn btn-primary" aria-label="Sign In">
+                <span className="btn-icon">🔒</span>
                 Sign In
               </Link>
-              <Link to="/signup" className="btn btn-secondary">
+              <Link to="/signup" className="btn btn-secondary" aria-label="Sign Up">
                 <span className="btn-icon">📊</span>
                 Sign Up
               </Link>
-              <Link to="/map" className="btn btn-outline">
+              <Link to="/map" className="btn btn-outline" aria-label="View Map">
                 <span className="btn-icon">🗺️</span>
                 View Map
               </Link>
-              <Link to="/resource-finder" className="btn btn-outline">
-                <span className="btn-icon">🔍</span>
-                Resource Finder
-              </Link>
-            </div>
-          </div>
-          <div className="hero-visual">
-            <div className="dashboard-preview">
-              <div className="preview-header">
-                <div className="preview-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-              <div className="preview-content">
-                <div className="preview-card">
-                  <div className="preview-stat">
-                    <span className="preview-icon">🏠</span>
-                    <div>
-                      <span className="preview-number">84</span>
-                      <span className="preview-label">Shelters</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="preview-card critical">
-                  <div className="preview-stat">
-                    <span className="preview-icon">🔴</span>
-                    <div>
-                      <span className="preview-number">12</span>
-                      <span className="preview-label">Critical</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="preview-card">
-                  <div className="preview-stat">
-                    <span className="preview-icon">📈</span>
-                    <div>
-                      <span className="preview-number">67</span>
-                      <span className="preview-label">Avg Influx</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -304,4 +260,4 @@ const Home = () => {
   );
 };
 
-export default Home; 
+export default Home;

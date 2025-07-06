@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Map.css';
+import './styles.css';
 
 const Map = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -8,16 +8,13 @@ const Map = () => {
   const [selectedShelter, setSelectedShelter] = useState(null);
 
   useEffect(() => {
-    // Simulate loading map data
     const loadMapData = async () => {
       try {
         setIsLoading(true);
         setError('');
         
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Mock shelter data - in a real app, this would come from an API
         const mockShelters = [
           {
             id: 1,
@@ -75,11 +72,11 @@ const Map = () => {
             hours: '24/7'
           }
         ];
-        
+
         setShelters(mockShelters);
-        setIsLoading(false);
       } catch (err) {
         setError('Failed to load map data');
+      } finally {
         setIsLoading(false);
       }
     };
@@ -125,21 +122,19 @@ const Map = () => {
     return services.map(service => serviceLabels[service] || service).join(', ');
   };
 
-  if (isLoading) {
-    return (
-      <div className="map-container">
+  return (
+    <div className="map-container flex flex-column">
+      <header>
+        <h1>Shelter Map</h1>
+      </header>
+
+      {isLoading ? (
         <div className="map-loading">
           <div className="loading-spinner"></div>
           <h2>Loading Shelter Map</h2>
           <p>Finding nearby shelters and services...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="map-container">
+      ) : error ? (
         <div className="map-error">
           <div className="error-icon">⚠️</div>
           <h2>Map Unavailable</h2>
@@ -151,87 +146,79 @@ const Map = () => {
             Try Again
           </button>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="map-container">
-      <header className="map-header">
-        <h1>Interactive Shelter Map</h1>
-        <p>Explore shelter locations and availability</p>
-      </header>
-      <div className="map-content">
-        <div className="map-sidebar">
-          <h2>Nearby Shelters</h2>
-          <ul className="shelter-list">
-            {shelters.map((shelter) => (
-              <li 
-                key={shelter.id}
-                className={`shelter-item ${selectedShelter?.id === shelter.id ? 'selected' : ''}`}
-                onClick={() => handleShelterClick(shelter)}
-                role="button"
-                aria-haspopup="true"
-                aria-expanded={selectedShelter?.id === shelter.id}
-              >
-                <div className="shelter-info">
-                  <h3 className="shelter-name">{shelter.name}</h3>
-                  <div 
-                    className="occupancy-badge"
-                    style={{ backgroundColor: getOccupancyColor(shelter.occupancy, shelter.capacity) }}
-                    aria-label={`Occupancy: ${shelter.occupancy} of ${shelter.capacity} beds`}
-                  >
-                    {getOccupancyText(shelter.occupancy, shelter.capacity)}
-                  </div>
-                </div>
-                
-                <p className="shelter-address">{shelter.address}</p>
-                
-                <div className="shelter-services">
-                  <span className="services-label">Services:</span>
-                  <span className="services-list">{formatServices(shelter.services)}</span>
-                </div>
-                
-                <div className="shelter-occupancy">
-                  <span className="occupancy-text">
-                    {shelter.occupancy}/{shelter.capacity} beds
-                  </span>
-                  <div className="occupancy-bar" aria-hidden="true">
+      ) : (
+        <div className="map-content">
+          <div className="map-sidebar">
+            <h2>Nearby Shelters</h2>
+            <ul className="shelter-list">
+              {shelters.map((shelter) => (
+                <li 
+                  key={shelter.id}
+                  className={`shelter-item ${selectedShelter?.id === shelter.id ? 'selected' : ''}`}
+                  onClick={() => handleShelterClick(shelter)}
+                  role="button"
+                  aria-haspopup="true"
+                  aria-expanded={selectedShelter?.id === shelter.id}
+                >
+                  <div className="shelter-info">
+                    <h3 className="shelter-name">{shelter.name}</h3>
                     <div 
-                      className="occupancy-fill"
-                      style={{ 
-                        width: `${(shelter.occupancy / shelter.capacity) * 100}%`,
-                        backgroundColor: getOccupancyColor(shelter.occupancy, shelter.capacity)
-                      }}
-                    ></div>
+                      className="occupancy-badge"
+                      style={{ backgroundColor: getOccupancyColor(shelter.occupancy, shelter.capacity) }}
+                      aria-label={`Occupancy: ${shelter.occupancy} of ${shelter.capacity} beds`}
+                    >
+                      {getOccupancyText(shelter.occupancy, shelter.capacity)}
+                    </div>
                   </div>
+                  
+                  <p className="shelter-address">{shelter.address}</p>
+                  
+                  <div className="shelter-services">
+                    <span className="services-label">Services:</span>
+                    <span className="services-list">{formatServices(shelter.services)}</span>
+                  </div>
+                  
+                  <div className="shelter-occupancy">
+                    <span className="occupancy-text">
+                      {shelter.occupancy}/{shelter.capacity} beds
+                    </span>
+                    <div className="occupancy-bar" aria-hidden="true">
+                      <div 
+                        className="occupancy-fill"
+                        style={{ 
+                          width: `${(shelter.occupancy / shelter.capacity) * 100}%`,
+                          backgroundColor: getOccupancyColor(shelter.occupancy, shelter.capacity)
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="map-view">
+            <div className="map-placeholder" aria-hidden="true">
+              <div className="map-icon">🗺️</div>
+              <h3>Interactive Map</h3>
+              <p>Select a shelter from the list to view details</p>
+              <div className="map-legend">
+                <div className="legend-item">
+                  <div className="legend-color" style={{ backgroundColor: '#10b981' }}></div>
+                  <span>Available</span>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="map-view">
-          <div className="map-placeholder" aria-hidden="true">
-            <div className="map-icon">🗺️</div>
-            <h3>Interactive Map</h3>
-            <p>Select a shelter from the list to view details</p>
-            <div className="map-legend">
-              <div className="legend-item">
-                <div className="legend-color" style={{ backgroundColor: '#10b981' }}></div>
-                <span>Available</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ backgroundColor: '#f59e0b' }}></div>
-                <span>Busy</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ backgroundColor: '#dc2626' }}></div>
-                <span>Full</span>
+                <div className="legend-item">
+                  <div className="legend-color" style={{ backgroundColor: '#f59e0b' }}></div>
+                  <span>Busy</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-color" style={{ backgroundColor: '#dc2626' }}></div>
+                  <span>Full</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {selectedShelter && (
         <div className="shelter-details-overlay">

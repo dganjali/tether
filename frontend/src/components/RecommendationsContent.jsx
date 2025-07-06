@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
-import './RecommendationsContent.css';
+import './styles.css';
 
 const RecommendationsContent = () => {
   const [predictions, setPredictions] = useState([]);
@@ -128,127 +128,41 @@ const RecommendationsContent = () => {
   }
 
   return (
-    <div className="recommendations-content">
-      <div className="content-header">
-        <h2>AI-Powered Recommendations</h2>
-        <p>Get intelligent resource allocation recommendations based on predicted influx</p>
-      </div>
+    <div className="recommendations-container flex flex-column text-center">
+      <header>
+        <h1>Recommendations</h1>
+      </header>
 
-      <div className="recommendations-controls">
-        <div className="form-group">
-          <label>Select Shelter:</label>
-          <select 
-            value={selectedShelter} 
-            onChange={(e) => handleShelterChange(e.target.value)}
-            className="form-control"
-          >
-            <option value="">Choose a shelter...</option>
+      {loading && <LoadingSpinner text="Loading predictions..." />}
+      {error && <p className="text-bold" style={{ color: 'red' }}>{error}</p>}
+
+      <div className="card">
+        <h2>Predictions</h2>
+        {predictions.length > 0 ? (
+          <ul>
             {predictions.map((prediction, index) => (
-              <option key={index} value={prediction.name}>
-                {prediction.name} (Predicted: {prediction.predicted_influx})
-              </option>
+              <li key={index}>{prediction.name} - Predicted Influx: {prediction.predicted_influx}</li>
             ))}
-          </select>
-        </div>
-        
-        <div className="form-group">
-          <label>Predicted Influx:</label>
-          <input
-            type="number"
-            value={selectedPredictedInflux}
-            onChange={(e) => setSelectedPredictedInflux(e.target.value)}
-            className="form-control"
-            placeholder="Enter predicted influx"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Shelter Capacity:</label>
-          <input
-            type="number"
-            value={selectedCapacity}
-            onChange={(e) => setSelectedCapacity(e.target.value)}
-            className="form-control"
-            placeholder="Enter shelter capacity"
-          />
-        </div>
-        
-        <button 
-          onClick={fetchRecommendations}
-          disabled={!selectedShelter || !selectedPredictedInflux || !selectedCapacity || fetchingRecommendations}
-          className="btn btn-primary"
-        >
-          {fetchingRecommendations ? (
-            <>
-              <LoadingSpinner size="small" />
-              Getting AI Recommendations...
-            </>
-          ) : (
-            'Get AI Recommendations'
-          )}
-        </button>
+          </ul>
+        ) : (
+          <p>No predictions available</p>
+        )}
       </div>
 
-      {recommendations.length > 0 && (
-        <div className="recommendations-results">
-          {recommendations.map((rec, index) => (
-            <div key={index} className="recommendation-card">
-              <div className="recommendation-header">
-                <h3>{rec.shelter_name}</h3>
-                <div className="severity-badge" style={{ backgroundColor: getSeverityColor(rec.severity) }}>
-                  {getSeverityIcon(rec.severity)} {rec.severity} SEVERITY
-                </div>
-              </div>
-              
-              <div className="recommendation-stats">
-                <div className="stat-item">
-                  <span className="stat-label">Predicted Occupancy</span>
-                  <span className="stat-value">{rec.predicted_occupancy}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Capacity</span>
-                  <span className="stat-value">{rec.capacity}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Excess</span>
-                  <span className="stat-value" style={{ color: getSeverityColor(rec.severity) }}>
-                    +{rec.excess}
-                  </span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Utilization</span>
-                  <span className="stat-value">{rec.capacity_utilization_rate}%</span>
-                </div>
-              </div>
-
-              <div className="recommendation-content">
-                <div className="llm-feedback">
-                  <h4>AI Recommendations</h4>
-                  <pre className="recommendation-text">{rec.llm_feedback}</pre>
-                </div>
-                
-                <div className="action-items">
-                  <h4>Immediate Actions</h4>
-                  <ul>
-                    {rec.action_items && rec.action_items.map((action, idx) => (
-                      <li key={idx}>{action}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {predictions.length === 0 && (
-        <div className="no-data">
-          <h3>No Shelter Data Available</h3>
-          <p>No shelter data is currently available to generate recommendations.</p>
-        </div>
-      )}
+      <div className="card">
+        <h2>Recommendations</h2>
+        {recommendations.length > 0 ? (
+          <ul>
+            {recommendations.map((recommendation, index) => (
+              <li key={index}>{recommendation.name} - Capacity: {recommendation.capacity}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>No recommendations available</p>
+        )}
+      </div>
     </div>
   );
 };
 
-export default RecommendationsContent; 
+export default RecommendationsContent;

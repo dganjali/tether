@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import FormField from './FormField';
 import LoadingSpinner from './LoadingSpinner';
-import './Auth.css';
+import './styles.css';
 import logo from '../images/LOGO.png';
 
 const SignUp = () => {
@@ -83,88 +83,53 @@ const SignUp = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <div className="logo-container">
-              <img src={logo} alt="Toronto Shelter Analytics" className="auth-logo-img" />
-            </div>
-          </div>
-          <h1>Create Account</h1>
-          <p>Join Toronto Shelter Analytics to access advanced insights</p>
-        </div>
+    <div className="signup-container flex flex-column text-center">
+      <header>
+        <img src={logo} alt="Logo" className="logo" />
+        <h1>Sign Up</h1>
+      </header>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {loading && <LoadingSpinner size="small" text="Creating account..." />}
-          
-          <FormField
-            label="Username"
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="Choose a username (min 3 characters)"
-            required
-            disabled={loading}
-            error={errors.username}
-            minLength={3}
-            maxLength={30}
-            autoComplete="username"
-          />
+      <form onSubmit={handleSubmit} className="card">
+        {loading && <LoadingSpinner text="Signing up..." />}
+        
+        <FormField
+          label="Username"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          error={errors.username}
+        />
+        <FormField
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          error={errors.password}
+        />
+        <FormField
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          error={errors.confirmPassword}
+        />
 
-          <FormField
-            label="Password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Choose a password (min 6 characters)"
-            required
-            disabled={loading}
-            error={errors.password}
-            minLength={6}
-            showPasswordToggle={true}
-            autoComplete="new-password"
-          />
+        <button 
+          type="submit" 
+          className={`auth-button ${loading ? 'loading' : ''}`}
+          disabled={loading}
+        >
+          {loading ? 'Creating Account...' : 'Sign Up'}
+        </button>
+      </form>
 
-          <FormField
-            label="Confirm Password"
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm your password"
-            required
-            disabled={loading}
-            error={errors.confirmPassword}
-            showPasswordToggle={true}
-            autoComplete="new-password"
-          />
-
-          <button 
-            type="submit" 
-            className={`auth-button ${loading ? 'loading' : ''}`}
-            disabled={loading}
-          >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Already have an account?{' '}
-            <Link to="/signin" className="auth-link">
-              Sign in here
-            </Link>
-          </p>
-          <Link to="/" className="auth-link">
-            ← Back to Home
-          </Link>
-        </div>
-      </div>
+      <p>
+        Already have an account? <Link to="/signin">Sign In</Link>
+      </p>
     </div>
   );
 };
 
-export default SignUp; 
+export default SignUp;
