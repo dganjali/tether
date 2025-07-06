@@ -6,14 +6,24 @@ const AlertsContent = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all'); // all, critical, warning, info
+  const [filter, setFilter] = useState('all');
+  const [selectedAlerts, setSelectedAlerts] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    critical: 0,
+    warning: 0,
+    info: 0,
+    success: 0,
+    acknowledged: 0,
+    unacknowledged: 0
+  });
 
   const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/alerts', {
+      const response = await fetch(`/api/alerts?type=${filter}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -29,7 +39,7 @@ const AlertsContent = () => {
       }
       
       const data = await response.json();
-      setAlerts(data);
+      setAlerts(data.alerts || data);
     } catch (err) {
       console.error('Error fetching alerts:', err);
       setError(err.message);
@@ -38,13 +48,29 @@ const AlertsContent = () => {
     } finally {
       setLoading(false);
     }
+  }, [filter]);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await fetch('/api/alerts/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Error fetching alert stats:', err);
+    }
   }, []);
 
   useEffect(() => {
     fetchAlerts();
-  }, [fetchAlerts]);
-
-
+    fetchStats();
+  }, [fetchAlerts, fetchStats]);
 
   const generateMockAlerts = () => {
     return [
@@ -55,7 +81,8 @@ const AlertsContent = () => {
         message: 'Sojourn House is at 120% capacity. Immediate action required.',
         shelter: 'Sojourn House',
         timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        acknowledged: false
+        acknowledged: false,
+        priority: 'high'
       },
       {
         id: 2,
@@ -64,7 +91,8 @@ const AlertsContent = () => {
         message: 'Junction Place is approaching capacity at 95%.',
         shelter: 'Junction Place',
         timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        acknowledged: false
+        acknowledged: false,
+        priority: 'medium'
       },
       {
         id: 3,
@@ -73,7 +101,8 @@ const AlertsContent = () => {
         message: 'Severe weather expected tonight. Prepare for increased demand.',
         shelter: 'System-wide',
         timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-        acknowledged: true
+        acknowledged: true,
+        priority: 'medium'
       },
       {
         id: 4,
@@ -82,7 +111,8 @@ const AlertsContent = () => {
         message: 'Multiple shelters reporting staff shortages for overnight shifts.',
         shelter: 'Multiple Shelters',
         timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-        acknowledged: false
+        acknowledged: false,
+        priority: 'urgent'
       },
       {
         id: 5,
@@ -91,7 +121,8 @@ const AlertsContent = () => {
         message: 'Blankets and sleeping bags running low at Family Residence.',
         shelter: 'Family Residence',
         timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        acknowledged: true
+        acknowledged: true,
+        priority: 'medium'
       }
     ];
   };
@@ -112,6 +143,9 @@ const AlertsContent = () => {
       setAlerts(alerts.map(alert => 
         alert.id === alertId ? { ...alert, acknowledged: true } : alert
       ));
+      
+      // Refresh stats
+      fetchStats();
     } catch (err) {
       console.error('Error acknowledging alert:', err);
       setError(err.message);
@@ -132,15 +166,60 @@ const AlertsContent = () => {
       }
       
       setAlerts(alerts.filter(alert => alert.id !== alertId));
+      setSelectedAlerts(selectedAlerts.filter(id => id !== alertId));
+      
+      // Refresh stats
+      fetchStats();
     } catch (err) {
       console.error('Error dismissing alert:', err);
       setError(err.message);
     }
   };
 
-  const getFilteredAlerts = () => {
-    if (filter === 'all') return alerts;
-    return alerts.filter(alert => alert.type === filter);
+  const handleBulkAcknowledge = async () => {
+    if (selectedAlerts.length === 0) return;
+    
+    try {
+      const response = await fetch('/api/alerts/bulk-acknowledge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ alertIds: selectedAlerts })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to bulk acknowledge alerts: ${response.status}`);
+      }
+      
+      setAlerts(alerts.map(alert => 
+        selectedAlerts.includes(alert.id) ? { ...alert, acknowledged: true } : alert
+      ));
+      setSelectedAlerts([]);
+      
+      // Refresh stats
+      fetchStats();
+    } catch (err) {
+      console.error('Error bulk acknowledging alerts:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleSelectAlert = (alertId) => {
+    setSelectedAlerts(prev => 
+      prev.includes(alertId) 
+        ? prev.filter(id => id !== alertId)
+        : [...prev, alertId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedAlerts.length === alerts.length) {
+      setSelectedAlerts([]);
+    } else {
+      setSelectedAlerts(alerts.map(alert => alert.id));
+    }
   };
 
   const getAlertTypeColor = (type) => {
@@ -148,16 +227,43 @@ const AlertsContent = () => {
       case 'critical': return '#dc3545';
       case 'warning': return '#ffc107';
       case 'info': return '#17a2b8';
+      case 'success': return '#28a745';
       default: return '#6c757d';
     }
   };
 
   const getAlertTypeIcon = (type) => {
     switch (type) {
-      case 'critical': return '⚠️';
-      case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
-      default: return 'ℹ️';
+      case 'critical':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L1 21h22L12 2zm-2 15h4v2h-4v-2zm0-8h4v6h-4V9z"/>
+          </svg>
+        );
+      case 'warning':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M1 21h22L12 2 1 21zM13 18h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+          </svg>
+        );
+      case 'info':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+        );
+      case 'success':
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        );
+      default:
+        return (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+        );
     }
   };
 
@@ -199,89 +305,153 @@ const AlertsContent = () => {
         </div>
       )}
 
-      <div className="alerts-section">
-        <div className="section-header">
-          <h3>Active Alerts</h3>
-          <div className="filter-controls">
-            <button
-              className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              All
-            </button>
-            <button
-              className={`filter-btn ${filter === 'critical' ? 'active' : ''}`}
-              onClick={() => setFilter('critical')}
-            >
-              Critical
-            </button>
-            <button
-              className={`filter-btn ${filter === 'warning' ? 'active' : ''}`}
-              onClick={() => setFilter('warning')}
-            >
-              Warning
-            </button>
-            <button
-              className={`filter-btn ${filter === 'info' ? 'active' : ''}`}
-              onClick={() => setFilter('info')}
-            >
-              Info
-            </button>
+      {/* Alert Statistics */}
+      <div className="alert-stats">
+        <div className="stat-card">
+          <div className="stat-icon critical">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L1 21h22L12 2zm-2 15h4v2h-4v-2zm0-8h4v6h-4V9z"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <h3>Critical</h3>
+            <p>{stats.critical}</p>
           </div>
         </div>
+        
+        <div className="stat-card">
+          <div className="stat-icon warning">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zM13 18h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <h3>Warning</h3>
+            <p>{stats.warning}</p>
+          </div>
+        </div>
+        
+        <div className="stat-card">
+          <div className="stat-icon info">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <h3>Info</h3>
+            <p>{stats.info}</p>
+          </div>
+        </div>
+        
+        <div className="stat-card">
+          <div className="stat-icon total">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <div className="stat-content">
+            <h3>Total</h3>
+            <p>{stats.total}</p>
+          </div>
+        </div>
+      </div>
 
-        {getFilteredAlerts().length === 0 ? (
+      {/* Controls */}
+      <div className="alerts-controls">
+        <div className="filter-controls">
+          <select 
+            value={filter} 
+            onChange={(e) => setFilter(e.target.value)}
+            className="filter-select"
+          >
+            <option value="all">All Alerts</option>
+            <option value="critical">Critical</option>
+            <option value="warning">Warning</option>
+            <option value="info">Info</option>
+            <option value="success">Success</option>
+          </select>
+        </div>
+        
+        {selectedAlerts.length > 0 && (
+          <div className="bulk-actions">
+            <button 
+              onClick={handleBulkAcknowledge}
+              className="bulk-acknowledge-btn"
+            >
+              Acknowledge Selected ({selectedAlerts.length})
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Alerts List */}
+      <div className="alerts-list">
+        {alerts.length === 0 ? (
           <div className="no-alerts">
-            <h4>No Alerts</h4>
+            <h3>No Alerts</h3>
             <p>No alerts match the current filter criteria.</p>
           </div>
         ) : (
-          <div className="alerts-list">
-            {getFilteredAlerts().map((alert) => (
-              <div 
-                key={alert.id} 
-                className={`alert-card ${alert.type} ${alert.acknowledged ? 'acknowledged' : ''}`}
-              >
+          alerts.map((alert) => (
+            <div 
+              key={alert.id} 
+              className={`alert-item ${alert.acknowledged ? 'acknowledged' : ''} ${selectedAlerts.includes(alert.id) ? 'selected' : ''}`}
+            >
+              <div className="alert-checkbox">
+                <input
+                  type="checkbox"
+                  checked={selectedAlerts.includes(alert.id)}
+                  onChange={() => handleSelectAlert(alert.id)}
+                />
+              </div>
+              
+              <div className="alert-icon" style={{ color: getAlertTypeColor(alert.type) }}>
+                {getAlertTypeIcon(alert.type)}
+              </div>
+              
+              <div className="alert-content">
                 <div className="alert-header">
-                  <div className="alert-type">
-                    <span 
-                      className="alert-icon"
-                      style={{ color: getAlertTypeColor(alert.type) }}
-                    >
-                      {getAlertTypeIcon(alert.type)}
-                    </span>
-                    <span className="alert-title">{alert.title}</span>
-                  </div>
-                  <div className="alert-actions">
-                    {!alert.acknowledged && (
-                      <button
-                        onClick={() => handleAcknowledgeAlert(alert.id)}
-                        className="acknowledge-btn"
-                        title="Acknowledge alert"
-                      >
-                        Acknowledge
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDismissAlert(alert.id)}
-                      className="dismiss-btn"
-                      title="Dismiss alert"
-                    >
-                      ×
-                    </button>
-                  </div>
+                  <h3 className="alert-title">{alert.title}</h3>
+                  <span className="alert-time">{formatTimestamp(alert.timestamp)}</span>
                 </div>
                 
-                <div className="alert-content">
-                  <p className="alert-message">{alert.message}</p>
-                  <div className="alert-meta">
-                    <span className="alert-shelter">{alert.shelter}</span>
-                    <span className="alert-time">{formatTimestamp(alert.timestamp)}</span>
-                  </div>
+                <p className="alert-message">{alert.message}</p>
+                
+                <div className="alert-meta">
+                  <span className="alert-shelter">{alert.shelter}</span>
+                  {alert.priority && (
+                    <span className={`alert-priority ${alert.priority}`}>
+                      {alert.priority}
+                    </span>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
+              
+              <div className="alert-actions">
+                {!alert.acknowledged && (
+                  <button
+                    onClick={() => handleAcknowledgeAlert(alert.id)}
+                    className="acknowledge-btn"
+                    title="Acknowledge Alert"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => handleDismissAlert(alert.id)}
+                  className="dismiss-btn"
+                  title="Dismiss Alert"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>
