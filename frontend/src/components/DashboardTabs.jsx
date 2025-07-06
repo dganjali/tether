@@ -23,41 +23,21 @@ const DashboardTabs = () => {
     {
       id: 'dashboard',
       name: 'Public Dashboard',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
-        </svg>
-      ),
       description: 'Overview & Analytics'
     },
     {
       id: 'recommendations',
       name: 'AI Recommendations',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-        </svg>
-      ),
       description: 'Smart Insights'
     },
     {
       id: 'your-shelters',
       name: 'Your Shelters',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
-        </svg>
-      ),
       description: 'Personalized View'
     },
     {
       id: 'alerts',
       name: 'Alerts',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L1 21h22L12 2zm-2 15h4v2h-4v-2zm0-8h4v6h-4V9z"/>
-        </svg>
-      ),
       description: 'Notifications'
     }
   ];
@@ -100,7 +80,6 @@ const DashboardTabs = () => {
               className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => handleTabChange(tab.id)}
             >
-              <span className="tab-icon">{tab.icon}</span>
               <div className="tab-content">
                 <span className="tab-name">{tab.name}</span>
                 <span className="tab-description">{tab.description}</span>

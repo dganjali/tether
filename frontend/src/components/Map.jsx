@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
@@ -19,6 +19,8 @@ const Map = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedShelter, setSelectedShelter] = useState(null);
+  const [isShelterListVisible, setIsShelterListVisible] = useState(true);
+  const mapRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -91,7 +93,7 @@ const Map = () => {
 
   const createCustomIcon = useCallback((influx) => {
     const statusColor = getStatusColor(influx);
-    const color = statusColor === 'critical' ? '#D03737' : statusColor === 'warning' ? '#f39c12' : '#27ae60';
+    const color = statusColor === 'critical' ? '#ef4444' : statusColor === 'warning' ? '#f59e0b' : '#10b981';
     const symbol = statusColor === 'critical' || statusColor === 'warning' ? '!' : '✓';
     
     return L.divIcon({
@@ -122,10 +124,15 @@ const Map = () => {
 
   const handleShelterClick = (shelter) => {
     setSelectedShelter(shelter);
+    
+    // Center map on the selected shelter
+    if (mapRef.current && shelter.lat && shelter.lng) {
+      mapRef.current.setView([shelter.lat, shelter.lng], 15);
+    }
   };
 
-  const handleBackClick = () => {
-    navigate('/');
+  const toggleShelterList = () => {
+    setIsShelterListVisible(!isShelterListVisible);
   };
 
   const sheltersWithCoordinates = shelters.filter(shelter => shelter.lat && shelter.lng);
@@ -159,34 +166,37 @@ const Map = () => {
 
   return (
     <div className="map-page">
-      {/* Header with back button */}
+      {/* Header */}
       <div className="map-header">
-        <div className="header-left">
-          <button onClick={handleBackClick} className="back-button">
-            ← Back
-          </button>
-          <div className="header-content">
-            <div className="logo-container">
-              <img src={logo} alt="Logo" className="header-logo" />
-            </div>
-            <div className="title-container">
-              <h1>Toronto Shelter Map</h1>
-              <p>Interactive map showing all shelter locations and their current status</p>
-            </div>
+        <div className="header-content">
+          <div className="logo-container">
+            <img src={logo} alt="Logo" className="header-logo" />
+          </div>
+          <div className="title-container">
+            <h1>Toronto Shelter Map</h1>
+            <p>Interactive map showing all shelter locations and their current status</p>
           </div>
         </div>
-        <div className="map-legend">
-          <div className="legend-item">
-            <span className="legend-color normal"></span>
-            <span>Normal (&lt;80)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color warning"></span>
-            <span>Warning (80-150)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color critical"></span>
-            <span>Critical (&gt;150)</span>
+        <div className="map-controls">
+          <button onClick={toggleShelterList} className="toggle-list-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+            {isShelterListVisible ? 'Hide List' : 'Show List'}
+          </button>
+          <div className="map-legend">
+            <div className="legend-item">
+              <span className="legend-color normal"></span>
+              <span>Normal (&lt;80)</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-color warning"></span>
+              <span>Warning (80-150)</span>
+            </div>
+            <div className="legend-item">
+              <span className="legend-color critical"></span>
+              <span>Critical (&gt;150)</span>
+            </div>
           </div>
         </div>
       </div>
@@ -199,6 +209,7 @@ const Map = () => {
             zoom={11} 
             style={{ height: '100%', width: '100%' }}
             className="leaflet-map"
+            ref={mapRef}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -224,34 +235,36 @@ const Map = () => {
           </MapContainer>
           
           {/* Floating shelter list */}
-          <div className="shelter-list-container">
-            <div className="shelter-list-header">
-              <h3>Shelter List</h3>
-              <span className="shelter-count">{sheltersWithCoordinates.length} shelters</span>
-            </div>
-            <div className="shelter-list">
-              {sheltersWithCoordinates.map((shelter, index) => (
-                <div 
-                  key={index}
-                  className={`shelter-item ${getStatusColor(shelter.predicted_influx)} ${selectedShelter?.name === shelter.name ? 'selected' : ''}`}
-                  onClick={() => handleShelterClick(shelter)}
-                >
-                  <div className="shelter-info">
-                    <h4>{shelter.name}</h4>
-                    <p className="shelter-address">{shelter.address}</p>
-                    <div className="shelter-status">
-                      <span className={`status-indicator ${getStatusColor(shelter.predicted_influx)}`}>
-                        {getStatusText(shelter.predicted_influx)}
-                      </span>
-                      <span className="influx-value">
-                        Predicted: {shelter.predicted_influx}
-                      </span>
+          {isShelterListVisible && (
+            <div className="shelter-list-container">
+              <div className="shelter-list-header">
+                <h3>Shelter List</h3>
+                <span className="shelter-count">{sheltersWithCoordinates.length} shelters</span>
+              </div>
+              <div className="shelter-list">
+                {sheltersWithCoordinates.map((shelter, index) => (
+                  <div 
+                    key={index}
+                    className={`shelter-item ${getStatusColor(shelter.predicted_influx)} ${selectedShelter?.name === shelter.name ? 'selected' : ''}`}
+                    onClick={() => handleShelterClick(shelter)}
+                  >
+                    <div className="shelter-info">
+                      <h4>{shelter.name}</h4>
+                      <p className="shelter-address">{shelter.address}</p>
+                      <div className="shelter-status">
+                        <span className={`status-indicator ${getStatusColor(shelter.predicted_influx)}`}>
+                          {getStatusText(shelter.predicted_influx)}
+                        </span>
+                        <span className="influx-value">
+                          Predicted: {shelter.predicted_influx}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
