@@ -4,12 +4,8 @@ import './RecommendationsContent.css';
 
 const RecommendationsContent = () => {
   const [predictions, setPredictions] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedShelter, setSelectedShelter] = useState('');
-  const [selectedCapacity, setSelectedCapacity] = useState('');
-  const [selectedPredictedInflux, setSelectedPredictedInflux] = useState('');
 
   useEffect(() => {
     fetchPredictions();
@@ -30,15 +26,6 @@ const RecommendationsContent = () => {
       const data = await response.json();
       console.log('Predictions data for recommendations:', data);
       setPredictions(data);
-      
-      // Set default selected shelter if available
-      if (data.length > 0) {
-        setSelectedShelter(data[0].name);
-        setSelectedPredictedInflux(data[0].predicted_influx || 0);
-        // Set a realistic capacity based on the predicted influx
-        const realisticCapacity = Math.max(50, Math.floor((data[0].predicted_influx || 0) * 0.8));
-        setSelectedCapacity(realisticCapacity);
-      }
     } catch (err) {
       console.error('Error fetching predictions:', err);
       setError(err.message);
@@ -93,15 +80,7 @@ const RecommendationsContent = () => {
 
       <div className="card">
         <h2>Recommendations</h2>
-        {recommendations.length > 0 ? (
-          <ul>
-            {recommendations.map((recommendation, index) => (
-              <li key={index}>{recommendation.name} - Capacity: {recommendation.capacity}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No recommendations available</p>
-        )}
+        <p>Recommendations feature coming soon...</p>
       </div>
     </div>
   );
