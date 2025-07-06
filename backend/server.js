@@ -9,6 +9,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const userShelterRoutes = require('./routes/userShelters');
 const alertRoutes = require('./routes/alerts');
+const recordedDataRoutes = require('./routes/recordedData');
 const { 
   globalErrorHandler, 
   notFoundHandler, 
@@ -92,6 +93,7 @@ if (fs.existsSync(frontendBuildPath)) {
 app.use('/api/auth', authRoutes);
 app.use('/api/user-shelters', userShelterRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/recorded-data', recordedDataRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -11,6 +11,14 @@ const DashboardContent = () => {
   const [sortBy, setSortBy] = useState('name');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDataRecording, setShowDataRecording] = useState(false);
+  const [recordingData, setRecordingData] = useState({
+    shelterName: '',
+    currentOccupancy: '',
+    capacity: '',
+    notes: ''
+  });
+  const [recordedData, setRecordedData] = useState([]);
   const [analytics, setAnalytics] = useState({
     totalShelters: 0,
     criticalShelters: 0,
@@ -25,6 +33,7 @@ const DashboardContent = () => {
 
   useEffect(() => {
     fetchPredictions();
+    fetchRecordedData();
     
     // Set up auto-refresh if enabled
     if (autoRefresh) {
@@ -135,6 +144,74 @@ const DashboardContent = () => {
     }
   };
 
+  const fetchRecordedData = async () => {
+    try {
+      const response = await fetch('/api/recorded-data');
+      if (response.ok) {
+        const data = await response.json();
+        setRecordedData(data);
+      }
+    } catch (err) {
+      console.error('Error fetching recorded data:', err);
+    }
+  };
+
+  const handleRecordData = async (e) => {
+    e.preventDefault();
+    
+    if (!recordingData.shelterName || !recordingData.currentOccupancy || !recordingData.capacity) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/recorded-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          ...recordingData,
+          timestamp: new Date().toISOString(),
+          currentOccupancy: parseInt(recordingData.currentOccupancy),
+          capacity: parseInt(recordingData.capacity)
+        })
+      });
+
+      if (response.ok) {
+        alert('Data recorded successfully!');
+        setRecordingData({
+          shelterName: '',
+          currentOccupancy: '',
+          capacity: '',
+          notes: ''
+        });
+        fetchRecordedData(); // Refresh the data
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to record data');
+      }
+    } catch (err) {
+      console.error('Error recording data:', err);
+      alert(`Failed to record data: ${err.message}`);
+    }
+  };
+
+  const handleQuickRecord = (shelterName, capacity) => {
+    setRecordingData({
+      shelterName: shelterName,
+      currentOccupancy: '',
+      capacity: capacity.toString(),
+      notes: ''
+    });
+    setShowDataRecording(true);
+    // Scroll to the recording form
+    document.querySelector('.data-recording-section')?.scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  };
+
   const getStatusColor = (predictedInflux, capacity) => {
     const utilization = (predictedInflux / capacity) * 100;
     if (utilization > 100) return '#D03737'; // Critical - Red
@@ -151,9 +228,9 @@ const DashboardContent = () => {
 
   const getStatusIcon = (predictedInflux, capacity) => {
     const utilization = (predictedInflux / capacity) * 100;
-    if (utilization > 100) return '🚨';
-    if (utilization > 80) return '⚠️';
-    return '✅';
+    if (utilization > 100) return 'critical';
+    if (utilization > 80) return 'warning';
+    return 'normal';
   };
 
   const handleAddToMyShelters = async (shelterName, capacity) => {
@@ -254,7 +331,7 @@ const DashboardContent = () => {
       {/* Analytics Overview */}
       <div className="analytics-overview">
         <div className="analytics-header">
-          <h2>📊 Shelter Analytics Dashboard</h2>
+          <h2>Shelter Analytics Dashboard</h2>
           <p>Real-time shelter occupancy predictions and capacity analysis</p>
           <div className="refresh-info">
             <span className="last-refresh">
@@ -265,14 +342,18 @@ const DashboardContent = () => {
               className="refresh-btn"
               title="Refresh data (Ctrl+R)"
             >
-              🔄 Refresh
+              Refresh
             </button>
           </div>
         </div>
         
         <div className="analytics-grid">
           <div className="analytics-card total-shelters">
-            <div className="analytics-icon">🏠</div>
+            <div className="analytics-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+              </svg>
+            </div>
             <div className="analytics-content">
               <h3>Total Shelters</h3>
               <p className="analytics-value">{analytics.totalShelters}</p>
@@ -281,7 +362,11 @@ const DashboardContent = () => {
           </div>
           
           <div className="analytics-card critical-alerts">
-            <div className="analytics-icon">🚨</div>
+            <div className="analytics-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L1 21h22L12 2zm-2 15h4v2h-4v-2zm0-8h4v6h-4V9z"/>
+              </svg>
+            </div>
             <div className="analytics-content">
               <h3>Critical Alerts</h3>
               <p className="analytics-value">{analytics.criticalShelters}</p>
@@ -290,7 +375,11 @@ const DashboardContent = () => {
           </div>
           
           <div className="analytics-card warning-alerts">
-            <div className="analytics-icon">⚠️</div>
+            <div className="analytics-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M1 21h22L12 2 1 21zM13 18h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+              </svg>
+            </div>
             <div className="analytics-content">
               <h3>Warning Alerts</h3>
               <p className="analytics-value">{analytics.warningShelters}</p>
@@ -299,7 +388,11 @@ const DashboardContent = () => {
           </div>
           
           <div className="analytics-card avg-utilization">
-            <div className="analytics-icon">📈</div>
+            <div className="analytics-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
+              </svg>
+            </div>
             <div className="analytics-content">
               <h3>Avg Utilization</h3>
               <p className="analytics-value">{analytics.avgUtilization}%</p>
@@ -307,6 +400,94 @@ const DashboardContent = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Data Recording Section */}
+      <div className="data-recording-section">
+        <div className="recording-header">
+          <h3>Data Recording</h3>
+          <button 
+            onClick={() => setShowDataRecording(!showDataRecording)}
+            className="toggle-recording-btn"
+          >
+            {showDataRecording ? 'Hide Recording Form' : 'Show Recording Form'}
+          </button>
+        </div>
+        
+        {showDataRecording && (
+          <div className="recording-form-container">
+            <form onSubmit={handleRecordData} className="recording-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="shelterName">Shelter Name *</label>
+                  <input
+                    type="text"
+                    id="shelterName"
+                    value={recordingData.shelterName}
+                    onChange={(e) => setRecordingData(prev => ({ ...prev, shelterName: e.target.value }))}
+                    placeholder="Enter shelter name"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="currentOccupancy">Current Occupancy *</label>
+                  <input
+                    type="number"
+                    id="currentOccupancy"
+                    value={recordingData.currentOccupancy}
+                    onChange={(e) => setRecordingData(prev => ({ ...prev, currentOccupancy: e.target.value }))}
+                    placeholder="Current number of occupants"
+                    min="0"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="capacity">Capacity *</label>
+                  <input
+                    type="number"
+                    id="capacity"
+                    value={recordingData.capacity}
+                    onChange={(e) => setRecordingData(prev => ({ ...prev, capacity: e.target.value }))}
+                    placeholder="Total capacity"
+                    min="1"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="notes">Notes (Optional)</label>
+                <textarea
+                  id="notes"
+                  value={recordingData.notes}
+                  onChange={(e) => setRecordingData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Additional notes or observations"
+                  rows="3"
+                />
+              </div>
+              
+              <div className="form-actions">
+                <button type="submit" className="submit-btn">
+                  Record Data
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setRecordingData({
+                    shelterName: '',
+                    currentOccupancy: '',
+                    capacity: '',
+                    notes: ''
+                  })}
+                  className="clear-btn"
+                >
+                  Clear Form
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Controls Section */}
@@ -318,7 +499,11 @@ const DashboardContent = () => {
               onClick={() => setSelectedView('grid')}
               title="Grid View (Ctrl+G)"
             >
-              <span className="view-icon">⊞</span>
+              <span className="view-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 3v8h8V3H3zm6 6H5V5h4v4zm-6 4v8h8v-8H3zm6 6H5v-4h4v4zm4-16v8h8V3h-8zm6 6h-4V5h4v4zm-6 4v8h8v-8h-8zm6 6h-4v-4h4v4z"/>
+                </svg>
+              </span>
               Grid View
             </button>
             <button 
@@ -326,14 +511,34 @@ const DashboardContent = () => {
               onClick={() => setSelectedView('table')}
               title="Table View (Ctrl+T)"
             >
-              <span className="view-icon">⊟</span>
+              <span className="view-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                </svg>
+              </span>
               Table View
+            </button>
+            <button 
+              className={`view-btn ${selectedView === 'charts' ? 'active' : ''}`}
+              onClick={() => setSelectedView('charts')}
+              title="Charts View"
+            >
+              <span className="view-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                </svg>
+              </span>
+              Charts View
             </button>
           </div>
           
           <div className="search-filter">
             <div className="search-box">
-              <span className="search-icon">🔍</span>
+              <span className="search-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+              </span>
               <input
                 type="text"
                 placeholder="Search shelters... (Ctrl+F)"
@@ -384,7 +589,7 @@ const DashboardContent = () => {
         </div>
       ) : (
         <div className={`results-container ${selectedView}`}>
-          {selectedView === 'grid' ? (
+          {selectedView === 'grid' && (
             <div className="predictions-grid">
               {filteredAndSortedPredictions.map((prediction, index) => {
                 const capacity = prediction.capacity || 100;
@@ -400,25 +605,34 @@ const DashboardContent = () => {
                       <div className="shelter-info">
                         <h3>{prediction.name}</h3>
                         <div className="status-indicator">
-                          <span className="status-icon">{statusIcon}</span>
+                          <span className={`status-icon ${statusIcon}`}></span>
                           <span className="status-text">{statusText}</span>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleAddToMyShelters(prediction.name, capacity)}
-                        disabled={addingToMyShelters[prediction.name]}
-                        className="add-to-shelters-btn"
-                        title="Add to Your Shelters"
-                      >
-                        {addingToMyShelters[prediction.name] ? (
-                          <>
-                            <LoadingSpinner size="small" />
-                            Adding...
-                          </>
-                        ) : (
-                          '+'
-                        )}
-                      </button>
+                      <div className="header-actions">
+                        <button
+                          onClick={() => handleQuickRecord(prediction.name, capacity)}
+                          className="quick-record-btn"
+                          title="Quick Record Data"
+                        >
+                          Record
+                        </button>
+                        <button
+                          onClick={() => handleAddToMyShelters(prediction.name, capacity)}
+                          disabled={addingToMyShelters[prediction.name]}
+                          className="add-to-shelters-btn"
+                          title="Add to Your Shelters"
+                        >
+                          {addingToMyShelters[prediction.name] ? (
+                            <>
+                              <LoadingSpinner size="small" />
+                              Adding...
+                            </>
+                          ) : (
+                            '+'
+                          )}
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="utilization-bar">
@@ -469,7 +683,9 @@ const DashboardContent = () => {
                 );
               })}
             </div>
-          ) : (
+          )}
+
+          {selectedView === 'table' && (
             <div className="predictions-table">
               <table>
                 <thead>
@@ -497,7 +713,7 @@ const DashboardContent = () => {
                         <td className="shelter-name">{prediction.name}</td>
                         <td>
                           <div className="table-status">
-                            <span className="status-icon">{statusIcon}</span>
+                            <span className={`status-icon ${statusIcon}`}></span>
                             <span className="status-text">{statusText}</span>
                           </div>
                         </td>
@@ -524,6 +740,181 @@ const DashboardContent = () => {
               </table>
             </div>
           )}
+
+          {selectedView === 'charts' && (
+            <div className="charts-container">
+              <ShelterCharts 
+                predictions={filteredAndSortedPredictions}
+                recordedData={recordedData}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Shelter Charts Component
+const ShelterCharts = ({ predictions, recordedData }) => {
+  const [selectedShelter, setSelectedShelter] = useState('');
+  const [chartType, setChartType] = useState('occupancy');
+
+  const shelters = [...new Set([
+    ...predictions.map(p => p.name),
+    ...recordedData.map(r => r.shelterName)
+  ])];
+
+  const getShelterData = (shelterName) => {
+    const prediction = predictions.find(p => p.name === shelterName);
+    const recorded = recordedData.filter(r => r.shelterName === shelterName);
+    
+    return {
+      prediction,
+      recorded,
+      hasData: prediction || recorded.length > 0
+    };
+  };
+
+  const renderBarChart = (shelterName) => {
+    const data = getShelterData(shelterName);
+    if (!data.hasData) return <p>No data available for this shelter</p>;
+
+    const maxValue = Math.max(
+      data.prediction?.predicted_influx || 0,
+      data.prediction?.capacity || 0,
+      ...data.recorded.map(r => Math.max(r.currentOccupancy, r.capacity))
+    );
+
+    return (
+      <div className="bar-chart">
+        <div className="chart-header">
+          <h4>{shelterName} - Occupancy Data</h4>
+          <div className="chart-legend">
+            <span className="legend-item">
+              <span className="legend-color predicted"></span>
+              Predicted
+            </span>
+            <span className="legend-item">
+              <span className="legend-color recorded"></span>
+              Recorded
+            </span>
+            <span className="legend-item">
+              <span className="legend-color capacity"></span>
+              Capacity
+            </span>
+          </div>
+        </div>
+        
+        <div className="chart-container">
+          {data.prediction && (
+            <div className="chart-bar-group">
+              <div className="bar-label">Predicted</div>
+              <div className="bar-container">
+                <div 
+                  className="bar predicted"
+                  style={{ 
+                    width: `${(data.prediction.predicted_influx / maxValue) * 100}%`,
+                    height: '30px'
+                  }}
+                >
+                  <span className="bar-value">{data.prediction.predicted_influx}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {data.recorded.map((record, index) => (
+            <div key={index} className="chart-bar-group">
+              <div className="bar-label">
+                Recorded ({new Date(record.timestamp).toLocaleDateString()})
+              </div>
+              <div className="bar-container">
+                <div 
+                  className="bar recorded"
+                  style={{ 
+                    width: `${(record.currentOccupancy / maxValue) * 100}%`,
+                    height: '30px'
+                  }}
+                >
+                  <span className="bar-value">{record.currentOccupancy}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {data.prediction && (
+            <div className="chart-bar-group">
+              <div className="bar-label">Capacity</div>
+              <div className="bar-container">
+                <div 
+                  className="bar capacity"
+                  style={{ 
+                    width: `${(data.prediction.capacity / maxValue) * 100}%`,
+                    height: '30px'
+                  }}
+                >
+                  <span className="bar-value">{data.prediction.capacity}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="charts-view">
+      <div className="charts-controls">
+        <div className="chart-selector">
+          <label htmlFor="shelter-select">Select Shelter:</label>
+          <select
+            id="shelter-select"
+            value={selectedShelter}
+            onChange={(e) => setSelectedShelter(e.target.value)}
+          >
+            <option value="">Choose a shelter...</option>
+            {shelters.map(shelter => (
+              <option key={shelter} value={shelter}>{shelter}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="chart-type-selector">
+          <label htmlFor="chart-type">Chart Type:</label>
+          <select
+            id="chart-type"
+            value={chartType}
+            onChange={(e) => setChartType(e.target.value)}
+          >
+            <option value="occupancy">Occupancy Comparison</option>
+            <option value="utilization">Utilization Rate</option>
+            <option value="trends">Historical Trends</option>
+          </select>
+        </div>
+      </div>
+      
+      {selectedShelter ? (
+        <div className="chart-content">
+          {chartType === 'occupancy' && renderBarChart(selectedShelter)}
+          {chartType === 'utilization' && (
+            <div className="utilization-chart">
+              <h4>Utilization Rate Analysis</h4>
+              <p>Utilization chart for {selectedShelter} coming soon...</p>
+            </div>
+          )}
+          {chartType === 'trends' && (
+            <div className="trends-chart">
+              <h4>Historical Trends</h4>
+              <p>Trends chart for {selectedShelter} coming soon...</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="no-chart-selected">
+          <h4>Select a shelter to view charts</h4>
+          <p>Choose a shelter from the dropdown above to see detailed charts and analytics.</p>
         </div>
       )}
     </div>
