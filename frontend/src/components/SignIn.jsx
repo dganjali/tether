@@ -79,7 +79,9 @@ const SignIn = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
-            <img src={logo} alt="Logo" className="auth-logo-img" />
+            <div className="logo-container">
+              <img src={logo} alt="Toronto Shelter Analytics" className="auth-logo-img" />
+            </div>
           </div>
           <h1>Welcome Back</h1>
           <p>Sign in to access Toronto Shelter Analytics Dashboard</p>
