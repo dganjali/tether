@@ -62,10 +62,10 @@ const Dashboard = () => {
 
   const getSeverityColor = (severity) => {
     switch (severity) {
-      case 'HIGH': return '#D03737';
-      case 'MEDIUM': return '#FFA500';
-      case 'LOW': return '#28A745';
-      default: return '#6C757D';
+      case 'HIGH': return '#ef4444';
+      case 'MEDIUM': return '#f59e0b';
+      case 'LOW': return '#10b981';
+      default: return '#64748b';
     }
   };
 
@@ -84,11 +84,17 @@ const Dashboard = () => {
         <div className="dashboard-header">
           <img src={logo} alt="Logo" className="dashboard-logo" />
           <h1>Dashboard</h1>
-          <button onClick={handleLogout} className="logout-btn">Logout</button>
+          <button onClick={handleLogout} className="logout-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+            </svg>
+            Logout
+          </button>
         </div>
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading shelter data...</p>
+          <h2>Loading Dashboard</h2>
+          <p>Fetching shelter data and predictions...</p>
         </div>
       </div>
     );
@@ -99,18 +105,32 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <img src={logo} alt="Logo" className="dashboard-logo" />
         <h1>Dashboard</h1>
-        <button onClick={handleLogout} className="logout-btn">Logout</button>
+        <button onClick={handleLogout} className="logout-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+          </svg>
+          Logout
+        </button>
       </div>
 
       <div className="dashboard-content">
         {/* AI Recommendations Section */}
         <div className="recommendations-section">
-          <h2>🤖 AI-Powered Recommendations</h2>
-          <p>Get intelligent resource allocation recommendations based on predicted influx</p>
+          <div className="section-header">
+            <div className="section-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+            <div className="section-title">
+              <h2>AI-Powered Recommendations</h2>
+              <p>Get intelligent resource allocation recommendations based on predicted influx</p>
+            </div>
+          </div>
           
           <div className="recommendations-controls">
             <div className="form-group">
-              <label>Select Shelter:</label>
+              <label>Select Shelter</label>
               <select 
                 value={selectedShelter} 
                 onChange={(e) => setSelectedShelter(e.target.value)}
@@ -126,7 +146,7 @@ const Dashboard = () => {
             </div>
             
             <div className="form-group">
-              <label>Predicted Influx:</label>
+              <label>Predicted Influx</label>
               <input
                 type="number"
                 value={selectedCapacity}
@@ -141,6 +161,9 @@ const Dashboard = () => {
               disabled={!selectedShelter || !selectedCapacity}
               className="btn btn-primary"
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
               Get AI Recommendations
             </button>
           </div>
@@ -150,7 +173,10 @@ const Dashboard = () => {
               {recommendations.map((rec, index) => (
                 <div key={index} className="recommendation-card">
                   <div className="recommendation-header">
-                    <h3>{rec.shelter_name}</h3>
+                    <div className="recommendation-title">
+                      <h3>{rec.shelter_name}</h3>
+                      <span className="recommendation-subtitle">AI Analysis Report</span>
+                    </div>
                     <div className="severity-badge" style={{ backgroundColor: getSeverityColor(rec.severity) }}>
                       {getSeverityIcon(rec.severity)} {rec.severity} SEVERITY
                     </div>
@@ -179,12 +205,22 @@ const Dashboard = () => {
 
                   <div className="recommendation-content">
                     <div className="llm-feedback">
-                      <h4>AI Recommendations</h4>
+                      <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        AI Recommendations
+                      </h4>
                       <pre className="recommendation-text">{rec.llm_feedback}</pre>
                     </div>
                     
                     <div className="action-items">
-                      <h4>Immediate Actions</h4>
+                      <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        Immediate Actions
+                      </h4>
                       <ul>
                         {rec.action_items && rec.action_items.map((action, idx) => (
                           <li key={idx}>{action}</li>
@@ -198,17 +234,40 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Existing Predictions Section */}
+        {/* Current Predictions Section */}
         <div className="predictions-section">
-          <h2>📊 Current Predictions</h2>
-          {error && <div className="error-message">{error}</div>}
+          <div className="section-header">
+            <div className="section-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+              </svg>
+            </div>
+            <div className="section-title">
+              <h2>Current Predictions</h2>
+              <p>Real-time shelter occupancy predictions and capacity analysis</p>
+            </div>
+          </div>
+          
+          {error && (
+            <div className="error-message">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L1 21h22L12 2zm-2 15h4v2h-4v-2zm0-8h4v6h-4V9z"/>
+              </svg>
+              {error}
+            </div>
+          )}
           
           <div className="predictions-grid">
             {predictions.map((prediction, index) => (
               <div key={index} className="prediction-card">
                 <div className="prediction-header">
-                  <h3>{prediction.name}</h3>
-                  <span className="prediction-date">{new Date().toLocaleDateString()}</span>
+                  <div className="prediction-title">
+                    <h3>{prediction.name}</h3>
+                    <span className="prediction-date">{new Date().toLocaleDateString()}</span>
+                  </div>
+                  <span className={`status-badge ${prediction.predicted_influx > (prediction.capacity || 0) ? 'critical' : 'normal'}`}>
+                    {prediction.predicted_influx > (prediction.capacity || 0) ? 'Critical' : 'Normal'}
+                  </span>
                 </div>
                 
                 <div className="prediction-stats">
