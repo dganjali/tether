@@ -73,12 +73,12 @@ const ResourceFinder = () => {
       if (response.ok && data.success) {
         setResults(data.results);
         if (data.results.length > 0) {
-          showSuccess(`Found ${data.results.length} nearby resources!`);
+          showSuccess(`Found ${data.results.length} nearby shelters!`);
         } else {
-          showError('No resources found for your location and selected services');
+          showError('No shelters found for your location and selected services');
         }
       } else {
-        showError(data.error || 'Failed to find resources');
+        showError(data.error || 'Failed to find shelters');
       }
     } catch (error) {
       console.error('Error finding resources:', error);
@@ -117,10 +117,10 @@ const ResourceFinder = () => {
           <div className="logo-container">
             <img src={logo} alt="Logo" className="header-logo" />
           </div>
-          <div className="title-container">
-            <h1>Resource Finder</h1>
-            <p>Find nearby homeless shelters and services based on your location and needs</p>
-          </div>
+                      <div className="title-container">
+              <h1>Shelter Finder</h1>
+              <p>Find nearby homeless shelters and services based on your location and needs</p>
+            </div>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ const ResourceFinder = () => {
         {/* Form Section */}
         <div className="form-section">
           <div className="form-card">
-            <h2>Find Resources</h2>
+            <h2>Find Shelters</h2>
             <p>Enter your location and select the services you need</p>
 
             <form onSubmit={handleSubmit} className="resource-form">
@@ -148,7 +148,7 @@ const ResourceFinder = () => {
                   className="location-input"
                 />
                 <div className="input-hint">
-                  We'll find resources near this location
+                  We'll find shelters near this location
                 </div>
               </div>
 
@@ -229,12 +229,12 @@ const ResourceFinder = () => {
                   {loading ? (
                     <>
                       <LoadingSpinner size="small" />
-                      <span>Searching for resources...</span>
+                      <span>Searching for shelters...</span>
                     </>
                   ) : (
                     <>
                       <span className="button-icon">🔍</span>
-                      <span>Find Resources</span>
+                      <span>Find Shelters</span>
                     </>
                   )}
                 </button>
@@ -255,7 +255,7 @@ const ResourceFinder = () => {
         {results.length > 0 && (
           <div className="results-section">
             <div className="results-header">
-              <h2>Found {results.length} Resources</h2>
+              <h2>Found {results.length} Shelters</h2>
               <p>Sorted by relevance and distance</p>
             </div>
 

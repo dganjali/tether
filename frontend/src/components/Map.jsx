@@ -203,7 +203,7 @@ const Map = () => {
         <div className="map-actions">
           <Link to="/resource-finder" className="resource-finder-btn">
             <span className="btn-icon">🔍</span>
-            Resource Finder
+            Shelter Finder
           </Link>
         </div>
       </div>
