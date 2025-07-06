@@ -59,7 +59,7 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
     logger.info('Executing Python scraper', { command });
     
     exec(command, { 
-      timeout: 60000, // 1 minute timeout (reduced from 2 minutes)
+      timeout: 90000, // 1.5 minutes timeout for Toronto-specific searches
       env: {
         ...process.env,
         PYTHONPATH: path.join(__dirname, '..'),
@@ -81,7 +81,7 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
         if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
           return res.status(408).json({ 
             success: false, 
-            error: 'Request timed out. Please try again with fewer services or a more specific location.' 
+            error: 'Request timed out. Toronto shelter search is taking longer than expected. Please try again.' 
           });
         }
         

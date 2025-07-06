@@ -110,18 +110,23 @@ class ResourceFinder:
     
     def search_services(self, location: str, selected_services: List[str]) -> List[Dict]:
         """
-        Fast search for services using minimal queries.
+        Fast search for services using Toronto-specific queries.
         """
         all_results = []
         
-        # Focus on shelters and emergency housing
+        # Toronto-specific search queries with longer processing time
         search_queries = [
-            f"homeless shelters emergency housing {location}",
-            f"emergency shelters overnight accommodation {location}",
-            f"homeless shelters crisis housing {location}"
+            f"homeless shelters Toronto Ontario Canada",
+            f"emergency shelters Toronto downtown",
+            f"homeless shelters emergency housing Toronto",
+            f"Toronto homeless shelters overnight accommodation",
+            f"Toronto emergency housing crisis shelters",
+            f"homeless shelters GTA Toronto area",
+            f"Toronto shelter services homeless assistance",
+            f"emergency shelters Toronto Ontario Canada"
         ]
         
-        logger.info(f"Executing {len(search_queries)} search queries")
+        logger.info(f"Executing {len(search_queries)} Toronto-specific search queries")
         
         for i, query in enumerate(search_queries):
             try:
@@ -133,11 +138,13 @@ class ResourceFinder:
                 
                 payload = {
                     'q': query,
-                    'num': 8,  # Reduced for speed
-                    'gl': 'ca'
+                    'num': 10,  # Increased for better coverage
+                    'gl': 'ca',
+                    'hl': 'en',
+                    'location': 'Toronto, Ontario, Canada'
                 }
                 
-                response = requests.post(url, headers=headers, json=payload, timeout=15)
+                response = requests.post(url, headers=headers, json=payload, timeout=20)
                 response.raise_for_status()
                 
                 data = response.json()
@@ -148,23 +155,40 @@ class ResourceFinder:
                 
                 logger.info(f"Query {i+1}/{len(search_queries)}: Found {len(data.get('organic', []))} results")
                 
-                # Minimal rate limiting
-                time.sleep(0.3)
+                # Longer rate limiting for better results
+                time.sleep(1.0)
                 
             except Exception as e:
                 logger.error(f"Search error for query '{query}': {e}")
                 continue
         
+        # Filter results to ensure they're Toronto-specific
+        toronto_results = []
+        toronto_keywords = ['toronto', 'gta', 'ontario', 'canada', 'downtown', 'scarborough', 'etobicoke', 'north york']
+        
+        for result in all_results:
+            text_to_check = f"{result.get('title', '')} {result.get('snippet', '')}".lower()
+            
+            # Check if result mentions Toronto or related areas
+            is_toronto_related = any(keyword in text_to_check for keyword in toronto_keywords)
+            
+            # Also check if it's a shelter-related result
+            shelter_keywords = ['shelter', 'emergency housing', 'crisis housing', 'homeless', 'overnight']
+            is_shelter_related = any(keyword in text_to_check for keyword in shelter_keywords)
+            
+            if is_toronto_related and is_shelter_related:
+                toronto_results.append(result)
+        
         # Remove duplicate URLs
         seen_urls = set()
         unique_results = []
-        for result in all_results:
+        for result in toronto_results:
             url = result.get('link', '')
             if url and url not in seen_urls:
                 seen_urls.add(url)
                 unique_results.append(result)
         
-        logger.info(f"Total unique results found: {len(unique_results)}")
+        logger.info(f"Total Toronto-specific shelter results found: {len(unique_results)}")
         return unique_results
     
     def match_keywords(self, text: str, selected_services: List[str]) -> List[str]:
@@ -187,9 +211,9 @@ class ResourceFinder:
     def find_resources(self, location: str, selected_services: List[str], 
                       use_llm: bool = False, enhance_with_scraping: bool = True) -> List[ServiceResult]:
         """
-        Main method to find resources - simplified for speed.
+        Main method to find resources - optimized for Toronto shelters.
         """
-        logger.info(f"Starting resource search for location: {location}")
+        logger.info(f"Starting Toronto-specific resource search for location: {location}")
         logger.info(f"Selected services: {selected_services}")
         
         # Get coordinates
@@ -200,16 +224,17 @@ class ResourceFinder:
             logger.error(f"Failed to get coordinates: {e}")
             return []
         
-        # Search for services
+        # Search for services with longer processing time
+        logger.info("Searching for Toronto shelters (this may take 10-15 seconds)...")
         search_results = self.search_services(location, selected_services)
         
         if not search_results:
-            logger.warning("No search results found")
+            logger.warning("No Toronto shelter results found")
             return []
         
-        logger.info(f"Found {len(search_results)} initial search results")
+        logger.info(f"Found {len(search_results)} Toronto shelter results")
         
-        # Process results quickly
+        # Process results with Toronto-specific filtering
         processed_results = []
         
         for result in search_results:
@@ -227,13 +252,18 @@ class ResourceFinder:
             service_overlap = len(set(matching_services) & set(selected_services))
             match_score = service_overlap / len(selected_services)
             
-            # Prioritize shelter-related results
+            # Prioritize Toronto shelter-related results
             text_lower = text_to_analyze.lower()
+            toronto_keywords = ['toronto', 'gta', 'ontario', 'canada', 'downtown', 'scarborough', 'etobicoke', 'north york']
             shelter_keywords = ['shelter', 'emergency housing', 'crisis housing', 'homeless shelter', 'overnight']
+            
+            has_toronto_keywords = any(keyword in text_lower for keyword in toronto_keywords)
             has_shelter_keywords = any(keyword in text_lower for keyword in shelter_keywords)
             
-            # Boost score for shelter-related results
-            if has_shelter_keywords:
+            # Boost score for Toronto shelter-related results
+            if has_toronto_keywords and has_shelter_keywords:
+                match_score *= 2.0
+            elif has_shelter_keywords:
                 match_score *= 1.5
             
             # Create ServiceResult
@@ -253,20 +283,20 @@ class ResourceFinder:
             
             processed_results.append(service_result)
             
-            # Stop after 6 results for speed, but ensure minimum of 3
-            if len(processed_results) >= 6:
+            # Allow more results for better coverage
+            if len(processed_results) >= 10:
                 break
         
         # Ensure we have at least 3 results
         if len(processed_results) < 3:
-            logger.warning(f"Only found {len(processed_results)} results, returning what we have")
+            logger.warning(f"Only found {len(processed_results)} Toronto shelter results, returning what we have")
         else:
-            logger.info(f"Found {len(processed_results)} results (minimum 3 required)")
+            logger.info(f"Found {len(processed_results)} Toronto shelter results")
         
         # Sort by match score
         processed_results.sort(key=lambda x: -x.match_score)
         
-        logger.info(f"Found {len(processed_results)} relevant results")
+        logger.info(f"Returning {len(processed_results)} Toronto shelter results")
         return processed_results
 
 def main():
