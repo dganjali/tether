@@ -1,40 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useToast } from '../context/ToastContext';
-import LoadingSpinner from './LoadingSpinner';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './ResourceFinder.css';
-import logo from '../images/LOGO.png';
 
 const ResourceFinder = () => {
   const [location, setLocation] = useState('');
   const [selectedServices, setSelectedServices] = useState([]);
-  const [availableServices, setAvailableServices] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [useLLM, setUseLLM] = useState(false);
-  const [enhanceScraping, setEnhanceScraping] = useState(true);
-  const { showError, showSuccess } = useToast();
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchAvailableServices();
-  }, []);
-
-  const fetchAvailableServices = async () => {
-    try {
-      const response = await fetch('/api/available-services');
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableServices(data.services);
-      }
-    } catch (error) {
-      console.error('Error fetching available services:', error);
-    }
+  const availableServices = {
+    'showers': 'Showers & Hygiene',
+    'meals': 'Meals & Food',
+    'mental_health': 'Mental Health Services',
+    'medical': 'Medical Care',
+    'laundry': 'Laundry Services',
+    'wifi': 'WiFi & Internet',
+    'shelter': 'Emergency Shelter',
+    'clothing': 'Clothing & Supplies',
+    'counseling': 'Counseling Services',
+    'job_assistance': 'Job Assistance',
+    'legal_aid': 'Legal Aid',
+    'substance_abuse': 'Substance Abuse Support'
   };
 
-  const handleServiceToggle = (serviceKey) => {
+  const handleServiceToggle = (service) => {
     setSelectedServices(prev => 
-      prev.includes(serviceKey)
-        ? prev.filter(s => s !== serviceKey)
-        : [...prev, serviceKey]
+      prev.includes(service)
+        ? prev.filter(s => s !== service)
+        : [...prev, service]
     );
   };
 
@@ -42,16 +36,17 @@ const ResourceFinder = () => {
     e.preventDefault();
     
     if (!location.trim()) {
-      showError('Please enter a location');
+      setError('Please enter a location');
       return;
     }
     
     if (selectedServices.length === 0) {
-      showError('Please select at least one service');
+      setError('Please select at least one service');
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
+    setError('');
     setResults([]);
 
     try {
@@ -63,278 +58,170 @@ const ResourceFinder = () => {
         body: JSON.stringify({
           location: location.trim(),
           selectedServices,
-          useLLM,
-          enhanceScraping
+          useLLM: false,
+          enhanceScraping: true
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        setResults(data.results);
-        if (data.results.length > 0) {
-          showSuccess(`Found ${data.results.length} nearby shelters!`);
-        } else {
-          showError('No shelters found for your location and selected services');
-        }
+      if (data.success) {
+        setResults(data.results || []);
       } else {
-        showError(data.error || 'Failed to find shelters');
+        setError(data.error || 'Failed to find resources');
       }
-    } catch (error) {
-      console.error('Error finding shelters:', error);
-      showError('Failed to connect to the server');
+    } catch (err) {
+      setError('Network error. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const getServiceIcon = (service) => {
-    const icons = {
-      'showers': '🚿',
-      'meals': '🍽️',
-      'mental_health': '🧠',
-      'medical': '🏥',
-      'laundry': '👕',
-      'wifi': '📶',
-      'shelter': '🏠',
-      'clothing': '👔',
-      'counseling': '💬',
-      'job_assistance': '💼',
-      'legal_aid': '⚖️',
-      'substance_abuse': '💊'
-    };
-    return icons[service] || '📍';
+  const formatDistance = (distance) => {
+    if (!distance) return 'Distance unknown';
+    return `${distance} km away`;
   };
 
-  const getMatchScoreColor = (score) => {
-    if (score >= 0.8) return 'excellent';
-    if (score >= 0.6) return 'good';
-    if (score >= 0.4) return 'fair';
-    return 'poor';
+  const formatServices = (services) => {
+    if (!services || services.length === 0) return 'Services not specified';
+    return services.map(service => availableServices[service] || service).join(', ');
   };
 
   return (
-    <div className="shelter-finder-page">
-      {/* Header */}
-      <header className="finder-header">
-        <div className="header-content">
-          <div className="logo-section">
-            <img src={logo} alt="Logo" className="header-logo" />
+    <div className="resource-finder">
+      <div className="resource-finder-container">
+        <header className="resource-finder-header">
+          <h1>Shelter Finder</h1>
+          <p>Find nearby shelters and services based on your location and needs</p>
+        </header>
+
+        <form onSubmit={handleSubmit} className="resource-finder-form">
+          <div className="form-group">
+            <label htmlFor="location">Location</label>
+            <input
+              type="text"
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Enter your address, city, or postal code"
+              className="location-input"
+            />
           </div>
-          <div className="title-section">
-            <h1>Shelter Finder</h1>
-            <p>Find nearby homeless shelters and services based on your location and needs</p>
-          </div>
-        </div>
-      </header>
 
-      <main className="finder-main">
-        {/* Form Section */}
-        <section className="form-section">
-          <div className="form-card">
-            <h2>Find Shelters</h2>
-            <p>Enter your location and select the services you need</p>
-
-            <form onSubmit={handleSubmit} className="finder-form">
-              <div className="form-group">
-                <label htmlFor="location">
-                  <span className="label-icon">📍</span>
-                  Location
+          <div className="form-group">
+            <label>Services Needed</label>
+            <div className="services-grid">
+              {Object.entries(availableServices).map(([key, label]) => (
+                <label key={key} className="service-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedServices.includes(key)}
+                    onChange={() => handleServiceToggle(key)}
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span className="service-label">{label}</span>
                 </label>
-                <input
-                  type="text"
-                  id="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Enter your address, city, or postal code"
-                  required
-                  disabled={loading}
-                  className="location-input"
-                />
-                <div className="input-hint">
-                  We'll find shelters near this location
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <span className="label-icon">🛠️</span>
-                  Services Needed
-                  <span className="services-count">
-                    {selectedServices.length} selected
-                  </span>
-                </label>
-                <div className="services-grid">
-                  {Object.entries(availableServices).map(([key, name]) => (
-                    <div
-                      key={key}
-                      className={`service-option ${selectedServices.includes(key) ? 'selected' : ''}`}
-                      onClick={() => handleServiceToggle(key)}
-                    >
-                      <div className="service-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={selectedServices.includes(key)}
-                          onChange={() => handleServiceToggle(key)}
-                          disabled={loading}
-                        />
-                      </div>
-                      <span className="service-icon">{getServiceIcon(key)}</span>
-                      <span className="service-name">{name}</span>
-                    </div>
-                  ))}
-                </div>
-                {selectedServices.length === 0 && (
-                  <div className="form-hint">
-                    Please select at least one service you need
-                  </div>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <span className="label-icon">⚙️</span>
-                  Advanced Options
-                </label>
-                <div className="advanced-options">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={useLLM}
-                      onChange={(e) => setUseLLM(e.target.checked)}
-                      disabled={loading}
-                    />
-                    <div className="checkbox-content">
-                      <span className="checkbox-title">Use AI Analysis</span>
-                      <span className="checkbox-description">Get AI-powered insights and recommendations</span>
-                    </div>
-                  </label>
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={enhanceScraping}
-                      onChange={(e) => setEnhanceScraping(e.target.checked)}
-                      disabled={loading}
-                    />
-                    <div className="checkbox-content">
-                      <span className="checkbox-title">Enhanced Data Collection</span>
-                      <span className="checkbox-description">Gather detailed information from service websites</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div className="form-actions">
-                <button
-                  type="submit"
-                  className="search-button"
-                  disabled={loading || !location.trim() || selectedServices.length === 0}
-                >
-                  {loading ? (
-                    <>
-                      <LoadingSpinner size="small" />
-                      <span>Searching for shelters...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="button-icon">🔍</span>
-                      <span>Find Shelters</span>
-                    </>
-                  )}
-                </button>
-                
-                {!location.trim() && (
-                  <div className="form-error">Please enter a location</div>
-                )}
-                
-                {location.trim() && selectedServices.length === 0 && (
-                  <div className="form-error">Please select at least one service</div>
-                )}
-              </div>
-            </form>
-          </div>
-        </section>
-
-        {/* Results Section */}
-        {results.length > 0 && (
-          <section className="results-section">
-            <div className="results-header">
-              <h2>Found {results.length} Shelters</h2>
-              <p>Sorted by relevance and distance</p>
+              ))}
             </div>
+          </div>
 
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            className="search-button"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Searching...' : 'Find Shelters'}
+          </button>
+        </form>
+
+        {isLoading && (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Searching for shelters and services...</p>
+          </div>
+        )}
+
+        {results.length > 0 && (
+          <div className="results-section">
+            <h2>Found {results.length} shelter{results.length !== 1 ? 's' : ''}</h2>
             <div className="results-grid">
               {results.map((result, index) => (
                 <div key={index} className="result-card">
                   <div className="result-header">
                     <h3 className="result-title">{result.name}</h3>
-                    <div className={`match-score ${getMatchScoreColor(result.match_score)}`}>
-                      {Math.round(result.match_score * 100)}% Match
+                    <div className="result-score">
+                      <span className="score-label">Match</span>
+                      <span className="score-value">{Math.round(result.match_score * 100)}%</span>
                     </div>
                   </div>
-
-                  <div className="result-services">
-                    {result.matching_services.map((service, idx) => (
-                      <span key={idx} className="service-tag">
-                        {getServiceIcon(service)} {availableServices[service] || service}
-                      </span>
-                    ))}
+                  
+                  <div className="result-details">
+                    {result.address && (
+                      <div className="result-info">
+                        <span className="info-label">Address:</span>
+                        <span className="info-value">{result.address}</span>
+                      </div>
+                    )}
+                    
+                    {result.phone && (
+                      <div className="result-info">
+                        <span className="info-label">Phone:</span>
+                        <span className="info-value">{result.phone}</span>
+                      </div>
+                    )}
+                    
+                    {result.hours && (
+                      <div className="result-info">
+                        <span className="info-label">Hours:</span>
+                        <span className="info-value">{result.hours}</span>
+                      </div>
+                    )}
+                    
+                    <div className="result-info">
+                      <span className="info-label">Services:</span>
+                      <span className="info-value">{formatServices(result.matching_services)}</span>
+                    </div>
+                    
+                    <div className="result-info">
+                      <span className="info-label">Distance:</span>
+                      <span className="info-value">{formatDistance(result.distance_km)}</span>
+                    </div>
                   </div>
-
-                  {result.address && (
-                    <div className="result-info">
-                      <strong>Address:</strong> {result.address}
-                    </div>
+                  
+                  {result.snippet && (
+                    <p className="result-description">{result.snippet}</p>
                   )}
-
-                  {result.phone && (
-                    <div className="result-info">
-                      <strong>Phone:</strong> {result.phone}
-                    </div>
+                  
+                  {result.url && (
+                    <a 
+                      href={result.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="result-link"
+                    >
+                      Visit Website
+                    </a>
                   )}
-
-                  {result.hours && (
-                    <div className="result-info">
-                      <strong>Hours:</strong> {result.hours}
-                    </div>
-                  )}
-
-                  {result.distance_km && (
-                    <div className="result-info">
-                      <strong>Distance:</strong> {result.distance_km.toFixed(1)} km
-                    </div>
-                  )}
-
-                  <div className="result-snippet">
-                    {result.snippet}
-                  </div>
-
-                  {result.llm_summary && (
-                    <div className="llm-summary">
-                      <strong>AI Analysis:</strong> {result.llm_summary}
-                    </div>
-                  )}
-
-                  <a
-                    href={result.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="visit-link"
-                  >
-                    Visit Website →
-                  </a>
                 </div>
               ))}
             </div>
-          </section>
+          </div>
         )}
 
-        {loading && (
-          <section className="loading-section">
-            <LoadingSpinner size="large" text="Searching for shelters..." />
-          </section>
+        {results.length === 0 && !isLoading && !error && (
+          <div className="empty-state">
+            <div className="empty-icon">🏠</div>
+            <h3>Ready to Find Shelters</h3>
+            <p>Enter your location and select the services you need to find nearby shelters and resources.</p>
+          </div>
         )}
-      </main>
+      </div>
     </div>
   );
 };
