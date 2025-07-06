@@ -10,6 +10,7 @@ const RecommendationsContent = () => {
   const [error, setError] = useState(null);
   const [selectedShelter, setSelectedShelter] = useState('');
   const [selectedCapacity, setSelectedCapacity] = useState('');
+  const [selectedPredictedInflux, setSelectedPredictedInflux] = useState('');
 
   useEffect(() => {
     fetchPredictions();
@@ -34,7 +35,10 @@ const RecommendationsContent = () => {
       // Set default selected shelter if available
       if (data.length > 0) {
         setSelectedShelter(data[0].name);
-        setSelectedCapacity(data[0].capacity || 100);
+        setSelectedPredictedInflux(data[0].predicted_influx || 0);
+        // Set a realistic capacity based on the predicted influx
+        const realisticCapacity = Math.max(50, Math.floor((data[0].predicted_influx || 0) * 0.8));
+        setSelectedCapacity(realisticCapacity);
       }
     } catch (err) {
       console.error('Error fetching predictions:', err);
@@ -45,14 +49,14 @@ const RecommendationsContent = () => {
   };
 
   const fetchRecommendations = async () => {
-    if (!selectedShelter || !selectedCapacity) return;
+    if (!selectedShelter || !selectedPredictedInflux || !selectedCapacity) return;
     
     try {
       setFetchingRecommendations(true);
       setError(null);
       
-      console.log('Fetching recommendations for:', selectedShelter, selectedCapacity);
-      const response = await fetch(`/api/recommendations?shelter=${encodeURIComponent(selectedShelter)}&influx=${selectedCapacity}&capacity=${selectedCapacity}`);
+      console.log('Fetching recommendations for:', selectedShelter, selectedPredictedInflux, selectedCapacity);
+      const response = await fetch(`/api/recommendations?shelter=${encodeURIComponent(selectedShelter)}&influx=${selectedPredictedInflux}&capacity=${selectedCapacity}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch recommendations: ${response.status}`);
@@ -84,6 +88,18 @@ const RecommendationsContent = () => {
       case 'MEDIUM': return '⚠️';
       case 'LOW': return '✅';
       default: return 'ℹ️';
+    }
+  };
+
+  const handleShelterChange = (shelterName) => {
+    setSelectedShelter(shelterName);
+    // Find the prediction for this shelter
+    const prediction = predictions.find(p => p.name === shelterName);
+    if (prediction) {
+      setSelectedPredictedInflux(prediction.predicted_influx || 0);
+      // Set a realistic capacity based on the predicted influx
+      const realisticCapacity = Math.max(50, Math.floor((prediction.predicted_influx || 0) * 0.8));
+      setSelectedCapacity(realisticCapacity);
     }
   };
 
@@ -121,13 +137,13 @@ const RecommendationsContent = () => {
           <label>Select Shelter:</label>
           <select 
             value={selectedShelter} 
-            onChange={(e) => setSelectedShelter(e.target.value)}
+            onChange={(e) => handleShelterChange(e.target.value)}
             className="form-control"
           >
             <option value="">Choose a shelter...</option>
             {predictions.map((prediction, index) => (
               <option key={index} value={prediction.name}>
-                {prediction.name}
+                {prediction.name} (Predicted: {prediction.predicted_influx})
               </option>
             ))}
           </select>
@@ -137,16 +153,27 @@ const RecommendationsContent = () => {
           <label>Predicted Influx:</label>
           <input
             type="number"
+            value={selectedPredictedInflux}
+            onChange={(e) => setSelectedPredictedInflux(e.target.value)}
+            className="form-control"
+            placeholder="Enter predicted influx"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Shelter Capacity:</label>
+          <input
+            type="number"
             value={selectedCapacity}
             onChange={(e) => setSelectedCapacity(e.target.value)}
             className="form-control"
-            placeholder="Enter predicted influx"
+            placeholder="Enter shelter capacity"
           />
         </div>
         
         <button 
           onClick={fetchRecommendations}
-          disabled={!selectedShelter || !selectedCapacity || fetchingRecommendations}
+          disabled={!selectedShelter || !selectedPredictedInflux || !selectedCapacity || fetchingRecommendations}
           className="btn btn-primary"
         >
           {fetchingRecommendations ? (
@@ -212,12 +239,12 @@ const RecommendationsContent = () => {
         </div>
       )}
 
-              {predictions.length === 0 && (
-          <div className="no-data">
-            <h3>No Shelter Data Available</h3>
-            <p>No shelter data is currently available to generate recommendations.</p>
-          </div>
-        )}
+      {predictions.length === 0 && (
+        <div className="no-data">
+          <h3>No Shelter Data Available</h3>
+          <p>No shelter data is currently available to generate recommendations.</p>
+        </div>
+      )}
     </div>
   );
 };

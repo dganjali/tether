@@ -241,7 +241,7 @@ app.get('/api/recommendations', (req, res) => {
   const severity = excess <= 2 ? "LOW" : excess <= 5 ? "MEDIUM" : "HIGH";
   const excessPercentage = capacity > 0 ? ((excess / parseInt(capacity)) * 100).toFixed(1) : 0;
   
-  // Generate recommendations using the ML-LLM system
+  // Generate data-driven recommendations using CSV data
   const recommendationData = {
     shelter_name: shelter,
     predicted_occupancy: parseInt(predictedInflux),
@@ -253,139 +253,210 @@ app.get('/api/recommendations', (req, res) => {
     date: new Date().toISOString().split('T')[0]
   };
   
-  // Generate LLM feedback
-  const llmScriptPath = path.join(__dirname, '../ML-LLM-hybrid-recommendation-system/llm_feedback.py');
+  // Generate data-driven recommendations
+  const csvPath = path.join(__dirname, '../data/shelter_occupancy.csv');
   
-  // Check if the LLM script exists
-  if (!fs.existsSync(llmScriptPath)) {
-    console.log('LLM script not found, using fallback recommendations');
+  if (!fs.existsSync(csvPath)) {
+    console.log('CSV data not found, using fallback recommendations');
     return res.json({
       ...recommendationData,
-      llm_feedback: generateBasicRecommendations(excess, severity),
+      llm_feedback: generateDataDrivenRecommendations(excess, severity, parseInt(predictedInflux), parseInt(capacity)),
       reasoning: generateReasoning(severity),
       action_items: generateActionItems(severity)
     });
   }
   
-  exec(`python3 "${llmScriptPath}" "${JSON.stringify(recommendationData)}"`, { 
-    cwd: __dirname,
-    env: { ...process.env, PYTHONPATH: path.join(__dirname, '../ML-LLM-hybrid-recommendation-system') }
-  }, (error, stdout, stderr) => {
-    if (error) {
-      console.error('LLM feedback error:', error);
-      console.error('Stderr:', stderr);
-      // Return basic recommendations if LLM fails
-      return res.json({
-        ...recommendationData,
-        llm_feedback: generateBasicRecommendations(excess, severity),
-        reasoning: generateReasoning(severity),
-        action_items: generateActionItems(severity)
-      });
-    }
-
-    try {
-      const llmFeedback = stdout.trim();
+  // Read CSV data and generate recommendations
+  const csv = require('csv-parser');
+  const fs = require('fs');
+  const results = [];
+  
+  fs.createReadStream(csvPath)
+    .pipe(csv())
+    .on('data', (data) => {
+      if (data.SHELTER_NAME && data.SHELTER_NAME.includes(shelter)) {
+        results.push(data);
+      }
+    })
+    .on('end', () => {
+      const recommendations = generateDataDrivenRecommendationsWithHistory(
+        excess, 
+        severity, 
+        parseInt(predictedInflux), 
+        parseInt(capacity),
+        results,
+        shelter
+      );
+      
       res.json({
         ...recommendationData,
-        llm_feedback: llmFeedback,
+        llm_feedback: recommendations,
         reasoning: generateReasoning(severity),
         action_items: generateActionItems(severity)
       });
-    } catch (parseError) {
-      console.error('LLM feedback parse error:', parseError);
+    })
+    .on('error', (error) => {
+      console.error('CSV reading error:', error);
       res.json({
         ...recommendationData,
-        llm_feedback: generateBasicRecommendations(excess, severity),
+        llm_feedback: generateDataDrivenRecommendations(excess, severity, parseInt(predictedInflux), parseInt(capacity)),
         reasoning: generateReasoning(severity),
         action_items: generateActionItems(severity)
       });
-    }
-  });
+    });
 });
 
-// Helper functions for generating recommendations
-function generateBasicRecommendations(excess, severity) {
-  const recommendations = {
-    LOW: `1. RESOURCE ALLOCATION:
-   - Additional blankets/sleeping bags needed: ${excess}
-   - Extra meals to prepare: ${excess * 3}
-   - Additional staff hours required: ${excess * 8}
-   - Additional funding needed: $${excess * 50}
-
-2. CAPACITY PLANNING:
-   - Overflow beds to set up: ${excess}
-   - Partner shelter beds to reserve: ${Math.max(0, excess - 2)}
-   - Temporary accommodations to arrange: 0
-
-3. STAFFING REQUIREMENTS:
-   - Additional staff members needed: ${Math.ceil(excess / 5)}
-   - Extra volunteer hours required: ${excess * 4}
-   - Specific roles needing additional coverage: Overnight staff
-
-4. SUPPLY CHAIN:
-   - Additional hygiene kits needed: ${excess}
-   - Extra food to order: ${excess * 3} meals
-   - Medical supplies to stock: Basic first aid supplies
-
-5. FINANCIAL PROJECTIONS:
-   - Estimated additional costs: $${excess * 100}
-   - Required emergency funding: $${excess * 200}
-   - Resource allocation budget: $${excess * 300}`,
-    
-    MEDIUM: `1. RESOURCE ALLOCATION:
-   - Additional blankets/sleeping bags needed: ${excess}
-   - Extra meals to prepare: ${excess * 3}
-   - Additional staff hours required: ${excess * 12}
-   - Additional funding needed: $${excess * 75}
-
-2. CAPACITY PLANNING:
-   - Overflow beds to set up: ${excess + 2}
-   - Partner shelter beds to reserve: ${excess + 5}
-   - Temporary accommodations to arrange: ${Math.ceil(excess / 2)}
-
-3. STAFFING REQUIREMENTS:
-   - Additional staff members needed: ${Math.ceil(excess / 3)}
-   - Extra volunteer hours required: ${excess * 6}
-   - Specific roles needing additional coverage: Overnight staff, kitchen staff
-
-4. SUPPLY CHAIN:
-   - Additional hygiene kits needed: ${excess + 2}
-   - Extra food to order: ${excess * 4} meals
-   - Medical supplies to stock: Enhanced first aid supplies
-
-5. FINANCIAL PROJECTIONS:
-   - Estimated additional costs: $${excess * 150}
-   - Required emergency funding: $${excess * 300}
-   - Resource allocation budget: $${excess * 450}`,
-    
-    HIGH: `1. RESOURCE ALLOCATION:
-   - Additional blankets/sleeping bags needed: ${excess}
-   - Extra meals to prepare: ${excess * 3}
-   - Additional staff hours required: ${excess * 16}
-   - Additional funding needed: $${excess * 100}
-
-2. CAPACITY PLANNING:
-   - Overflow beds to set up: ${excess + 5}
-   - Partner shelter beds to reserve: ${excess + 10}
-   - Temporary accommodations to arrange: ${excess}
-
-3. STAFFING REQUIREMENTS:
-   - Additional staff members needed: ${Math.ceil(excess / 2)}
-   - Extra volunteer hours required: ${excess * 8}
-   - Specific roles needing additional coverage: All staff roles
-
-4. SUPPLY CHAIN:
-   - Additional hygiene kits needed: ${excess + 5}
-   - Extra food to order: ${excess * 5} meals
-   - Medical supplies to stock: Comprehensive medical supplies
-
-5. FINANCIAL PROJECTIONS:
-   - Estimated additional costs: $${excess * 200}
-   - Required emergency funding: $${excess * 400}
-   - Resource allocation budget: $${excess * 600}`
-  };
+// Helper functions for generating data-driven recommendations
+function generateDataDrivenRecommendationsWithHistory(excess, severity, predictedOccupancy, capacity, historicalData, shelterName) {
+  // Calculate historical statistics for this shelter
+  const shelterData = historicalData.filter(row => 
+    row.SHELTER_NAME && row.SHELTER_NAME.includes(shelterName)
+  );
   
-  return recommendations[severity] || recommendations.LOW;
+  let avgOccupancy = 0;
+  let maxOccupancy = 0;
+  let avgCapacity = 0;
+  let utilizationRate = 0;
+  
+  if (shelterData.length > 0) {
+    const occupancies = shelterData.map(row => parseInt(row.OCCUPANCY) || 0);
+    const capacities = shelterData.map(row => parseInt(row.CAPACITY) || 0);
+    
+    avgOccupancy = occupancies.reduce((a, b) => a + b, 0) / occupancies.length;
+    maxOccupancy = Math.max(...occupancies);
+    avgCapacity = capacities.reduce((a, b) => a + b, 0) / capacities.length;
+    utilizationRate = avgCapacity > 0 ? (avgOccupancy / avgCapacity) * 100 : 0;
+  }
+  
+  // Calculate resource requirements based on historical patterns and excess
+  const baseMealsPerPerson = 3;
+  const baseStaffHoursPerPerson = 8;
+  const baseFundingPerPerson = 50;
+  const baseHygieneKitsPerPerson = 1;
+  
+  // Adjust based on severity and historical patterns
+  const severityMultiplier = severity === 'HIGH' ? 1.5 : severity === 'MEDIUM' ? 1.2 : 1.0;
+  const historicalMultiplier = utilizationRate > 80 ? 1.3 : utilizationRate > 60 ? 1.1 : 1.0;
+  
+  const totalMultiplier = severityMultiplier * historicalMultiplier;
+  
+  const additionalMeals = Math.ceil(excess * baseMealsPerPerson * totalMultiplier);
+  const additionalStaffHours = Math.ceil(excess * baseStaffHoursPerPerson * totalMultiplier);
+  const additionalFunding = Math.ceil(excess * baseFundingPerPerson * totalMultiplier);
+  const additionalHygieneKits = Math.ceil(excess * baseHygieneKitsPerPerson * totalMultiplier);
+  
+  // Calculate overflow and partner arrangements
+  const overflowBeds = severity === 'HIGH' ? excess + 5 : severity === 'MEDIUM' ? excess + 2 : excess;
+  const partnerBeds = severity === 'HIGH' ? excess + 10 : severity === 'MEDIUM' ? excess + 5 : Math.max(0, excess - 2);
+  const tempAccommodations = severity === 'HIGH' ? excess : severity === 'MEDIUM' ? Math.ceil(excess / 2) : 0;
+  
+  // Calculate staffing requirements
+  const additionalStaff = severity === 'HIGH' ? Math.ceil(excess / 2) : severity === 'MEDIUM' ? Math.ceil(excess / 3) : Math.ceil(excess / 5);
+  const volunteerHours = severity === 'HIGH' ? excess * 8 : severity === 'MEDIUM' ? excess * 6 : excess * 4;
+  
+  // Calculate financial projections
+  const estimatedCosts = additionalFunding * 2;
+  const emergencyFunding = additionalFunding * 4;
+  const resourceBudget = additionalFunding * 6;
+  
+  return `1. RESOURCE ALLOCATION (Based on ${shelterName} historical data):
+   - Additional blankets/sleeping bags needed: ${excess}
+   - Extra meals to prepare: ${additionalMeals} (${baseMealsPerPerson} per person × ${excess} people × ${totalMultiplier.toFixed(1)}x multiplier)
+   - Additional staff hours required: ${additionalStaffHours} hours
+   - Additional funding needed: $${additionalFunding}
+
+2. CAPACITY PLANNING:
+   - Overflow beds to set up: ${overflowBeds}
+   - Partner shelter beds to reserve: ${partnerBeds}
+   - Temporary accommodations to arrange: ${tempAccommodations}
+
+3. STAFFING REQUIREMENTS:
+   - Additional staff members needed: ${additionalStaff}
+   - Extra volunteer hours required: ${volunteerHours} hours
+   - Specific roles needing additional coverage: ${severity === 'HIGH' ? 'All staff roles' : severity === 'MEDIUM' ? 'Overnight staff, kitchen staff' : 'Overnight staff'}
+
+4. SUPPLY CHAIN:
+   - Additional hygiene kits needed: ${additionalHygieneKits}
+   - Extra food to order: ${additionalMeals} meals
+   - Medical supplies to stock: ${severity === 'HIGH' ? 'Comprehensive medical supplies' : severity === 'MEDIUM' ? 'Enhanced first aid supplies' : 'Basic first aid supplies'}
+
+5. FINANCIAL PROJECTIONS:
+   - Estimated additional costs: $${estimatedCosts}
+   - Required emergency funding: $${emergencyFunding}
+   - Resource allocation budget: $${resourceBudget}
+
+HISTORICAL CONTEXT:
+- Average historical occupancy: ${avgOccupancy.toFixed(1)} beds
+- Maximum historical occupancy: ${maxOccupancy} beds
+- Average capacity utilization: ${utilizationRate.toFixed(1)}%
+- Current prediction: ${predictedOccupancy} beds (${excess} over capacity)
+
+RECOMMENDATION FACTORS:
+- Severity multiplier: ${severityMultiplier}x
+- Historical utilization multiplier: ${historicalMultiplier.toFixed(1)}x
+- Total adjustment factor: ${totalMultiplier.toFixed(1)}x`;
+}
+
+function generateDataDrivenRecommendations(excess, severity, predictedOccupancy, capacity) {
+  // Calculate resource requirements based on typical shelter patterns
+  const baseMealsPerPerson = 3;
+  const baseStaffHoursPerPerson = 8;
+  const baseFundingPerPerson = 50;
+  const baseHygieneKitsPerPerson = 1;
+  
+  // Adjust based on severity
+  const severityMultiplier = severity === 'HIGH' ? 1.5 : severity === 'MEDIUM' ? 1.2 : 1.0;
+  
+  const additionalMeals = Math.ceil(excess * baseMealsPerPerson * severityMultiplier);
+  const additionalStaffHours = Math.ceil(excess * baseStaffHoursPerPerson * severityMultiplier);
+  const additionalFunding = Math.ceil(excess * baseFundingPerPerson * severityMultiplier);
+  const additionalHygieneKits = Math.ceil(excess * baseHygieneKitsPerPerson * severityMultiplier);
+  
+  // Calculate overflow and partner arrangements
+  const overflowBeds = severity === 'HIGH' ? excess + 5 : severity === 'MEDIUM' ? excess + 2 : excess;
+  const partnerBeds = severity === 'HIGH' ? excess + 10 : severity === 'MEDIUM' ? excess + 5 : Math.max(0, excess - 2);
+  const tempAccommodations = severity === 'HIGH' ? excess : severity === 'MEDIUM' ? Math.ceil(excess / 2) : 0;
+  
+  // Calculate staffing requirements
+  const additionalStaff = severity === 'HIGH' ? Math.ceil(excess / 2) : severity === 'MEDIUM' ? Math.ceil(excess / 3) : Math.ceil(excess / 5);
+  const volunteerHours = severity === 'HIGH' ? excess * 8 : severity === 'MEDIUM' ? excess * 6 : excess * 4;
+  
+  // Calculate financial projections
+  const estimatedCosts = additionalFunding * 2;
+  const emergencyFunding = additionalFunding * 4;
+  const resourceBudget = additionalFunding * 6;
+  
+  return `1. RESOURCE ALLOCATION:
+   - Additional blankets/sleeping bags needed: ${excess}
+   - Extra meals to prepare: ${additionalMeals} (${baseMealsPerPerson} per person × ${excess} people × ${severityMultiplier.toFixed(1)}x severity multiplier)
+   - Additional staff hours required: ${additionalStaffHours} hours
+   - Additional funding needed: $${additionalFunding}
+
+2. CAPACITY PLANNING:
+   - Overflow beds to set up: ${overflowBeds}
+   - Partner shelter beds to reserve: ${partnerBeds}
+   - Temporary accommodations to arrange: ${tempAccommodations}
+
+3. STAFFING REQUIREMENTS:
+   - Additional staff members needed: ${additionalStaff}
+   - Extra volunteer hours required: ${volunteerHours} hours
+   - Specific roles needing additional coverage: ${severity === 'HIGH' ? 'All staff roles' : severity === 'MEDIUM' ? 'Overnight staff, kitchen staff' : 'Overnight staff'}
+
+4. SUPPLY CHAIN:
+   - Additional hygiene kits needed: ${additionalHygieneKits}
+   - Extra food to order: ${additionalMeals} meals
+   - Medical supplies to stock: ${severity === 'HIGH' ? 'Comprehensive medical supplies' : severity === 'MEDIUM' ? 'Enhanced first aid supplies' : 'Basic first aid supplies'}
+
+5. FINANCIAL PROJECTIONS:
+   - Estimated additional costs: $${estimatedCosts}
+   - Required emergency funding: $${emergencyFunding}
+   - Resource allocation budget: $${resourceBudget}
+
+CALCULATION BASIS:
+- Severity multiplier: ${severityMultiplier}x
+- Base meals per person: ${baseMealsPerPerson}
+- Base staff hours per person: ${baseStaffHoursPerPerson}
+- Base funding per person: $${baseFundingPerPerson}`;
 }
 
 function generateReasoning(severity) {

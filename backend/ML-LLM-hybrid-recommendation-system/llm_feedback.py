@@ -12,31 +12,25 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_llm_feedback(rec):
     prompt = f"""
-    As a homeless shelter management expert with expertise in data-driven decision making, analyze this situation:
+    As a homeless shelter management expert with expertise in data-driven decision making, analyze this situation and provide QUANTITATIVE, SPECIFIC recommendations:
 
     SHELTER DATA:
     - Shelter: {rec.get('shelter_name', '')}
-    - Program: {rec.get('program_name', '')}
-    - Date: {rec.get('date', '')}
     - Predicted occupancy: {rec.get('predicted_occupancy', '')} beds
     - Capacity: {rec.get('capacity', '')} beds
     - Excess: {rec.get('excess', '')} beds over capacity ({rec.get('excess_percentage', '')}% over capacity)
     - Severity: {rec.get('severity', '')}
     - Capacity utilization: {rec.get('capacity_utilization_rate', '')}%
 
-    HISTORICAL CONTEXT:
-    - Average occupancy: {rec.get('avg_occupancy', '')} beds
-    - Maximum historical occupancy: {rec.get('max_occupancy', '')} beds
-    - Average daily influx: {rec.get('avg_daily_influx', '')} beds/day
-    - Maximum daily influx: {rec.get('max_daily_influx', '')} beds/day
-    - Seasonal peak factor: {rec.get('seasonal_peak_factor', '')}x average
-    - Occupancy volatility: {rec.get('occupancy_volatility', '')} beds
+    HISTORICAL CONTEXT (if available):
+    - Average occupancy: {rec.get('avg_occupancy', 'N/A')} beds
+    - Maximum historical occupancy: {rec.get('max_occupancy', 'N/A')} beds
+    - Average daily influx: {rec.get('avg_daily_influx', 'N/A')} beds/day
+    - Maximum daily influx: {rec.get('max_daily_influx', 'N/A')} beds/day
+    - Seasonal peak factor: {rec.get('seasonal_peak_factor', 'N/A')}x average
+    - Occupancy volatility: {rec.get('occupancy_volatility', 'N/A')} beds
 
-    CONTEXT:
-    - Reasoning: {rec.get('reasoning', '')}
-    - Action items: {rec.get('action_items', '')}
-
-    Please provide QUANTITATIVE, DATA-DRIVEN recommendations with specific numbers based on the excess capacity prediction:
+    Based on this data, provide SPECIFIC, QUANTITATIVE recommendations with exact numbers:
 
     1. RESOURCE ALLOCATION (with specific quantities):
        - How many additional blankets/sleeping bags needed?
@@ -57,22 +51,22 @@ def get_llm_feedback(rec):
     4. SUPPLY CHAIN:
        - How many additional hygiene kits needed?
        - How much extra food to order?
-       - How many medical supplies to stock?
+       - What medical supplies to stock?
 
     5. FINANCIAL PROJECTIONS:
        - Estimated additional costs
        - Required emergency funding
        - Resource allocation budget
 
-    Base your recommendations on the excess capacity prediction and typical shelter resource usage patterns. Provide specific numbers and calculations where possible.
+    IMPORTANT: Provide specific numbers and calculations. Base your recommendations on the excess capacity prediction and typical shelter resource usage patterns. Use realistic multipliers based on the severity level.
     """
 
     try:
         response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",  # or "gpt-4" if available
+            model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=500,
-            temperature=0.7,
+            max_tokens=800,
+            temperature=0.3,
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -83,85 +77,133 @@ def generate_fallback_recommendations(rec):
     """Generate fallback recommendations when OpenAI API is not available"""
     excess = rec.get('excess', 0)
     severity = rec.get('severity', 'LOW')
+    predicted_occupancy = rec.get('predicted_occupancy', 0)
+    capacity = rec.get('capacity', 0)
+    
+    # Calculate realistic resource requirements
+    base_meals_per_person = 3
+    base_staff_hours_per_person = 8
+    base_funding_per_person = 50
+    base_hygiene_kits_per_person = 1
+    
+    # Adjust based on severity
+    severity_multiplier = 1.5 if severity == 'HIGH' else 1.2 if severity == 'MEDIUM' else 1.0
+    
+    additional_meals = max(1, int(excess * base_meals_per_person * severity_multiplier))
+    additional_staff_hours = max(1, int(excess * base_staff_hours_per_person * severity_multiplier))
+    additional_funding = max(1, int(excess * base_funding_per_person * severity_multiplier))
+    additional_hygiene_kits = max(1, int(excess * base_hygiene_kits_per_person * severity_multiplier))
+    
+    # Calculate overflow and partner arrangements
+    overflow_beds = excess + (5 if severity == 'HIGH' else 2 if severity == 'MEDIUM' else 0)
+    partner_beds = excess + (10 if severity == 'HIGH' else 5 if severity == 'MEDIUM' else max(0, excess - 2))
+    temp_accommodations = excess if severity == 'HIGH' else (excess // 2 if severity == 'MEDIUM' else 0)
+    
+    # Calculate staffing requirements
+    additional_staff = max(1, excess // (2 if severity == 'HIGH' else 3 if severity == 'MEDIUM' else 5))
+    volunteer_hours = excess * (8 if severity == 'HIGH' else 6 if severity == 'MEDIUM' else 4)
+    
+    # Calculate financial projections
+    estimated_costs = additional_funding * 2
+    emergency_funding = additional_funding * 4
+    resource_budget = additional_funding * 6
     
     recommendations = {
         'LOW': f"""1. RESOURCE ALLOCATION:
    - Additional blankets/sleeping bags needed: {excess}
-   - Extra meals to prepare: {excess * 3}
-   - Additional staff hours required: {excess * 8}
-   - Additional funding needed: ${excess * 50}
+   - Extra meals to prepare: {additional_meals} (3 per person × {excess} people × {severity_multiplier:.1f}x multiplier)
+   - Additional staff hours required: {additional_staff_hours} hours
+   - Additional funding needed: ${additional_funding}
 
 2. CAPACITY PLANNING:
-   - Overflow beds to set up: {excess}
-   - Partner shelter beds to reserve: {max(0, excess - 2)}
-   - Temporary accommodations to arrange: 0
+   - Overflow beds to set up: {overflow_beds}
+   - Partner shelter beds to reserve: {partner_beds}
+   - Temporary accommodations to arrange: {temp_accommodations}
 
 3. STAFFING REQUIREMENTS:
-   - Additional staff members needed: {max(1, excess // 5)}
-   - Extra volunteer hours required: {excess * 4}
+   - Additional staff members needed: {additional_staff}
+   - Extra volunteer hours required: {volunteer_hours} hours
    - Specific roles needing additional coverage: Overnight staff
 
 4. SUPPLY CHAIN:
-   - Additional hygiene kits needed: {excess}
-   - Extra food to order: {excess * 3} meals
+   - Additional hygiene kits needed: {additional_hygiene_kits}
+   - Extra food to order: {additional_meals} meals
    - Medical supplies to stock: Basic first aid supplies
 
 5. FINANCIAL PROJECTIONS:
-   - Estimated additional costs: ${excess * 100}
-   - Required emergency funding: ${excess * 200}
-   - Resource allocation budget: ${excess * 300}""",
+   - Estimated additional costs: ${estimated_costs}
+   - Required emergency funding: ${emergency_funding}
+   - Resource allocation budget: ${resource_budget}
+
+CALCULATION BASIS:
+- Severity multiplier: {severity_multiplier:.1f}x
+- Base meals per person: {base_meals_per_person}
+- Base staff hours per person: {base_staff_hours_per_person}
+- Base funding per person: ${base_funding_per_person}""",
         
         'MEDIUM': f"""1. RESOURCE ALLOCATION:
    - Additional blankets/sleeping bags needed: {excess}
-   - Extra meals to prepare: {excess * 3}
-   - Additional staff hours required: {excess * 12}
-   - Additional funding needed: ${excess * 75}
+   - Extra meals to prepare: {additional_meals} (3 per person × {excess} people × {severity_multiplier:.1f}x multiplier)
+   - Additional staff hours required: {additional_staff_hours} hours
+   - Additional funding needed: ${additional_funding}
 
 2. CAPACITY PLANNING:
-   - Overflow beds to set up: {excess + 2}
-   - Partner shelter beds to reserve: {excess + 5}
-   - Temporary accommodations to arrange: {max(1, excess // 2)}
+   - Overflow beds to set up: {overflow_beds}
+   - Partner shelter beds to reserve: {partner_beds}
+   - Temporary accommodations to arrange: {temp_accommodations}
 
 3. STAFFING REQUIREMENTS:
-   - Additional staff members needed: {max(1, excess // 3)}
-   - Extra volunteer hours required: {excess * 6}
+   - Additional staff members needed: {additional_staff}
+   - Extra volunteer hours required: {volunteer_hours} hours
    - Specific roles needing additional coverage: Overnight staff, kitchen staff
 
 4. SUPPLY CHAIN:
-   - Additional hygiene kits needed: {excess + 2}
-   - Extra food to order: {excess * 4} meals
+   - Additional hygiene kits needed: {additional_hygiene_kits}
+   - Extra food to order: {additional_meals} meals
    - Medical supplies to stock: Enhanced first aid supplies
 
 5. FINANCIAL PROJECTIONS:
-   - Estimated additional costs: ${excess * 150}
-   - Required emergency funding: ${excess * 300}
-   - Resource allocation budget: ${excess * 450}""",
+   - Estimated additional costs: ${estimated_costs}
+   - Required emergency funding: ${emergency_funding}
+   - Resource allocation budget: ${resource_budget}
+
+CALCULATION BASIS:
+- Severity multiplier: {severity_multiplier:.1f}x
+- Base meals per person: {base_meals_per_person}
+- Base staff hours per person: {base_staff_hours_per_person}
+- Base funding per person: ${base_funding_per_person}""",
         
         'HIGH': f"""1. RESOURCE ALLOCATION:
    - Additional blankets/sleeping bags needed: {excess}
-   - Extra meals to prepare: {excess * 3}
-   - Additional staff hours required: {excess * 16}
-   - Additional funding needed: ${excess * 100}
+   - Extra meals to prepare: {additional_meals} (3 per person × {excess} people × {severity_multiplier:.1f}x multiplier)
+   - Additional staff hours required: {additional_staff_hours} hours
+   - Additional funding needed: ${additional_funding}
 
 2. CAPACITY PLANNING:
-   - Overflow beds to set up: {excess + 5}
-   - Partner shelter beds to reserve: {excess + 10}
-   - Temporary accommodations to arrange: {excess}
+   - Overflow beds to set up: {overflow_beds}
+   - Partner shelter beds to reserve: {partner_beds}
+   - Temporary accommodations to arrange: {temp_accommodations}
 
 3. STAFFING REQUIREMENTS:
-   - Additional staff members needed: {max(1, excess // 2)}
-   - Extra volunteer hours required: {excess * 8}
+   - Additional staff members needed: {additional_staff}
+   - Extra volunteer hours required: {volunteer_hours} hours
    - Specific roles needing additional coverage: All staff roles
 
 4. SUPPLY CHAIN:
-   - Additional hygiene kits needed: {excess + 5}
-   - Extra food to order: {excess * 5} meals
+   - Additional hygiene kits needed: {additional_hygiene_kits}
+   - Extra food to order: {additional_meals} meals
    - Medical supplies to stock: Comprehensive medical supplies
 
 5. FINANCIAL PROJECTIONS:
-   - Estimated additional costs: ${excess * 200}
-   - Required emergency funding: ${excess * 400}
-   - Resource allocation budget: ${excess * 600}"""
+   - Estimated additional costs: ${estimated_costs}
+   - Required emergency funding: ${emergency_funding}
+   - Resource allocation budget: ${resource_budget}
+
+CALCULATION BASIS:
+- Severity multiplier: {severity_multiplier:.1f}x
+- Base meals per person: {base_meals_per_person}
+- Base staff hours per person: {base_staff_hours_per_person}
+- Base funding per person: ${base_funding_per_person}"""
     }
     
     return recommendations.get(severity, recommendations['LOW'])
