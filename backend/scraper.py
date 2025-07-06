@@ -1214,7 +1214,7 @@ def main():
     parser.add_argument('--location', required=True, help='Location to search in')
     parser.add_argument('--services', required=True, help='Comma-separated list of services')
     parser.add_argument('--use-llm', action='store_true', help='Use LLM for analysis')
-    parser.add_argument('--enhance-scraping', action='store_true', default=True, help='Enhance results with scraping')
+    parser.add_argument('--enhance-scraping', action='store_true', help='Enhance results with scraping')
     parser.add_argument('--output-json', action='store_true', help='Output results as JSON')
     
     # Parse arguments

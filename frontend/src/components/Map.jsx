@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
@@ -19,6 +19,7 @@ const Map = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedShelter, setSelectedShelter] = useState(null);
+  const mapRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -122,10 +123,11 @@ const Map = () => {
 
   const handleShelterClick = (shelter) => {
     setSelectedShelter(shelter);
-  };
-
-  const handleBackClick = () => {
-    navigate('/');
+    
+    // Zoom to the shelter on the map
+    if (mapRef.current && shelter.lat && shelter.lng) {
+      mapRef.current.setView([shelter.lat, shelter.lng], 15);
+    }
   };
 
   const sheltersWithCoordinates = shelters.filter(shelter => shelter.lat && shelter.lng);
@@ -159,20 +161,13 @@ const Map = () => {
 
   return (
     <div className="map-page">
-      {/* Header with back button */}
+      {/* Header */}
       <div className="map-header">
-        <div className="header-left">
-          <button onClick={handleBackClick} className="back-button">
-            ← Back
-          </button>
-          <div className="header-content">
-            <div className="logo-container">
-              <img src={logo} alt="Logo" className="header-logo" />
-            </div>
-            <div className="title-container">
-              <h1>Toronto Shelter Map</h1>
-              <p>Interactive map showing all shelter locations and their current status</p>
-            </div>
+        <div className="header-content">
+          <img src={logo} alt="Logo" className="header-logo" />
+          <div className="title-container">
+            <h1>Toronto Shelter Map</h1>
+            <p>Interactive map showing all shelter locations and their current status</p>
           </div>
         </div>
         <div className="map-legend">
@@ -195,6 +190,7 @@ const Map = () => {
         {/* Map container */}
         <div className="map-container">
           <MapContainer 
+            ref={mapRef}
             center={[43.6532, -79.3832]} 
             zoom={11} 
             style={{ height: '100%', width: '100%' }}

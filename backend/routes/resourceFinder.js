@@ -52,7 +52,9 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
     const servicesArg = selectedServices.join(',');
     
     // Build the command with proper argument structure
-    const command = `python3 "${pythonScript}" --location "${location}" --services "${servicesArg}" --use-llm ${useLLM} --enhance-scraping ${enhanceScraping} --output-json`;
+    const useLLMFlag = useLLM ? '--use-llm' : '';
+    const enhanceScrapingFlag = enhanceScraping ? '--enhance-scraping' : '';
+    const command = `python3 "${pythonScript}" --location "${location}" --services "${servicesArg}" ${useLLMFlag} ${enhanceScrapingFlag} --output-json`;
     
     logger.info('Executing Python scraper', { command });
     
