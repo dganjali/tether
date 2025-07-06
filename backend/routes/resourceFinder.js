@@ -59,7 +59,7 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
     logger.info('Executing Python scraper', { command });
     
     exec(command, { 
-      timeout: 120000, // 2 minute timeout
+      timeout: 60000, // 1 minute timeout (reduced from 2 minutes)
       env: {
         ...process.env,
         PYTHONPATH: path.join(__dirname, '..'),
@@ -67,7 +67,7 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
         SERPER_API_KEY: process.env.SERPER_API_KEY,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY
       },
-      maxBuffer: 1024 * 1024 * 10 // 10MB buffer for large outputs
+      maxBuffer: 1024 * 1024 * 5 // 5MB buffer (reduced)
     }, (error, stdout, stderr) => {
       if (error) {
         logger.error('Python scraper error', { 
