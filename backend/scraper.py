@@ -317,44 +317,33 @@ class ResourceFinder:
             logger.warning(f"Could not geocode location, using location string: {e}")
             user_coords = None
         
-        # Create focused search strategies - reduced to most effective queries
+        # Create focused search strategies - OPTIMIZED for speed
         search_queries = []
         
-        # Strategy 1: Core shelter searches (most effective)
+        # Strategy 1: Core shelter searches (reduced to 2 most effective)
         core_queries = [
             f"homeless shelters {location}",
-            f"homeless services {location}",
-            f"emergency shelters {location}",
-            f"drop-in centers {location}"
+            f"emergency shelters {location}"
         ]
         search_queries.extend(core_queries)
         
-        # Strategy 2: Service-specific searches (only for selected services)
+        # Strategy 2: Service-specific searches (only 1 per service)
         for service in selected_services:
             if service not in self.available_services:
                 continue
             
-            # Only 2 most effective queries per service
+            # Only 1 most effective query per service
             queries = [
-                f"homeless shelter {service} {location}",
-                f"homeless {service} {location}"
+                f"homeless shelter {service} {location}"
             ]
             search_queries.extend(queries)
         
-        # Strategy 3: Major shelter organizations (only top 3)
+        # Strategy 3: Major shelter organizations (only top 2)
         major_shelters = [
             f"Salvation Army {location}",
-            f"Goodwill {location}",
             f"YMCA {location}"
         ]
         search_queries.extend(major_shelters)
-        
-        # Strategy 4: Broader area search (only if coordinates available)
-        if user_coords and location:
-            nearby_queries = [
-                f"homeless shelters near {location}"
-            ]
-            search_queries.extend(nearby_queries)
         
         # Remove duplicates while preserving order
         seen_queries = set()
@@ -377,7 +366,7 @@ class ResourceFinder:
                 
                 payload = {
                     'q': query,
-                    'num': 20,  # Get more results per query to compensate for fewer queries
+                    'num': 10,  # Reduced for speed
                     'gl': 'ca' if location and 'M5S' in location else 'us'  # Country bias
                 }
                 
@@ -396,7 +385,7 @@ class ResourceFinder:
                 logger.info(f"Query {i+1}/{len(unique_queries)}: Found {len(data.get('organic', []))} results")
                 
                 # Rate limiting
-                time.sleep(0.5)  # Reduced rate limiting
+                time.sleep(0.2)  # Further reduced for speed
                 
             except Exception as e:
                 logger.error(f"Search error for query '{query}': {e}")
@@ -762,6 +751,7 @@ class ResourceFinder:
     def enhance_results_with_details(self, results: List[Dict]) -> List[Dict]:
         """
         Enhance search results with intelligent information extraction from shelter websites.
+        OPTIMIZED: Only scrape top 10 candidates to save time.
         
         Args:
             results: List of search results
@@ -771,7 +761,10 @@ class ResourceFinder:
         """
         enhanced_results = []
         
-        for result in results:
+        # Only enhance top 10 results to save time
+        top_candidates = results[:10]
+        
+        for i, result in enumerate(top_candidates):
             url = result.get('link', '')
             if not url:
                 continue
@@ -798,11 +791,14 @@ class ResourceFinder:
                 
                 enhanced_results.append(result)
                 
-                logger.info(f"Enhanced result: {result.get('title', 'Unknown')} - Services: {details.get('services', [])} - Quality: {result.get('content_quality_score', 0)}")
+                logger.info(f"Enhanced result {i+1}/10: {result.get('title', 'Unknown')} - Services: {details.get('services', [])} - Quality: {result.get('content_quality_score', 0)}")
                 
             except Exception as e:
                 logger.warning(f"Failed to enhance result {url}: {e}")
                 enhanced_results.append(result)
+        
+        # Add remaining results without enhancement
+        enhanced_results.extend(results[10:])
         
         return enhanced_results
     
@@ -998,9 +994,9 @@ class ResourceFinder:
         
         logger.info(f"Found {len(search_results)} initial search results")
         
-        # Step 3: Enhance results with detailed scraping for verification
+        # Step 3: Enhance results with detailed scraping for verification (OPTIMIZED)
         if enhance_with_scraping:
-            logger.info("Enhancing results with detailed website scraping for verification...")
+            logger.info("Enhancing top 10 results with detailed website scraping for verification...")
             search_results = self.enhance_results_with_details(search_results)
         
         # Step 4: Process and filter results with strict shelter verification
@@ -1071,8 +1067,8 @@ class ResourceFinder:
             
             processed_results.append(service_result)
             
-            # Stop after finding 8 good results (we'll return 5-10 best)
-            if len(processed_results) >= 8:
+            # Stop after finding 5 good results (OPTIMIZED for speed)
+            if len(processed_results) >= 5:
                 logger.info(f"Found {len(processed_results)} good results, stopping search")
                 break
         
