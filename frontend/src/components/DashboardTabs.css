@@ -114,8 +114,13 @@
 
 .tab-button.active {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
+  color: #ffffff;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.tab-button.active .tab-name,
+.tab-button.active .tab-description {
+  color: #ffffff;
 }
 
 .tab-button.active:hover {

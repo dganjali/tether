@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './ResourceFinder.css';
+import logo from '../images/LOGO.png';
 
 const ResourceFinder = () => {
   const [location, setLocation] = useState('');
@@ -111,7 +112,10 @@ const ResourceFinder = () => {
     <div className="resource-finder">
       <div className="resource-finder-container">
         <header className="resource-finder-header">
-          <h1>Shelter Finder</h1>
+          <div className="header-content">
+            <img src={logo} alt="Tether Logo" className="resource-finder-logo" />
+            <h1>Shelter Finder</h1>
+          </div>
         </header>
 
         <form onSubmit={handleSubmit} className="resource-finder-form">

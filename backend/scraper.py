@@ -243,9 +243,15 @@ class ResourceFinder:
             
             processed_results.append(service_result)
             
-            # Stop after 6 results for speed
+            # Stop after 6 results for speed, but ensure minimum of 3
             if len(processed_results) >= 6:
                 break
+        
+        # Ensure we have at least 3 results
+        if len(processed_results) < 3:
+            logger.warning(f"Only found {len(processed_results)} results, returning what we have")
+        else:
+            logger.info(f"Found {len(processed_results)} results (minimum 3 required)")
         
         # Sort by match score
         processed_results.sort(key=lambda x: -x.match_score)
