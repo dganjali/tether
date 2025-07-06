@@ -381,4 +381,9 @@
   .auth-footer p {
     color: #94a3b8;
   }
+}
+
+/* Auth-specific FormField label styling */
+.auth-container .form-label {
+  color: #ffffff !important;
 } 
