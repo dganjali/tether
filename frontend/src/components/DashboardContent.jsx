@@ -633,7 +633,7 @@ const ShelterCharts = ({ predictions }) => {
           <div className="chart-y-axis">
             <div className="y-axis-label">Count</div>
             <div className="y-axis-ticks">
-              {[0, Math.round(maxValue * 0.25), Math.round(maxValue * 0.5), Math.round(maxValue * 0.75), maxValue].map(tick => (
+              {[maxValue, Math.round(maxValue * 0.75), Math.round(maxValue * 0.5), Math.round(maxValue * 0.25), 0].map(tick => (
                 <div key={tick} className="y-tick">
                   <span className="tick-label">{tick}</span>
                   <div className="tick-line"></div>

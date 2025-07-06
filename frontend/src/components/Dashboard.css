@@ -234,7 +234,7 @@
 
 .tab-button.active .tab-name,
 .tab-button.active .tab-description {
-  color: #ffffff;
+  color: #000000 !important;
 }
 
 .tab-icon {

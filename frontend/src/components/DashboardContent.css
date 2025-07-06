@@ -806,6 +806,7 @@
   justify-content: space-between;
   height: 220px;
   position: relative;
+  flex-direction: column-reverse;
 }
 
 .y-tick {
@@ -890,10 +891,11 @@
 
 .bar-value {
   position: absolute;
-  top: -20px;
+  bottom: -20px;
   font-size: 9px;
   font-weight: 600;
   white-space: nowrap;
+  color: #333;
 }
 
 .x-labels {
