@@ -5,6 +5,10 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+import { useNavigate, Link } from 'react-router-dom';
+>>>>>>> Stashed changes
 =======
 import { useNavigate, Link } from 'react-router-dom';
 >>>>>>> Stashed changes
@@ -218,6 +222,12 @@ const Map = () => {
             </svg>
             {isShelterListVisible ? 'Hide List' : 'Show List'}
           </button>
+        </div>
+        <div className="map-actions">
+          <Link to="/resource-finder" className="resource-finder-btn">
+            <span className="btn-icon">🔍</span>
+            Resource Finder
+          </Link>
         </div>
         <div className="map-actions">
           <Link to="/resource-finder" className="resource-finder-btn">
