@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const userShelterRoutes = require('./routes/userShelters');
 const alertRoutes = require('./routes/alerts');
 const recordedDataRoutes = require('./routes/recordedData');
+const resourceFinderRoutes = require('./routes/resourceFinder');
 const { 
   globalErrorHandler, 
   notFoundHandler, 
@@ -94,6 +95,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user-shelters', userShelterRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/recorded-data', recordedDataRoutes);
+app.use('/api', resourceFinderRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

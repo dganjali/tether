@@ -142,20 +142,33 @@ const ResourceFinder = () => {
 
             <form onSubmit={handleSubmit} className="resource-form">
               <div className="form-group">
-                <label htmlFor="location">Location</label>
+                <label htmlFor="location">
+                  <span className="label-icon">📍</span>
+                  Location
+                </label>
                 <input
                   type="text"
                   id="location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Enter address, city, or postal code"
+                  placeholder="Enter your address, city, or postal code"
                   required
                   disabled={loading}
+                  className="location-input"
                 />
+                <div className="input-hint">
+                  We'll find resources near this location
+                </div>
               </div>
 
               <div className="form-group">
-                <label>Services Needed</label>
+                <label>
+                  <span className="label-icon">🛠️</span>
+                  Services Needed
+                  <span className="services-count">
+                    {selectedServices.length} selected
+                  </span>
+                </label>
                 <div className="services-grid">
                   {Object.entries(availableServices).map(([key, name]) => (
                     <div
@@ -163,15 +176,31 @@ const ResourceFinder = () => {
                       className={`service-option ${selectedServices.includes(key) ? 'selected' : ''}`}
                       onClick={() => handleServiceToggle(key)}
                     >
+                      <div className="service-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedServices.includes(key)}
+                          onChange={() => handleServiceToggle(key)}
+                          disabled={loading}
+                        />
+                      </div>
                       <span className="service-icon">{getServiceIcon(key)}</span>
                       <span className="service-name">{name}</span>
                     </div>
                   ))}
                 </div>
+                {selectedServices.length === 0 && (
+                  <div className="form-hint">
+                    Please select at least one service you need
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
-                <label>Advanced Options</label>
+                <label>
+                  <span className="label-icon">⚙️</span>
+                  Advanced Options
+                </label>
                 <div className="advanced-options">
                   <label className="checkbox-label">
                     <input
@@ -180,7 +209,10 @@ const ResourceFinder = () => {
                       onChange={(e) => setUseLLM(e.target.checked)}
                       disabled={loading}
                     />
-                    <span>Use AI analysis for better results</span>
+                    <div className="checkbox-content">
+                      <span className="checkbox-title">Use AI Analysis</span>
+                      <span className="checkbox-description">Get AI-powered insights and recommendations</span>
+                    </div>
                   </label>
                   <label className="checkbox-label">
                     <input
@@ -189,25 +221,41 @@ const ResourceFinder = () => {
                       onChange={(e) => setEnhanceScraping(e.target.checked)}
                       disabled={loading}
                     />
-                    <span>Scrape detailed information from websites</span>
+                    <div className="checkbox-content">
+                      <span className="checkbox-title">Enhanced Data Collection</span>
+                      <span className="checkbox-description">Gather detailed information from service websites</span>
+                    </div>
                   </label>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="search-button"
-                disabled={loading || !location.trim() || selectedServices.length === 0}
-              >
-                {loading ? (
-                  <>
-                    <LoadingSpinner size="small" />
-                    Searching...
-                  </>
-                ) : (
-                  'Find Resources'
+              <div className="form-actions">
+                <button
+                  type="submit"
+                  className="search-button"
+                  disabled={loading || !location.trim() || selectedServices.length === 0}
+                >
+                  {loading ? (
+                    <>
+                      <LoadingSpinner size="small" />
+                      <span>Searching for resources...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="button-icon">🔍</span>
+                      <span>Find Resources</span>
+                    </>
+                  )}
+                </button>
+                
+                {!location.trim() && (
+                  <div className="form-error">Please enter a location</div>
                 )}
-              </button>
+                
+                {location.trim() && selectedServices.length === 0 && (
+                  <div className="form-error">Please select at least one service</div>
+                )}
+              </div>
             </form>
           </div>
         </div>

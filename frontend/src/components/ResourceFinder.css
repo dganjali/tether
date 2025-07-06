@@ -136,9 +136,28 @@
   color: #1e293b;
   font-size: 0.95rem;
   letter-spacing: -0.025em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.form-group input[type="text"] {
+.label-icon {
+  font-size: 1.1rem;
+}
+
+.services-count {
+  margin-left: auto;
+  background: #3b82f6;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.form-group input[type="text"],
+.location-input {
   padding: 16px 20px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
@@ -148,15 +167,35 @@
   color: #1e293b;
 }
 
-.form-group input[type="text"]:focus {
+.form-group input[type="text"]:focus,
+.location-input:focus {
   outline: none;
   border-color: #3b82f6;
   background: white;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.form-group input[type="text"]::placeholder {
+.form-group input[type="text"]::placeholder,
+.location-input::placeholder {
   color: #94a3b8;
+}
+
+.input-hint {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.form-hint {
+  font-size: 0.875rem;
+  color: #f59e0b;
+  margin-top: 8px;
+  font-weight: 500;
+  padding: 8px 12px;
+  background: #fef3c7;
+  border-radius: 8px;
+  border-left: 3px solid #f59e0b;
 }
 
 /* Services Grid */
@@ -176,6 +215,22 @@
   cursor: pointer;
   transition: all 0.3s ease;
   background: white;
+  position: relative;
+}
+
+.service-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.service-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b82f6;
+  cursor: pointer;
 }
 
 .service-option:hover {
@@ -210,21 +265,40 @@
 
 .checkbox-label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.checkbox-label:hover {
+  background: #f8fafc;
 }
 
 .checkbox-label input[type="checkbox"] {
   width: 18px;
   height: 18px;
   accent-color: #3b82f6;
+  margin-top: 2px;
 }
 
-.checkbox-label span {
+.checkbox-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkbox-title {
   font-size: 0.95rem;
-  color: #374151;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.checkbox-description {
+  font-size: 0.875rem;
+  color: #64748b;
   font-weight: 500;
 }
 
@@ -257,6 +331,28 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+.button-icon {
+  font-size: 1.1rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.form-error {
+  font-size: 0.875rem;
+  color: #ef4444;
+  font-weight: 500;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border-radius: 8px;
+  border-left: 3px solid #ef4444;
+  text-align: center;
 }
 
 /* Results Section */
