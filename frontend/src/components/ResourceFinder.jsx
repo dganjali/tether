@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import LoadingSpinner from './LoadingSpinner';
 import './ResourceFinder.css';
@@ -13,7 +12,6 @@ const ResourceFinder = () => {
   const [loading, setLoading] = useState(false);
   const [useLLM, setUseLLM] = useState(false);
   const [enhanceScraping, setEnhanceScraping] = useState(true);
-  const navigate = useNavigate();
   const { showError, showSuccess } = useToast();
 
   useEffect(() => {
@@ -90,9 +88,7 @@ const ResourceFinder = () => {
     }
   };
 
-  const handleBackClick = () => {
-    navigate('/');
-  };
+
 
   const getServiceIcon = (service) => {
     const icons = {
@@ -117,18 +113,13 @@ const ResourceFinder = () => {
     <div className="resource-finder-page">
       {/* Header */}
       <div className="resource-header">
-        <div className="header-left">
-          <button onClick={handleBackClick} className="back-button">
-            ← Back
-          </button>
-          <div className="header-content">
-            <div className="logo-container">
-              <img src={logo} alt="Logo" className="header-logo" />
-            </div>
-            <div className="title-container">
-              <h1>Resource Finder</h1>
-              <p>Find nearby homeless shelters and services based on your location and needs</p>
-            </div>
+        <div className="header-content">
+          <div className="logo-container">
+            <img src={logo} alt="Logo" className="header-logo" />
+          </div>
+          <div className="title-container">
+            <h1>Resource Finder</h1>
+            <p>Find nearby homeless shelters and services based on your location and needs</p>
           </div>
         </div>
       </div>

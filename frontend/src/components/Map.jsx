@@ -206,36 +206,6 @@ const Map = () => {
             Resource Finder
           </Link>
         </div>
-        <div className="map-actions">
-          <Link to="/resource-finder" className="resource-finder-btn">
-            <span className="btn-icon">🔍</span>
-            Resource Finder
-          </Link>
-        </div>
-        <div className="map-actions">
-          <Link to="/resource-finder" className="resource-finder-btn">
-            <span className="btn-icon">🔍</span>
-            Resource Finder
-          </Link>
-        </div>
-        <div className="map-actions">
-          <Link to="/resource-finder" className="resource-finder-btn">
-            <span className="btn-icon">🔍</span>
-            Resource Finder
-          </Link>
-        </div>
-        <div className="map-actions">
-          <Link to="/resource-finder" className="resource-finder-btn">
-            <span className="btn-icon">🔍</span>
-            Resource Finder
-          </Link>
-        </div>
-        <div className="map-actions">
-          <Link to="/resource-finder" className="resource-finder-btn">
-            <span className="btn-icon">🔍</span>
-            Resource Finder
-          </Link>
-        </div>
       </div>
       
       <div className="map-main">
