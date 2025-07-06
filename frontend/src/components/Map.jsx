@@ -1,137 +1,142 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useNavigate } from 'react-router-dom';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import './Map.css';
+import logo from '../images/LOGO.png';
+
+// Fix for default markers in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const Map = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
   const [shelters, setShelters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedShelter, setSelectedShelter] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Simulate loading map data
-    const loadMapData = async () => {
-      try {
-        setIsLoading(true);
-        setError('');
-        
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Mock shelter data - in a real app, this would come from an API
-        const mockShelters = [
-          {
-            id: 1,
-            name: 'Downtown Emergency Shelter',
-            address: '123 Main St, Toronto, ON M5V 2H1',
-            coordinates: { lat: 43.6532, lng: -79.3832 },
-            services: ['shelter', 'meals', 'showers'],
-            capacity: 150,
-            occupancy: 120,
-            phone: '(416) 555-0123',
-            hours: '24/7'
-          },
-          {
-            id: 2,
-            name: 'Harbourfront Community Center',
-            address: '456 Queen St W, Toronto, ON M5V 2A9',
-            coordinates: { lat: 43.6487, lng: -79.3774 },
-            services: ['meals', 'medical', 'counseling'],
-            capacity: 80,
-            occupancy: 65,
-            phone: '(416) 555-0456',
-            hours: '7:00 AM - 10:00 PM'
-          },
-          {
-            id: 3,
-            name: 'North End Support Services',
-            address: '789 Yonge St, Toronto, ON M4W 2G8',
-            coordinates: { lat: 43.6702, lng: -79.3868 },
-            services: ['shelter', 'laundry', 'wifi'],
-            capacity: 100,
-            occupancy: 85,
-            phone: '(416) 555-0789',
-            hours: '6:00 PM - 8:00 AM'
-          },
-          {
-            id: 4,
-            name: 'West End Resource Center',
-            address: '321 Bloor St W, Toronto, ON M5S 1W1',
-            coordinates: { lat: 43.6677, lng: -79.3948 },
-            services: ['meals', 'showers', 'mental_health'],
-            capacity: 60,
-            occupancy: 45,
-            phone: '(416) 555-0321',
-            hours: '8:00 AM - 8:00 PM'
-          },
-          {
-            id: 5,
-            name: 'East Side Emergency Services',
-            address: '654 Danforth Ave, Toronto, ON M4K 1L9',
-            coordinates: { lat: 43.6769, lng: -79.3505 },
-            services: ['shelter', 'medical', 'clothing'],
-            capacity: 120,
-            occupancy: 110,
-            phone: '(416) 555-0654',
-            hours: '24/7'
-          }
-        ];
-        
-        setShelters(mockShelters);
-        setIsLoading(false);
-      } catch (err) {
-        setError('Failed to load map data');
-        setIsLoading(false);
-      }
-    };
-
-    loadMapData();
+    fetchShelterData();
   }, []);
+
+  const fetchShelterData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching shelter data...');
+      
+      // Fetch both predictions and locations
+      const [predictionsResponse, locationsResponse] = await Promise.all([
+        fetch('/api/predictions'),
+        fetch('/api/shelter-locations')
+      ]);
+      
+      if (!predictionsResponse.ok) {
+        throw new Error(`Predictions HTTP error! status: ${predictionsResponse.status}`);
+      }
+      
+      if (!locationsResponse.ok) {
+        throw new Error(`Locations HTTP error! status: ${locationsResponse.status}`);
+      }
+      
+      const predictions = await predictionsResponse.json();
+      const locations = await locationsResponse.json();
+      
+      console.log('Predictions:', predictions.length);
+      console.log('Locations:', locations.length);
+      
+      // Combine predictions with locations
+      const combinedShelters = predictions.map(prediction => {
+        const location = locations.find(loc => loc.name === prediction.name);
+        return {
+          ...prediction,
+          lat: location?.lat ? parseFloat(location.lat) : null,
+          lng: location?.lng ? parseFloat(location.lng) : null,
+          address: location?.address || 'Address not available',
+          city: location?.city || 'Toronto',
+          province: location?.province || 'ON'
+        };
+      });
+      
+      console.log('Combined shelters:', combinedShelters.length);
+      console.log('Shelters with coordinates:', combinedShelters.filter(s => s.lat && s.lng).length);
+      
+      setShelters(combinedShelters);
+    } catch (err) {
+      console.error('Error fetching shelter data:', err);
+      setError('Failed to load shelter data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusText = useCallback((influx) => {
+    if (influx > 150) return 'Critical';
+    if (influx >= 80) return 'Warning';
+    return 'Normal';
+  }, []);
+
+  const getStatusColor = useCallback((influx) => {
+    if (influx > 150) return 'critical';
+    if (influx >= 80) return 'warning';
+    return 'normal';
+  }, []);
+
+  const createCustomIcon = useCallback((influx) => {
+    const statusColor = getStatusColor(influx);
+    const color = statusColor === 'critical' ? '#D03737' : statusColor === 'warning' ? '#f39c12' : '#27ae60';
+    const symbol = statusColor === 'critical' || statusColor === 'warning' ? '!' : '✓';
+    
+    return L.divIcon({
+      html: `
+        <div style="
+          background-color: ${color};
+          color: white;
+          border-radius: 50%;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          font-weight: bold;
+          font-size: 12px;
+        ">
+          ${symbol}
+        </div>
+      `,
+      className: 'custom-marker',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+      popupAnchor: [0, -15]
+    });
+  }, [getStatusColor]);
 
   const handleShelterClick = (shelter) => {
     setSelectedShelter(shelter);
   };
 
-  const closeShelterDetails = () => {
-    setSelectedShelter(null);
+  const handleBackClick = () => {
+    navigate('/');
   };
 
-  const getOccupancyColor = (occupancy, capacity) => {
-    const percentage = (occupancy / capacity) * 100;
-    if (percentage >= 90) return '#dc2626'; // Red
-    if (percentage >= 75) return '#f59e0b'; // Yellow
-    return '#10b981'; // Green
-  };
+  const sheltersWithCoordinates = shelters.filter(shelter => shelter.lat && shelter.lng);
 
-  const getOccupancyText = (occupancy, capacity) => {
-    const percentage = Math.round((occupancy / capacity) * 100);
-    if (percentage >= 90) return 'Full';
-    if (percentage >= 75) return 'Busy';
-    return 'Available';
-  };
-
-  const formatServices = (services) => {
-    const serviceLabels = {
-      'shelter': 'Shelter',
-      'meals': 'Meals',
-      'showers': 'Showers',
-      'medical': 'Medical',
-      'counseling': 'Counseling',
-      'laundry': 'Laundry',
-      'wifi': 'WiFi',
-      'mental_health': 'Mental Health',
-      'clothing': 'Clothing'
-    };
-    
-    return services.map(service => serviceLabels[service] || service).join(', ');
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="map-container">
-        <div className="map-loading">
+      <div className="map-loading">
+        <div className="loading-container">
           <div className="loading-spinner"></div>
-          <h2>Loading Shelter Map</h2>
-          <p>Finding nearby shelters and services...</p>
+          <h2>Loading Map...</h2>
+          <p>Fetching shelter locations</p>
         </div>
       </div>
     );
@@ -139,15 +144,12 @@ const Map = () => {
 
   if (error) {
     return (
-      <div className="map-container">
-        <div className="map-error">
+      <div className="map-error">
+        <div className="error-container">
           <div className="error-icon">⚠️</div>
-          <h2>Map Unavailable</h2>
+          <h2>Error Loading Map</h2>
           <p>{error}</p>
-          <button 
-            className="retry-button"
-            onClick={() => window.location.reload()}
-          >
+          <button onClick={fetchShelterData} className="btn-retry">
             Try Again
           </button>
         </div>
@@ -156,148 +158,102 @@ const Map = () => {
   }
 
   return (
-    <div className="map-container">
+    <div className="map-page">
+      {/* Header with back button */}
       <div className="map-header">
-        <h1>Shelter Map</h1>
-        <p>View shelters and their current availability</p>
-      </div>
-
-      <div className="map-content">
-        <div className="map-sidebar">
-          <div className="sidebar-header">
-            <h2>Nearby Shelters</h2>
-            <span className="shelter-count">{shelters.length} shelters found</span>
+        <div className="header-left">
+          <button onClick={handleBackClick} className="back-button">
+            ← Back
+          </button>
+          <div className="header-content">
+            <div className="logo-container">
+              <img src={logo} alt="Logo" className="header-logo" />
+            </div>
+            <div className="title-container">
+              <h1>Toronto Shelter Map</h1>
+              <p>Interactive map showing all shelter locations and their current status</p>
+            </div>
           </div>
-          
-          <div className="shelter-list">
-            {shelters.map((shelter) => (
-              <div 
-                key={shelter.id}
-                className={`shelter-item ${selectedShelter?.id === shelter.id ? 'selected' : ''}`}
-                onClick={() => handleShelterClick(shelter)}
+        </div>
+        <div className="map-legend">
+          <div className="legend-item">
+            <span className="legend-color normal"></span>
+            <span>Normal (&lt;80)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color warning"></span>
+            <span>Warning (80-150)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color critical"></span>
+            <span>Critical (&gt;150)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="map-layout">
+        {/* Map container */}
+        <div className="map-container">
+          <MapContainer 
+            center={[43.6532, -79.3832]} 
+            zoom={11} 
+            style={{ height: '100%', width: '100%' }}
+            className="leaflet-map"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {sheltersWithCoordinates.map((shelter, index) => (
+              <Marker
+                key={index}
+                position={[shelter.lat, shelter.lng]}
+                icon={createCustomIcon(shelter.predicted_influx)}
               >
-                <div className="shelter-header">
-                  <h3 className="shelter-name">{shelter.name}</h3>
-                  <div 
-                    className="occupancy-badge"
-                    style={{ backgroundColor: getOccupancyColor(shelter.occupancy, shelter.capacity) }}
-                  >
-                    {getOccupancyText(shelter.occupancy, shelter.capacity)}
+                <Popup>
+                  <div className="info-window">
+                    <h3>{shelter.name}</h3>
+                    <p><strong>Address:</strong> {shelter.address}</p>
+                    <p><strong>Predicted Influx:</strong> {shelter.predicted_influx}</p>
+                    <p><strong>Status:</strong> {getStatusText(shelter.predicted_influx)}</p>
                   </div>
-                </div>
-                
-                <p className="shelter-address">{shelter.address}</p>
-                
-                <div className="shelter-services">
-                  <span className="services-label">Services:</span>
-                  <span className="services-list">{formatServices(shelter.services)}</span>
-                </div>
-                
-                <div className="shelter-occupancy">
-                  <span className="occupancy-text">
-                    {shelter.occupancy}/{shelter.capacity} beds
-                  </span>
-                  <div className="occupancy-bar">
-                    <div 
-                      className="occupancy-fill"
-                      style={{ 
-                        width: `${(shelter.occupancy / shelter.capacity) * 100}%`,
-                        backgroundColor: getOccupancyColor(shelter.occupancy, shelter.capacity)
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
+                </Popup>
+              </Marker>
             ))}
-          </div>
-        </div>
-
-        <div className="map-view">
-          <div className="map-placeholder">
-            <div className="map-icon">🗺️</div>
-            <h3>Interactive Map</h3>
-            <p>Select a shelter from the list to view details</p>
-            <div className="map-legend">
-              <div className="legend-item">
-                <div className="legend-color" style={{ backgroundColor: '#10b981' }}></div>
-                <span>Available</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ backgroundColor: '#f59e0b' }}></div>
-                <span>Busy</span>
-              </div>
-              <div className="legend-item">
-                <div className="legend-color" style={{ backgroundColor: '#dc2626' }}></div>
-                <span>Full</span>
-              </div>
+          </MapContainer>
+          
+          {/* Floating shelter list */}
+          <div className="shelter-list-container">
+            <div className="shelter-list-header">
+              <h3>Shelter List</h3>
+              <span className="shelter-count">{sheltersWithCoordinates.length} shelters</span>
+            </div>
+            <div className="shelter-list">
+              {sheltersWithCoordinates.map((shelter, index) => (
+                <div 
+                  key={index}
+                  className={`shelter-item ${getStatusColor(shelter.predicted_influx)} ${selectedShelter?.name === shelter.name ? 'selected' : ''}`}
+                  onClick={() => handleShelterClick(shelter)}
+                >
+                  <div className="shelter-info">
+                    <h4>{shelter.name}</h4>
+                    <p className="shelter-address">{shelter.address}</p>
+                    <div className="shelter-status">
+                      <span className={`status-indicator ${getStatusColor(shelter.predicted_influx)}`}>
+                        {getStatusText(shelter.predicted_influx)}
+                      </span>
+                      <span className="influx-value">
+                        Predicted: {shelter.predicted_influx}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-
-      {selectedShelter && (
-        <div className="shelter-details-overlay">
-          <div className="shelter-details-modal">
-            <div className="modal-header">
-              <h2>{selectedShelter.name}</h2>
-              <button 
-                className="close-button"
-                onClick={closeShelterDetails}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="modal-content">
-              <div className="detail-section">
-                <h3>Location</h3>
-                <p>{selectedShelter.address}</p>
-              </div>
-              
-              <div className="detail-section">
-                <h3>Contact</h3>
-                <p>Phone: {selectedShelter.phone}</p>
-                <p>Hours: {selectedShelter.hours}</p>
-              </div>
-              
-              <div className="detail-section">
-                <h3>Services</h3>
-                <p>{formatServices(selectedShelter.services)}</p>
-              </div>
-              
-              <div className="detail-section">
-                <h3>Availability</h3>
-                <div className="availability-info">
-                  <div className="availability-status">
-                    <span className="status-label">Status:</span>
-                    <span 
-                      className="status-value"
-                      style={{ color: getOccupancyColor(selectedShelter.occupancy, selectedShelter.capacity) }}
-                    >
-                      {getOccupancyText(selectedShelter.occupancy, selectedShelter.capacity)}
-                    </span>
-                  </div>
-                  <div className="availability-beds">
-                    <span className="beds-label">Beds:</span>
-                    <span className="beds-value">
-                      {selectedShelter.occupancy} of {selectedShelter.capacity} occupied
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-actions">
-              <button className="action-button primary">
-                Get Directions
-              </button>
-              <button className="action-button secondary">
-                Call Shelter
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

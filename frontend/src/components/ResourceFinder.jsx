@@ -51,7 +51,7 @@ const ResourceFinder = () => {
     try {
       // Create AbortController for timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minute timeout
       
       const response = await fetch('/api/find-resources', {
         method: 'POST',
@@ -62,7 +62,7 @@ const ResourceFinder = () => {
           location: location.trim(),
           selectedServices,
           useLLM: false,
-          enhanceScraping: false // Disable scraping for faster results
+          enhanceScraping: true // Enable scraping for real results
         }),
         signal: controller.signal
       });

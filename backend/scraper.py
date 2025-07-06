@@ -41,7 +41,7 @@ try:
     GEOPY_AVAILABLE = True
 except ImportError:
     GEOPY_AVAILABLE = False
-    print("Warning: geopy not available. Distance calculations will use Google Maps API only.")
+    print("Warning: geopy not available. Distance calculations will use simple formula.")
 
 # Optional OpenAI integration
 try:
@@ -298,7 +298,7 @@ class ResourceFinder:
     
     def search_services(self, location: str, selected_services: List[str]) -> List[Dict]:
         """
-        Search for services using Serper.dev API with broader area search.
+        Search for services using Serper.dev API with focused search strategy.
         
         Args:
             location: User's location
@@ -317,40 +317,42 @@ class ResourceFinder:
             logger.warning(f"Could not geocode location, using location string: {e}")
             user_coords = None
         
-        # Create multiple search strategies
+        # Create focused search strategies - reduced to most effective queries
         search_queries = []
         
-        # Strategy 1: Direct service searches in the area
+        # Strategy 1: Core shelter searches (most effective)
+        core_queries = [
+            f"homeless shelters {location}",
+            f"homeless services {location}",
+            f"emergency shelters {location}",
+            f"drop-in centers {location}"
+        ]
+        search_queries.extend(core_queries)
+        
+        # Strategy 2: Service-specific searches (only for selected services)
         for service in selected_services:
             if service not in self.available_services:
                 continue
             
-            # Multiple query variations for better coverage
+            # Only 2 most effective queries per service
             queries = [
-                f"homeless shelter {service} services near {location}",
-                f"{service} homeless shelter {location}",
-                f"homeless services {service} {location}",
-                f"shelter {service} {location}"
+                f"homeless shelter {service} {location}",
+                f"homeless {service} {location}"
             ]
             search_queries.extend(queries)
         
-        # Strategy 2: General homeless shelter searches in the area
-        general_queries = [
-            f"homeless shelters near {location}",
-            f"homeless services {location}",
-            f"shelters {location}",
-            f"homeless assistance {location}",
-            f"homeless support {location}"
+        # Strategy 3: Major shelter organizations (only top 3)
+        major_shelters = [
+            f"Salvation Army {location}",
+            f"Goodwill {location}",
+            f"YMCA {location}"
         ]
-        search_queries.extend(general_queries)
+        search_queries.extend(major_shelters)
         
-        # Strategy 3: If we have coordinates, search in broader area
+        # Strategy 4: Broader area search (only if coordinates available)
         if user_coords and location:
-            # Search in a 20km radius with different city names
             nearby_queries = [
-                f"homeless shelters within 20km of {location}",
-                f"homeless services near {location}",
-                f"homeless shelters {location} area"
+                f"homeless shelters near {location}"
             ]
             search_queries.extend(nearby_queries)
         
@@ -362,7 +364,7 @@ class ResourceFinder:
                 seen_queries.add(query)
                 unique_queries.append(query)
         
-        logger.info(f"Executing {len(unique_queries)} search queries")
+        logger.info(f"Executing {len(unique_queries)} focused search queries")
         
         # Execute searches
         for i, query in enumerate(unique_queries):
@@ -375,9 +377,8 @@ class ResourceFinder:
                 
                 payload = {
                     'q': query,
-                    'num': 15,  # Get more results per query
-                    'gl': 'ca',  # Always use Canada bias
-                    'hl': 'en-ca'  # Canadian English
+                    'num': 20,  # Get more results per query to compensate for fewer queries
+                    'gl': 'ca' if location and 'M5S' in location else 'us'  # Country bias
                 }
                 
                 response = requests.post(url, headers=headers, json=payload)
@@ -395,7 +396,7 @@ class ResourceFinder:
                 logger.info(f"Query {i+1}/{len(unique_queries)}: Found {len(data.get('organic', []))} results")
                 
                 # Rate limiting
-                time.sleep(0.5)
+                time.sleep(0.5)  # Reduced rate limiting
                 
             except Exception as e:
                 logger.error(f"Search error for query '{query}': {e}")
@@ -811,23 +812,62 @@ class ResourceFinder:
         """
         text_to_analyze = f"{url} {title} {snippet}".lower()
         
-        # Positive indicators
+        # Positive indicators for actual shelters
         positive_keywords = [
             'shelter', 'mission', 'rescue', 'homeless', 'housing', 'assistance',
-            'support', 'help', 'services', 'center', 'organization', 'charity'
+            'support', 'help', 'services', 'center', 'organization', 'charity',
+            'drop-in', 'dropin', 'outreach', 'community', 'emergency',
+            'salvation army', 'goodwill', 'red cross', 'united way', 'ymca', 'ywca',
+            'st. vincent', 'vincent de paul', 'catholic charities', 'lutheran services',
+            'methodist', 'baptist', 'episcopal', 'presbyterian', 'quaker',
+            'food bank', 'clothing bank', 'soup kitchen', 'meal program',
+            'transitional housing', 'permanent supportive housing', 'rapid rehousing'
         ]
         
         # Negative indicators (commercial/irrelevant)
         negative_keywords = [
             'hotel', 'resort', 'vacation', 'booking', 'travel', 'shopping',
-            'restaurant', 'food delivery', 'real estate', 'property'
+            'restaurant', 'food delivery', 'real estate', 'property', 'apartment',
+            'condo', 'rental', 'airbnb', 'booking.com', 'tripadvisor', 'expedia',
+            'hotels.com', 'marriott', 'hilton', 'hyatt', 'holiday inn',
+            'government', 'municipal', 'city of', 'county of', 'state of',
+            'university', 'college', 'school', 'education', 'academic',
+            'news', 'media', 'journal', 'newspaper', 'magazine', 'blog'
         ]
         
+        # Check for positive indicators
         positive_score = sum(1 for keyword in positive_keywords if keyword in text_to_analyze)
+        
+        # Check for negative indicators
         negative_score = sum(1 for keyword in negative_keywords if keyword in text_to_analyze)
         
         # Must have more positive than negative indicators
-        return positive_score > negative_score
+        if negative_score > positive_score:
+            return False
+        
+        # Must have at least 2 positive indicators
+        if positive_score < 2:
+            return False
+        
+        # Additional checks for domain patterns
+        domain = urlparse(url).netloc.lower()
+        
+        # Check for known shelter organization domains
+        shelter_domains = [
+            'salvationarmy', 'goodwill', 'redcross', 'unitedway', 'ymca', 'ywca',
+            'svdp', 'catholiccharities', 'lutheranservices', 'methodist', 'baptist',
+            'episcopal', 'presbyterian', 'quaker', 'foodbank', 'soupkitchen'
+        ]
+        
+        if any(domain_keyword in domain for domain_keyword in shelter_domains):
+            return True
+        
+        # Check for .org domains (more likely to be non-profits)
+        if domain.endswith('.org'):
+            positive_score += 1
+        
+        # Final decision based on positive score
+        return positive_score >= 2
     
     def _analyze_content_quality(self, result: Dict) -> float:
         """
@@ -927,16 +967,16 @@ class ResourceFinder:
     def find_resources(self, location: str, selected_services: List[str], 
                       use_llm: bool = False, enhance_with_scraping: bool = True) -> List[ServiceResult]:
         """
-        Find homeless services and resources based on location and needs (optimized version).
+        Main method to find resources based on location and service needs.
         
         Args:
             location: User's location (address, city, postal code)
             selected_services: List of service types needed
-            use_llm: Whether to use LLM analysis (optional)
-            enhance_with_scraping: Whether to enhance with website scraping
+            use_llm: Whether to use LLM for analysis
+            enhance_with_scraping: Whether to scrape detailed information from websites
             
         Returns:
-            List of ServiceResult objects
+            List of ServiceResult objects, sorted by relevance and distance
         """
         logger.info(f"Starting resource search for location: {location}")
         logger.info(f"Selected services: {selected_services}")
@@ -958,16 +998,15 @@ class ResourceFinder:
         
         logger.info(f"Found {len(search_results)} initial search results")
         
-        # Step 3: Enhance results with detailed scraping (optional, limited)
+        # Step 3: Enhance results with detailed scraping for verification
         if enhance_with_scraping:
-            logger.info("Enhancing results with detailed website scraping...")
+            logger.info("Enhancing results with detailed website scraping for verification...")
             search_results = self.enhance_results_with_details(search_results)
         
-        # Step 4: Process and filter results (limit to top 20 for performance)
+        # Step 4: Process and filter results with strict shelter verification
         processed_results = []
-        max_results = 20  # Limit results for performance
         
-        for i, result in enumerate(search_results[:max_results]):
+        for result in search_results:
             # Extract text for keyword matching
             text_to_analyze = f"{result.get('title', '')} {result.get('snippet', '')}"
             
@@ -978,28 +1017,39 @@ class ResourceFinder:
             else:
                 matching_services = self.match_keywords(text_to_analyze, selected_services)
             
+            # STRICT VERIFICATION: Check if this is actually a shelter/service provider
+            if not self._verify_is_actual_shelter(result):
+                logger.info(f"Skipping {result.get('title', 'Unknown')} - not verified as actual shelter")
+                continue
+            
             # Check if any of the user's selected services are provided
             if not any(service in matching_services for service in selected_services):
-                continue  # Skip results that don't provide any requested services
+                logger.info(f"Skipping {result.get('title', 'Unknown')} - no matching services")
+                continue
             
-            # Calculate distance only for top results to save time
+            # Calculate distance (only for top candidates to save time)
             distance = None
-            if i < 10:  # Only calculate distance for top 10 results
-                address = result.get('address') or self.extract_address_from_url(result.get('link', ''))
-                if address and user_coords:
-                    try:
-                        distance = self.calculate_distance(user_coords, address)
-                    except Exception as e:
-                        logger.warning(f"Distance calculation failed for {address}: {e}")
+            address = result.get('address') or self.extract_address_from_url(result.get('link', ''))
+            if address and user_coords and len(processed_results) < 8:  # Only calculate for top 8
+                try:
+                    distance = self.calculate_distance(user_coords, address)
+                except Exception as e:
+                    logger.warning(f"Distance calculation failed for {address}: {e}")
             
-            # Calculate match score based on service overlap
+            # Calculate match score based on service overlap and quality
             service_overlap = len(set(matching_services) & set(selected_services))
             match_score = service_overlap / len(selected_services)
             
-            # LLM analysis (optional)
+            # Boost score for verified shelters with detailed information
+            if result.get('address') and result.get('phone'):
+                match_score += 0.2
+            if len(matching_services) >= 2:
+                match_score += 0.1
+            
+            # LLM analysis (optional, only for top candidates)
             llm_summary = None
             llm_score = None
-            if use_llm and self.llm_enabled and i < 5:  # Only for top 5 results
+            if use_llm and self.llm_enabled and match_score > 0.5 and len(processed_results) < 5:
                 llm_summary, llm_score = self.analyze_with_llm(result, selected_services)
                 if llm_score:
                     match_score = (match_score + llm_score / 10) / 2  # Combine scores
@@ -1020,16 +1070,69 @@ class ResourceFinder:
             )
             
             processed_results.append(service_result)
+            
+            # Stop after finding 8 good results (we'll return 5-10 best)
+            if len(processed_results) >= 8:
+                logger.info(f"Found {len(processed_results)} good results, stopping search")
+                break
         
         # Step 5: Sort results by relevance and distance
         processed_results.sort(key=lambda x: (-x.match_score, x.distance_km or float('inf')))
         
-        # Step 6: Limit to 5-10 best results
-        max_results = min(10, max(5, len(processed_results)))
-        processed_results = processed_results[:max_results]
+        # Step 6: Return 5-10 best verified results
+        final_results = processed_results[:min(10, max(5, len(processed_results)))]
         
-        logger.info(f"Found {len(processed_results)} relevant results after filtering")
-        return processed_results
+        logger.info(f"Found {len(final_results)} verified shelter results")
+        return final_results
+    
+    def _verify_is_actual_shelter(self, result: Dict) -> bool:
+        """
+        Strict verification to ensure result is actually a shelter/service provider.
+        
+        Args:
+            result: Search result dictionary
+            
+        Returns:
+            True if verified as actual shelter
+        """
+        title = result.get('title', '').lower()
+        snippet = result.get('snippet', '').lower()
+        url = result.get('link', '').lower()
+        
+        # Positive indicators for actual shelters
+        shelter_keywords = [
+            'shelter', 'mission', 'rescue', 'homeless', 'housing', 'assistance',
+            'support', 'help', 'services', 'center', 'organization', 'charity',
+            'drop-in', 'dropin', 'outreach', 'community', 'emergency'
+        ]
+        
+        # Negative indicators (commercial/irrelevant)
+        negative_keywords = [
+            'hotel', 'resort', 'vacation', 'booking', 'travel', 'shopping',
+            'restaurant', 'food delivery', 'real estate', 'property', 'apartment',
+            'condo', 'rental', 'airbnb', 'booking.com', 'tripadvisor'
+        ]
+        
+        # Check for positive indicators
+        positive_score = sum(1 for keyword in shelter_keywords if keyword in title or keyword in snippet)
+        
+        # Check for negative indicators
+        negative_score = sum(1 for keyword in negative_keywords if keyword in title or keyword in snippet or keyword in url)
+        
+        # Must have more positive than negative indicators
+        if negative_score > positive_score:
+            return False
+        
+        # Must have at least 2 positive indicators
+        if positive_score < 2:
+            return False
+        
+        # Additional verification: check if it has actual service information
+        if result.get('address') or result.get('phone'):
+            return True
+        
+        # If no detailed info, must have strong positive indicators
+        return positive_score >= 3
     
     def print_results(self, results: List[ServiceResult]):
         """
@@ -1104,42 +1207,52 @@ def main():
     """
     Main function for CLI usage with Node.js integration.
     """
-    # Check command line arguments
-    if len(sys.argv) < 3:
-        print("Usage: python3 scraper.py <location> <services> [use_llm] [enhance_scraping]")
-        sys.exit(1)
+    import argparse
     
-    location = sys.argv[1]
-    services_str = sys.argv[2]
-    use_llm = len(sys.argv) > 3 and sys.argv[3].lower() == 'true'
-    enhance_scraping = len(sys.argv) > 4 and sys.argv[4].lower() == 'true'
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Resource Finder - Homeless Services Locator')
+    parser.add_argument('--location', required=True, help='Location to search in')
+    parser.add_argument('--services', required=True, help='Comma-separated list of services')
+    parser.add_argument('--use-llm', action='store_true', help='Use LLM for analysis')
+    parser.add_argument('--enhance-scraping', action='store_true', default=True, help='Enhance results with scraping')
+    parser.add_argument('--output-json', action='store_true', help='Output results as JSON')
+    
+    # Parse arguments
+    args = parser.parse_args()
     
     # Parse services
-    selected_services = services_str.split(',')
+    selected_services = args.services.split(',')
     
     # Load API keys from environment variables
     serper_api_key = os.getenv('SERPER_API_KEY')
     openai_api_key = os.getenv('OPENAI_API_KEY')
     
     if not serper_api_key:
-        print("Error: Missing SERPER_API_KEY environment variable")
+        logger.error("Missing SERPER_API_KEY environment variable")
+        print(json.dumps([], indent=2))
         sys.exit(1)
     
     # Initialize resource finder
     finder = ResourceFinder(serper_api_key, openai_api_key)
     
-    # Find resources
-    logger.info(f"Searching for services in {location}...")
-    results = finder.find_resources(location, selected_services, use_llm, enhance_scraping)
-    
-    # Convert results to JSON-serializable format
-    json_results = []
-    for result in results:
-        json_result = asdict(result)
-        json_results.append(json_result)
-    
-    # Output JSON to stdout for Node.js to capture
-    print(json.dumps(json_results, indent=2))
+    try:
+        # Find resources
+        logger.info(f"Searching for services in {args.location}...")
+        results = finder.find_resources(args.location, selected_services, args.use_llm, args.enhance_scraping)
+        
+        # Convert results to JSON-serializable format
+        json_results = []
+        for result in results:
+            json_result = asdict(result)
+            json_results.append(json_result)
+        
+        # Output JSON to stdout for Node.js to capture
+        print(json.dumps(json_results, indent=2))
+        
+    except Exception as e:
+        logger.error(f"Error in resource finder: {e}")
+        print(json.dumps([], indent=2))
+        sys.exit(1)
 
 if __name__ == "__main__":
     main() 
