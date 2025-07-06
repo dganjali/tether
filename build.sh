@@ -49,6 +49,16 @@ if command -v python3 &> /dev/null; then
         echo "WARNING: requirements.txt not found in ML-LLM-hybrid-recommendation-system"
     fi
     cd ../..
+    
+    # Install scraper dependencies
+    echo "Installing scraper dependencies..."
+    cd backend
+    if [ -f "requirements.txt" ]; then
+        pip3 install -r requirements.txt
+    else
+        echo "WARNING: requirements.txt not found in backend directory"
+    fi
+    cd ..
 elif command -v python &> /dev/null; then
     echo "Python found, installing ML requirements..."
     cd backend/ML-LLM-hybrid-recommendation-system
@@ -58,6 +68,16 @@ elif command -v python &> /dev/null; then
         echo "WARNING: requirements.txt not found in ML-LLM-hybrid-recommendation-system"
     fi
     cd ../..
+    
+    # Install scraper dependencies
+    echo "Installing scraper dependencies..."
+    cd backend
+    if [ -f "requirements.txt" ]; then
+        pip install -r requirements.txt
+    else
+        echo "WARNING: requirements.txt not found in backend directory"
+    fi
+    cd ..
 else
     echo "WARNING: Python not found. ML features may not work properly."
 fi

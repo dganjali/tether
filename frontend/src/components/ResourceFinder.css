@@ -6,7 +6,7 @@
 }
 
 .resource-finder-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
@@ -42,23 +42,23 @@
 }
 
 .form-group {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .form-group label {
   display: block;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
 
 .location-input {
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   transition: all 0.2s ease;
   background: #f9fafb;
 }
@@ -76,26 +76,29 @@
 
 .services-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
   margin-top: 1rem;
 }
 
 .service-checkbox {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 1.25rem;
   background: #f9fafb;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  min-height: 60px;
 }
 
 .service-checkbox:hover {
   border-color: #d1d5db;
   background: #f3f4f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .service-checkbox input[type="checkbox"] {
@@ -105,14 +108,15 @@
 }
 
 .checkbox-custom {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: 2px solid #d1d5db;
   border-radius: 6px;
-  margin-right: 0.75rem;
+  margin-right: 1rem;
   position: relative;
   transition: all 0.2s ease;
   background: white;
+  flex-shrink: 0;
 }
 
 .service-checkbox input[type="checkbox"]:checked + .checkbox-custom {
@@ -127,28 +131,35 @@
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
+}
+
+.service-icon {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
 }
 
 .service-label {
   font-weight: 500;
   color: #374151;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  line-height: 1.4;
 }
 
 .search-button {
   width: 100%;
-  padding: 1rem 2rem;
+  padding: 1.25rem 2rem;
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .search-button:hover:not(:disabled) {
@@ -216,7 +227,7 @@
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
   gap: 1.5rem;
 }
 
@@ -281,16 +292,16 @@
 
 .result-info {
   display: flex;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
   line-height: 1.4;
 }
 
 .info-label {
   font-weight: 600;
   color: #6b7280;
-  min-width: 80px;
-  margin-right: 0.5rem;
+  min-width: 100px;
+  margin-right: 0.75rem;
 }
 
 .info-value {
@@ -351,6 +362,12 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .services-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .resource-finder {
     padding: 1rem 0.5rem;
@@ -374,6 +391,16 @@
   
   .services-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .service-checkbox {
+    padding: 1rem;
+    min-height: 50px;
+  }
+  
+  .service-icon {
+    font-size: 1.25rem;
   }
   
   .results-grid {
@@ -405,20 +432,20 @@
   }
   
   .form-group label {
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
   
   .location-input {
-    padding: 0.875rem 1rem;
-    font-size: 0.9rem;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
   }
   
   .service-label {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
   
   .search-button {
-    padding: 0.875rem 1.5rem;
-    font-size: 1rem;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
   }
 } 

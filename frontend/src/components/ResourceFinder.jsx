@@ -9,18 +9,18 @@ const ResourceFinder = () => {
   const [error, setError] = useState('');
 
   const availableServices = {
-    'showers': 'Showers & Hygiene',
-    'meals': 'Meals & Food',
-    'mental_health': 'Mental Health Services',
-    'medical': 'Medical Care',
-    'laundry': 'Laundry Services',
-    'wifi': 'WiFi & Internet',
-    'shelter': 'Emergency Shelter',
-    'clothing': 'Clothing & Supplies',
-    'counseling': 'Counseling Services',
-    'job_assistance': 'Job Assistance',
-    'legal_aid': 'Legal Aid',
-    'substance_abuse': 'Substance Abuse Support'
+    'showers': { label: 'Showers & Hygiene', icon: '🚿' },
+    'meals': { label: 'Meals & Food', icon: '🍽️' },
+    'mental_health': { label: 'Mental Health Services', icon: '🧠' },
+    'medical': { label: 'Medical Care', icon: '🏥' },
+    'laundry': { label: 'Laundry Services', icon: '👕' },
+    'wifi': { label: 'WiFi & Internet', icon: '📶' },
+    'shelter': { label: 'Emergency Shelter', icon: '🏠' },
+    'clothing': { label: 'Clothing & Supplies', icon: '👔' },
+    'counseling': { label: 'Counseling Services', icon: '💬' },
+    'job_assistance': { label: 'Job Assistance', icon: '💼' },
+    'legal_aid': { label: 'Legal Aid', icon: '⚖️' },
+    'substance_abuse': { label: 'Substance Abuse Support', icon: '🆘' }
   };
 
   const handleServiceToggle = (service) => {
@@ -83,7 +83,7 @@ const ResourceFinder = () => {
 
   const formatServices = (services) => {
     if (!services || services.length === 0) return 'Services not specified';
-    return services.map(service => availableServices[service] || service).join(', ');
+    return services.map(service => availableServices[service]?.label || service).join(', ');
   };
 
   return (
@@ -96,7 +96,7 @@ const ResourceFinder = () => {
 
         <form onSubmit={handleSubmit} className="resource-finder-form">
           <div className="form-group">
-            <label htmlFor="location">Location</label>
+            <label htmlFor="location">📍 Location</label>
             <input
               type="text"
               id="location"
@@ -108,9 +108,9 @@ const ResourceFinder = () => {
           </div>
 
           <div className="form-group">
-            <label>Services Needed</label>
+            <label>🛠️ Services Needed</label>
             <div className="services-grid">
-              {Object.entries(availableServices).map(([key, label]) => (
+              {Object.entries(availableServices).map(([key, service]) => (
                 <label key={key} className="service-checkbox">
                   <input
                     type="checkbox"
@@ -118,7 +118,8 @@ const ResourceFinder = () => {
                     onChange={() => handleServiceToggle(key)}
                   />
                   <span className="checkbox-custom"></span>
-                  <span className="service-label">{label}</span>
+                  <span className="service-icon">{service.icon}</span>
+                  <span className="service-label">{service.label}</span>
                 </label>
               ))}
             </div>
@@ -135,7 +136,7 @@ const ResourceFinder = () => {
             className="search-button"
             disabled={isLoading}
           >
-            {isLoading ? 'Searching...' : 'Find Shelters'}
+            {isLoading ? '🔍 Searching...' : '🔍 Find Shelters'}
           </button>
         </form>
 
@@ -163,32 +164,32 @@ const ResourceFinder = () => {
                   <div className="result-details">
                     {result.address && (
                       <div className="result-info">
-                        <span className="info-label">Address:</span>
+                        <span className="info-label">📍 Address:</span>
                         <span className="info-value">{result.address}</span>
                       </div>
                     )}
                     
                     {result.phone && (
                       <div className="result-info">
-                        <span className="info-label">Phone:</span>
+                        <span className="info-label">📞 Phone:</span>
                         <span className="info-value">{result.phone}</span>
                       </div>
                     )}
                     
                     {result.hours && (
                       <div className="result-info">
-                        <span className="info-label">Hours:</span>
+                        <span className="info-label">🕒 Hours:</span>
                         <span className="info-value">{result.hours}</span>
                       </div>
                     )}
                     
                     <div className="result-info">
-                      <span className="info-label">Services:</span>
+                      <span className="info-label">🛠️ Services:</span>
                       <span className="info-value">{formatServices(result.matching_services)}</span>
                     </div>
                     
                     <div className="result-info">
-                      <span className="info-label">Distance:</span>
+                      <span className="info-label">📏 Distance:</span>
                       <span className="info-value">{formatDistance(result.distance_km)}</span>
                     </div>
                   </div>
@@ -204,7 +205,7 @@ const ResourceFinder = () => {
                       rel="noopener noreferrer"
                       className="result-link"
                     >
-                      Visit Website
+                      🌐 Visit Website
                     </a>
                   )}
                 </div>

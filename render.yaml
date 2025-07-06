@@ -3,7 +3,9 @@ services:
     name: shelter-analytics
     env: node
     plan: free
-    buildCommand: npm run build
+    buildCommand: |
+      npm run build
+      cd backend && pip3 install -r requirements.txt
     startCommand: npm start
     envVars:
       - key: NODE_ENV
