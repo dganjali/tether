@@ -59,7 +59,9 @@ const RecommendationsContent = () => {
       const response = await fetch(`/api/recommendations?shelter=${encodeURIComponent(selectedShelter)}&influx=${selectedPredictedInflux}&capacity=${selectedCapacity}`);
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch recommendations: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Recommendations API error:', response.status, errorText);
+        throw new Error(`Failed to fetch recommendations: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();

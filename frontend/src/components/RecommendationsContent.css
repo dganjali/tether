@@ -133,15 +133,29 @@
   border: 2px solid #e9ecef;
   border-radius: 12px;
   font-size: 16px;
-  background: white;
+  background: white !important;
   width: 100%;
   box-sizing: border-box;
+  color: #333 !important;
 }
 
 .form-control:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: white !important;
+  color: #333 !important;
+}
+
+.form-control::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+
+.form-control:disabled {
+  background: #f8f9fa !important;
+  color: #6b7280 !important;
+  cursor: not-allowed;
 }
 
 .btn {
