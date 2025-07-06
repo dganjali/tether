@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { exec } = require('child_process');
+const path = require('path');
 const { asyncHandler } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
@@ -45,70 +47,56 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
   }
   
   try {
-    // Mock data for demonstration - in a real app, this would query a database
-    // or call external APIs to find actual resources
-    const mockResults = [
-      {
-        name: 'Toronto Homeless Services Center',
-        address: '123 Main St, Toronto, ON M5V 2H1',
-        phone: '(416) 555-0123',
-        hours: '24/7',
-        distance_km: 2.1,
-        matching_services: selectedServices.slice(0, 3),
-        match_score: 0.85,
-        snippet: 'Comprehensive homeless services including shelter, meals, and medical care.',
-        llm_summary: useLLM ? 'This facility offers excellent comprehensive care with 24/7 access and multiple service types.' : null,
-        url: 'https://example.com/toronto-homeless-services'
-      },
-      {
-        name: 'Downtown Community Shelter',
-        address: '456 Queen St W, Toronto, ON M5V 2A9',
-        phone: '(416) 555-0456',
-        hours: '7:00 AM - 10:00 PM',
-        distance_km: 3.5,
-        matching_services: selectedServices.slice(0, 2),
-        match_score: 0.72,
-        snippet: 'Community-based shelter providing meals and basic services.',
-        llm_summary: useLLM ? 'Good community shelter with limited hours but reliable service.' : null,
-        url: 'https://example.com/downtown-community-shelter'
-      },
-      {
-        name: 'Harbourfront Emergency Services',
-        address: '789 Lakeshore Blvd, Toronto, ON M5V 3A7',
-        phone: '(416) 555-0789',
-        hours: '6:00 PM - 8:00 AM',
-        distance_km: 4.2,
-        matching_services: selectedServices.slice(0, 1),
-        match_score: 0.58,
-        snippet: 'Emergency overnight shelter with basic amenities.',
-        llm_summary: useLLM ? 'Basic emergency shelter with overnight accommodation only.' : null,
-        url: 'https://example.com/harbourfront-emergency'
+    // Call the Python scraper script
+    const pythonScript = path.join(__dirname, '../scraper.py');
+    const servicesArg = selectedServices.join(',');
+    
+    const command = `python3 "${pythonScript}" "${location}" "${servicesArg}" ${useLLM} ${enhanceScraping}`;
+    
+    logger.info('Executing Python scraper', { command });
+    
+    exec(command, { 
+      timeout: 60000, // 60 second timeout
+      env: {
+        ...process.env,
+        PYTHONPATH: path.join(__dirname, '..')
       }
-    ];
-    
-    // Filter results based on selected services
-    const filteredResults = mockResults.filter(result => 
-      result.matching_services.some(service => selectedServices.includes(service))
-    );
-    
-    // Sort by match score and distance
-    const sortedResults = filteredResults.sort((a, b) => {
-      if (a.match_score !== b.match_score) {
-        return b.match_score - a.match_score;
+    }, (error, stdout, stderr) => {
+      if (error) {
+        logger.error('Python scraper error', { error: error.message, stderr });
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Failed to find resources. Please try again.' 
+        });
       }
-      return a.distance_km - b.distance_km;
-    });
-    
-    logger.info('Resources found', { 
-      count: sortedResults.length,
-      location,
-      selectedServices 
-    });
-    
-    res.json({
-      success: true,
-      results: sortedResults,
-      total: sortedResults.length
+      
+      try {
+        // Parse the JSON output from the Python script
+        const results = JSON.parse(stdout);
+        
+        logger.info('Resources found', { 
+          count: results.length,
+          location,
+          selectedServices 
+        });
+        
+        res.json({
+          success: true,
+          results: results,
+          total: results.length
+        });
+        
+      } catch (parseError) {
+        logger.error('Failed to parse Python script output', { 
+          error: parseError.message, 
+          stdout, 
+          stderr 
+        });
+        res.status(500).json({ 
+          success: false, 
+          error: 'Failed to process results from scraper.' 
+        });
+      }
     });
     
   } catch (error) {

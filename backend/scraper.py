@@ -3,10 +3,12 @@
 ## Scrape Program
 
 """
-Resource Finder - Homeless Services Locator
+Resource Finder - Homeless Services Locator (Backend Integration)
 
 A comprehensive tool that finds nearby homeless shelters and services based on user location
 and specific service needs. Integrates multiple APIs for accurate, relevant results.
+
+Modified for Node.js backend integration.
 
 Author: AI Assistant
 Date: 2024
@@ -17,7 +19,7 @@ import json
 import requests
 import pandas as pd
 from typing import List, Dict, Optional, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 import time
 import re
@@ -1046,128 +1048,46 @@ class ResourceFinder:
         
         logger.info(f"Results saved to {filename}")
 
-
 def main():
     """
-    Main function for CLI usage.
+    Main function for CLI usage with Node.js integration.
     """
-    # Set up argument parser
-    parser = argparse.ArgumentParser(description='Resource Finder - Homeless Services Locator')
-    parser.add_argument('--location', type=str, help='Location (address, city, or postal code)')
-    parser.add_argument('--services', type=str, help='Comma-separated list of services')
-    parser.add_argument('--use-llm', type=str, default='false', help='Use AI analysis (true/false)')
-    parser.add_argument('--enhance-scraping', type=str, default='true', help='Scrape detailed information (true/false)')
-    parser.add_argument('--output-json', action='store_true', help='Output results as JSON')
+    # Check command line arguments
+    if len(sys.argv) < 3:
+        print("Usage: python3 scraper.py <location> <services> [use_llm] [enhance_scraping]")
+        sys.exit(1)
     
-    args = parser.parse_args()
+    location = sys.argv[1]
+    services_str = sys.argv[2]
+    use_llm = len(sys.argv) > 3 and sys.argv[3].lower() == 'true'
+    enhance_scraping = len(sys.argv) > 4 and sys.argv[4].lower() == 'true'
+    
+    # Parse services
+    selected_services = services_str.split(',')
     
     # Load API keys from environment variables
     serper_api_key = os.getenv('SERPER_API_KEY')
     openai_api_key = os.getenv('OPENAI_API_KEY')
     
     if not serper_api_key:
-        if args.output_json:
-            print(json.dumps({'error': 'Missing SERPER_API_KEY environment variable'}))
-        else:
-            print("Error: Missing required API key.")
-            print("Please set the following environment variable:")
-            print("- SERPER_API_KEY")
-            print("- OPENAI_API_KEY (optional)")
-        return
+        print("Error: Missing SERPER_API_KEY environment variable")
+        sys.exit(1)
     
     # Initialize resource finder
     finder = ResourceFinder(serper_api_key, openai_api_key)
     
-    # Handle interactive mode (no arguments provided)
-    if not args.location:
-        # Interactive mode
-        print("Resource Finder - Homeless Services Locator")
-        print("=" * 50)
-        
-        location = input("Enter your location (address, city, or postal code): ").strip()
-        
-        print("\nAvailable services:")
-        for i, service in enumerate(finder.available_services.keys(), 1):
-            print(f"{i}. {service.replace('_', ' ').title()}")
-        
-        print("\nEnter the numbers of services you need (comma-separated):")
-        service_input = input("Example: 1,3,5: ").strip()
-        
-        # Parse selected services
-        try:
-            service_indices = [int(x.strip()) - 1 for x in service_input.split(',')]
-            selected_services = list(finder.available_services.keys())
-            user_services = [selected_services[i] for i in service_indices if 0 <= i < len(selected_services)]
-        except (ValueError, IndexError):
-            print("Invalid service selection. Using default services.")
-            user_services = ['meals', 'showers']
-        
-        # Ask about LLM usage
-        use_llm = False
-        if finder.llm_enabled:
-            llm_choice = input("\nUse AI analysis for better results? (y/n): ").strip().lower()
-            use_llm = llm_choice in ['y', 'yes']
-        
-        # Ask about detailed scraping
-        enhance_scraping = True
-        scraping_choice = input("\nScrape detailed information from shelter websites? (y/n): ").strip().lower()
-        enhance_scraping = scraping_choice in ['y', 'yes', '']
-        
-        # Find resources
-        print(f"\nSearching for services in {location}...")
-        results = finder.find_resources(location, user_services, use_llm, enhance_scraping)
-        
-        # Display results
-        finder.print_results(results)
-        
-        # Save results
-        save_choice = input("\nSave results to file? (y/n): ").strip().lower()
-        if save_choice in ['y', 'yes']:
-            finder.save_results(results)
-        
-        return
+    # Find resources
+    logger.info(f"Searching for services in {location}...")
+    results = finder.find_resources(location, selected_services, use_llm, enhance_scraping)
     
-    # Handle API mode (arguments provided)
-    location = args.location
-    services_str = args.services or 'meals,showers'
-    user_services = [s.strip() for s in services_str.split(',')]
-    use_llm = args.use_llm.lower() == 'true'
-    enhance_scraping = args.enhance_scraping.lower() == 'true'
+    # Convert results to JSON-serializable format
+    json_results = []
+    for result in results:
+        json_result = asdict(result)
+        json_results.append(json_result)
     
-    try:
-        # Find resources
-        results = finder.find_resources(location, user_services, use_llm, enhance_scraping)
-        
-        if args.output_json:
-            # Convert results to JSON-serializable format
-            json_results = []
-            for result in results:
-                json_results.append({
-                    'name': result.name,
-                    'url': result.url,
-                    'snippet': result.snippet,
-                    'matching_services': result.matching_services,
-                    'distance_km': result.distance_km,
-                    'match_score': result.match_score,
-                    'llm_summary': result.llm_summary,
-                    'llm_score': result.llm_score,
-                    'address': result.address,
-                    'phone': result.phone,
-                    'hours': result.hours
-                })
-            
-            print(json.dumps(json_results, indent=2))
-        else:
-            # Display results in human-readable format
-            finder.print_results(results)
-            
-    except Exception as e:
-        if args.output_json:
-            print(json.dumps({'error': str(e)}))
-        else:
-            print(f"Error: {e}")
-            return
-
+    # Output JSON to stdout for Node.js to capture
+    print(json.dumps(json_results, indent=2))
 
 if __name__ == "__main__":
     main() 
