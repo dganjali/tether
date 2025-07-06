@@ -81,14 +81,12 @@ const ResourceFinder = () => {
         showError(data.error || 'Failed to find shelters');
       }
     } catch (error) {
-      console.error('Error finding resources:', error);
+      console.error('Error finding shelters:', error);
       showError('Failed to connect to the server');
     } finally {
       setLoading(false);
     }
   };
-
-
 
   const getServiceIcon = (service) => {
     const icons = {
@@ -97,7 +95,13 @@ const ResourceFinder = () => {
       'mental_health': '🧠',
       'medical': '🏥',
       'laundry': '👕',
-      'wifi': '📶'
+      'wifi': '📶',
+      'shelter': '🏠',
+      'clothing': '👔',
+      'counseling': '💬',
+      'job_assistance': '💼',
+      'legal_aid': '⚖️',
+      'substance_abuse': '💊'
     };
     return icons[service] || '📍';
   };
@@ -110,28 +114,28 @@ const ResourceFinder = () => {
   };
 
   return (
-    <div className="resource-finder-page">
+    <div className="shelter-finder-page">
       {/* Header */}
-      <div className="resource-header">
+      <header className="finder-header">
         <div className="header-content">
-          <div className="logo-container">
+          <div className="logo-section">
             <img src={logo} alt="Logo" className="header-logo" />
           </div>
-                      <div className="title-container">
-              <h1>Shelter Finder</h1>
-              <p>Find nearby homeless shelters and services based on your location and needs</p>
-            </div>
+          <div className="title-section">
+            <h1>Shelter Finder</h1>
+            <p>Find nearby homeless shelters and services based on your location and needs</p>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="resource-main">
+      <main className="finder-main">
         {/* Form Section */}
-        <div className="form-section">
+        <section className="form-section">
           <div className="form-card">
             <h2>Find Shelters</h2>
             <p>Enter your location and select the services you need</p>
 
-            <form onSubmit={handleSubmit} className="resource-form">
+            <form onSubmit={handleSubmit} className="finder-form">
               <div className="form-group">
                 <label htmlFor="location">
                   <span className="label-icon">📍</span>
@@ -249,11 +253,11 @@ const ResourceFinder = () => {
               </div>
             </form>
           </div>
-        </div>
+        </section>
 
         {/* Results Section */}
         {results.length > 0 && (
-          <div className="results-section">
+          <section className="results-section">
             <div className="results-header">
               <h2>Found {results.length} Shelters</h2>
               <p>Sorted by relevance and distance</p>
@@ -322,15 +326,15 @@ const ResourceFinder = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {loading && (
-          <div className="loading-section">
-            <LoadingSpinner size="large" text="Searching for resources..." />
-          </div>
+          <section className="loading-section">
+            <LoadingSpinner size="large" text="Searching for shelters..." />
+          </section>
         )}
-      </div>
+      </main>
     </div>
   );
 };

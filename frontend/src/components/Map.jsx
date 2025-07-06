@@ -138,11 +138,13 @@ const Map = () => {
 
   if (loading) {
     return (
-      <div className="map-loading">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <h2>Loading Map...</h2>
-          <p>Fetching shelter locations</p>
+      <div className="map-page">
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <h2>Loading Shelter Map</h2>
+            <p>Fetching shelter locations and data...</p>
+          </div>
         </div>
       </div>
     );
@@ -150,14 +152,16 @@ const Map = () => {
 
   if (error) {
     return (
-      <div className="map-error">
-        <div className="error-container">
-          <div className="error-icon">⚠️</div>
-          <h2>Error Loading Map</h2>
-          <p>{error}</p>
-          <button onClick={fetchShelterData} className="btn-retry">
-            Try Again
-          </button>
+      <div className="map-page">
+        <div className="error-overlay">
+          <div className="error-content">
+            <div className="error-icon">⚠️</div>
+            <h2>Error Loading Map</h2>
+            <p>{error}</p>
+            <button onClick={fetchShelterData} className="retry-button">
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -165,56 +169,54 @@ const Map = () => {
 
   return (
     <div className="map-page">
-      {/* Top Controls Bar */}
-      <div className="map-controls-bar">
-        <div className="controls-left">
+      {/* Header */}
+      <header className="map-header">
+        <div className="header-content">
           <div className="logo-section">
-            <img src={logo} alt="Logo" className="map-logo" />
+            <img src={logo} alt="Logo" className="header-logo" />
             <div className="title-section">
               <h1>Shelter Map</h1>
-              <p>Interactive shelter locations and status</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="controls-right">
-          <div className="legend-section">
-            <div className="legend-item">
-              <span className="legend-dot normal"></span>
-              <span>Normal</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-dot warning"></span>
-              <span>Warning</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-dot critical"></span>
-              <span>Critical</span>
+              <p>Interactive shelter locations and occupancy status</p>
             </div>
           </div>
           
-          <button onClick={toggleShelterList} className="toggle-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-            </svg>
-            {isShelterListVisible ? 'Hide List' : 'Show List'}
-          </button>
+          <div className="header-actions">
+            <div className="legend">
+              <div className="legend-item">
+                <span className="legend-dot normal"></span>
+                <span>Normal</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-dot warning"></span>
+                <span>Warning</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-dot critical"></span>
+                <span>Critical</span>
+              </div>
+            </div>
+            
+            <button onClick={toggleShelterList} className="toggle-button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+              </svg>
+              {isShelterListVisible ? 'Hide List' : 'Show List'}
+            </button>
+            
+            <Link to="/resource-finder" className="finder-button">
+              <span>🔍</span>
+              Shelter Finder
+            </Link>
+          </div>
         </div>
-        <div className="map-actions">
-          <Link to="/resource-finder" className="resource-finder-btn">
-            <span className="btn-icon">🔍</span>
-            Shelter Finder
-          </Link>
-        </div>
-      </div>
+      </header>
       
-      <div className="map-main">
-        {/* Map container */}
+      {/* Main Map Area */}
+      <main className="map-main">
         <div className="map-container">
           <MapContainer 
             center={[43.6532, -79.3832]} 
             zoom={11} 
-            style={{ height: '100%', width: '100%' }}
             className="leaflet-map"
             ref={mapRef}
           >
@@ -230,7 +232,7 @@ const Map = () => {
                 icon={createCustomIcon(shelter.predicted_influx)}
               >
                 <Popup>
-                  <div className="info-window">
+                  <div className="popup-content">
                     <h3>{shelter.name}</h3>
                     <p><strong>Address:</strong> {shelter.address}</p>
                     <p><strong>Predicted Influx:</strong> {shelter.predicted_influx}</p>
@@ -242,9 +244,9 @@ const Map = () => {
           </MapContainer>
         </div>
         
-        {/* Shelter list sidebar */}
+        {/* Shelter List Sidebar */}
         {isShelterListVisible && (
-          <div className="shelter-sidebar">
+          <aside className="shelter-sidebar">
             <div className="sidebar-header">
               <h3>Shelter List</h3>
               <span className="shelter-count">{sheltersWithCoordinates.length} shelters</span>
@@ -275,9 +277,9 @@ const Map = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </aside>
         )}
-      </div>
+      </main>
     </div>
   );
 };
