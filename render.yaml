@@ -4,13 +4,27 @@ services:
     env: node
     plan: free
     buildCommand: |
-      npm run build
-      cd backend && pip3 install -r requirements.txt
-    startCommand: npm start
+      # Install Node.js dependencies
+      npm install
+      # Build frontend
+      cd frontend && npm install && npm run build
+      # Install Python dependencies
+      cd ../backend && pip3 install -r requirements.txt
+      # Install additional Python packages needed for scraper
+      pip3 install requests pandas geopy python-dotenv
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+      - key: SERPER_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
     healthCheckPath: /api/health
     autoDeploy: true 

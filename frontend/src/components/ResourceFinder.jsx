@@ -49,6 +49,10 @@ const ResourceFinder = () => {
     setResults([]);
 
     try {
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+      
       const response = await fetch('/api/find-resources', {
         method: 'POST',
         headers: {
@@ -58,19 +62,36 @@ const ResourceFinder = () => {
           location: location.trim(),
           selectedServices,
           useLLM: false,
-          enhanceScraping: true
+          enhanceScraping: false // Disable scraping for faster results
         }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 408) {
+          throw new Error('Request timed out. Please try again with fewer services or a more specific location.');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
 
       if (data.success) {
         setResults(data.results || []);
+        if (data.results && data.results.length === 0) {
+          setError('No shelters found for the given criteria. Try a different location or services.');
+        }
       } else {
         setError(data.error || 'Failed to find resources');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please try again with fewer services or a more specific location.');
+      } else {
+        setError(err.message || 'Network error. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +112,6 @@ const ResourceFinder = () => {
       <div className="resource-finder-container">
         <header className="resource-finder-header">
           <h1>Shelter Finder</h1>
-          <p>Find nearby shelters and services based on your location and needs</p>
         </header>
 
         <form onSubmit={handleSubmit} className="resource-finder-form">

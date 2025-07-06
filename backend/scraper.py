@@ -198,55 +198,15 @@ class ResourceFinder:
                     logger.warning(f"Geocoding failed for query '{query}': {e}")
                     continue
         
-        # For US ZIP codes
-        elif re.match(r'^\d{5}(-\d{4})?$', location):
-            search_queries = [
-                f"ZIP {location}, USA",
-                f"postal code {location}, USA",
-                f"zip code {location}, USA"
-            ]
-            
-            for query in search_queries:
-                try:
-                    url = "https://nominatim.openstreetmap.org/search"
-                    params = {
-                        'q': query,
-                        'format': 'json',
-                        'limit': 1,
-                        'addressdetails': 1,
-                        'countrycodes': 'us'
-                    }
-                    
-                    headers = {
-                        'User-Agent': 'ResourceFinder/1.0 (homeless services locator)'
-                    }
-                    
-                    response = requests.get(url, params=params, headers=headers)
-                    response.raise_for_status()
-                    
-                    data = response.json()
-                    
-                    if data:
-                        result = data[0]
-                        lat = float(result['lat'])
-                        lng = float(result['lon'])
-                        
-                        logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) using query: {query}")
-                        return lat, lng
-                    
-                except Exception as e:
-                    logger.warning(f"Geocoding failed for query '{query}': {e}")
-                    continue
-        
-        # For general locations, try with country bias
+        # For non-postal codes, try with Canada bias first
         try:
             url = "https://nominatim.openstreetmap.org/search"
             params = {
-                'q': location,
+                'q': f"{location}, Canada",
                 'format': 'json',
                 'limit': 1,
                 'addressdetails': 1,
-                'countrycodes': 'ca,us'  # Try Canada and US first
+                'countrycodes': 'ca'
             }
             
             headers = {
@@ -263,32 +223,76 @@ class ResourceFinder:
                 lat = float(result['lat'])
                 lng = float(result['lon'])
                 
-                logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) with country bias")
+                # Verify it's actually in Canada
+                if lat > 0 and -141 < lng < -52:
+                    logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) with Canada bias")
+                    return lat, lng
+            
+        except Exception as e:
+            logger.warning(f"Geocoding with Canada bias failed: {e}")
+        
+        # Fallback: use known coordinates for common locations
+        known_locations = {
+            'toronto': (43.6532, -79.3832),
+            'vancouver': (49.2827, -123.1207),
+            'montreal': (45.5017, -73.5673),
+            'calgary': (51.0447, -114.0719),
+            'ottawa': (45.4215, -75.6972),
+            'edmonton': (53.5461, -113.4938),
+            'winnipeg': (49.8951, -97.1384),
+            'quebec': (46.8139, -71.2080),
+            'hamilton': (43.2557, -79.8711),
+            'kitchener': (43.4516, -80.4925),
+            'london': (42.9849, -81.2453),
+            'victoria': (48.4284, -123.3656),
+            'windsor': (42.3149, -83.0364),
+            'saskatoon': (52.1332, -106.6700),
+            'regina': (50.4452, -104.6189),
+            'st. johns': (47.5615, -52.7126),
+            'halifax': (44.6488, -63.5752),
+            'saint john': (45.2733, -66.0633),
+            'fredericton': (45.9636, -66.6431),
+            'charlottetown': (46.2382, -63.1311),
+            'whitehorse': (60.7212, -135.0568),
+            'yellowknife': (62.4540, -114.3718),
+            'iqaluit': (63.7467, -68.5170)
+        }
+        
+        location_lower = location.lower().strip()
+        for known_name, coords in known_locations.items():
+            if known_name in location_lower:
+                logger.info(f"Using known coordinates for '{location}': {coords}")
+                return coords
+        
+        # Final fallback: try with US bias but prefer Canada
+        try:
+            url = "https://nominatim.openstreetmap.org/search"
+            params = {
+                'q': location,
+                'format': 'json',
+                'limit': 1,
+                'addressdetails': 1
+            }
+            
+            headers = {
+                'User-Agent': 'ResourceFinder/1.0 (homeless services locator)'
+            }
+            
+            response = requests.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if data:
+                result = data[0]
+                lat = float(result['lat'])
+                lng = float(result['lon'])
+                
+                logger.info(f"Geocoded '{location}' to coordinates: ({lat}, {lng}) with fallback")
                 return lat, lng
             
         except Exception as e:
-            logger.warning(f"Geocoding with country bias failed: {e}")
-        
-        # Final fallback: use known coordinates for common postal codes
-        postal_code_coords = {
-            'M5S 0C9': (43.6532, -79.3832),  # Toronto
-            'M5N 2X1': (43.6532, -79.3832),  # Toronto (approximate)
-            'V6B 1A1': (49.2827, -123.1207),  # Vancouver
-            'H2Y 1C6': (45.5017, -73.5673),   # Montreal
-            'T2P 1J9': (51.0447, -114.0719),  # Calgary
-        }
-        
-        # Check if it's a known postal code and use fallback
-        clean_location = location.replace(' ', '').upper()
-        if clean_location in postal_code_coords:
-            coords = postal_code_coords[clean_location]
-            logger.info(f"Using fallback coordinates for '{location}': {coords}")
-            return coords
-        
-        # If it looks like a Canadian postal code but not in our list, use Toronto as fallback
-        if re.match(r'^[A-Z]\d[A-Z]\s?\d[A-Z]\s?\d$', location, re.IGNORECASE):
-            logger.warning(f"Could not geocode Canadian postal code '{location}', using Toronto fallback")
-            return (43.6532, -79.3832)  # Toronto coordinates
+            logger.warning(f"Final geocoding attempt failed: {e}")
         
         raise Exception(f"No results found for location: {location} after trying multiple search strategies")
     
@@ -357,7 +361,8 @@ class ResourceFinder:
                 payload = {
                     'q': query,
                     'num': 10,  # Reduced from 15 to 10
-                    'gl': 'ca' if location and ('M5S' in location or 'Toronto' in location) else 'us'
+                    'gl': 'ca',  # Always use Canada bias
+                    'hl': 'en-ca'  # Canadian English
                 }
                 
                 response = requests.post(url, headers=headers, json=payload)
