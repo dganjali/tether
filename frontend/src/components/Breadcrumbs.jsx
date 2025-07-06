@@ -41,9 +41,9 @@ const Breadcrumbs = () => {
 
   return (
     <nav className="breadcrumbs" aria-label="Breadcrumb">
-      <Link to="/" className="breadcrumb-home">
+      <a href="https://hack404.framer.ai/" className="breadcrumb-home" target="_blank" rel="noopener noreferrer">
         🏠 Home
-      </Link>
+      </a>
       {breadcrumbs.length > 0 && <span className="breadcrumb-separator">/</span>}
       {breadcrumbs}
     </nav>

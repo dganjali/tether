@@ -133,9 +133,9 @@ const SignIn = () => {
               Sign up here
             </Link>
           </p>
-          <Link to="/" className="auth-link">
+          <a href="https://hack404.framer.ai/" className="auth-link" target="_blank" rel="noopener noreferrer">
             ← Back to Home
-          </Link>
+          </a>
         </div>
       </div>
     </div>
