@@ -189,7 +189,11 @@ class ResourceFinder:
                 unique_results.append(result)
         
         logger.info(f"Total Toronto-specific shelter results found: {len(unique_results)}")
-        return unique_results
+        
+        # Filter out similar results to avoid duplicates
+        filtered_results = self.filter_similar_results(unique_results)
+        
+        return filtered_results
     
     def match_keywords(self, text: str, selected_services: List[str]) -> List[str]:
         """
@@ -236,6 +240,7 @@ class ResourceFinder:
         
         # Process results with Toronto-specific filtering
         processed_results = []
+        seen_organizations = set()
         
         for result in search_results:
             # Extract text for keyword matching
@@ -266,6 +271,20 @@ class ResourceFinder:
             elif has_shelter_keywords:
                 match_score *= 1.5
             
+            # Check for organization diversity
+            title = result.get('title', '').lower()
+            org_keywords = ['mission', 'salvation army', 'yonge street', 'st. michael', 'st. stephen', 'good shepherd', 'covenant house', 'evangel hall']
+            
+            current_org = None
+            for org in org_keywords:
+                if org in title:
+                    current_org = org
+                    break
+            
+            # If we already have this organization, reduce the score
+            if current_org and current_org in seen_organizations:
+                match_score *= 0.5
+            
             # Create ServiceResult
             service_result = ServiceResult(
                 name=result.get('title', 'Unknown'),
@@ -283,6 +302,10 @@ class ResourceFinder:
             
             processed_results.append(service_result)
             
+            # Track organizations we've seen
+            if current_org:
+                seen_organizations.add(current_org)
+            
             # Allow more results for better coverage
             if len(processed_results) >= 10:
                 break
@@ -296,8 +319,137 @@ class ResourceFinder:
         # Sort by match score
         processed_results.sort(key=lambda x: -x.match_score)
         
-        logger.info(f"Returning {len(processed_results)} Toronto shelter results")
-        return processed_results
+        # Final diversity check - ensure we have different types of shelters
+        final_results = []
+        seen_types = set()
+        
+        logger.info(f"Applying diversity filtering to {len(processed_results)} results")
+        
+        for result in processed_results:
+            title = result.name.lower()
+            
+            # Categorize the shelter type
+            shelter_type = 'general'
+            if 'mission' in title:
+                shelter_type = 'mission'
+            elif 'salvation army' in title:
+                shelter_type = 'salvation_army'
+            elif 'covenant house' in title:
+                shelter_type = 'covenant_house'
+            elif 'st. michael' in title or 'st. stephen' in title:
+                shelter_type = 'church_based'
+            elif 'yonge street' in title:
+                shelter_type = 'yonge_street'
+            elif 'evangel hall' in title:
+                shelter_type = 'evangel_hall'
+            
+            # Only add if we don't have too many of this type
+            if shelter_type not in seen_types or len([r for r in final_results if shelter_type in r.name.lower()]) < 2:
+                final_results.append(result)
+                seen_types.add(shelter_type)
+                logger.info(f"Added {result.name} (type: {shelter_type})")
+            
+            # Stop when we have enough diverse results
+            if len(final_results) >= 6:
+                break
+        
+        # If we don't have enough diverse results, add the remaining high-scoring ones
+        if len(final_results) < 3:
+            logger.info(f"Only found {len(final_results)} diverse results, adding more...")
+            for result in processed_results:
+                if result not in final_results:
+                    final_results.append(result)
+                    logger.info(f"Added additional result: {result.name}")
+                if len(final_results) >= 6:
+                    break
+        
+        logger.info(f"Returning {len(final_results)} diverse Toronto shelter results")
+        return final_results
+
+    def is_similar_result(self, result1: Dict, result2: Dict) -> bool:
+        """
+        Check if two results are essentially the same shelter/service.
+        """
+        title1 = result1.get('title', '').lower()
+        title2 = result2.get('title', '').lower()
+        snippet1 = result1.get('snippet', '').lower()
+        snippet2 = result2.get('snippet', '').lower()
+        
+        # Check for exact title match
+        if title1 == title2 and title1 != '':
+            return True
+        
+        # Check for very similar titles (common words)
+        title1_words = set(title1.split())
+        title2_words = set(title2.split())
+        
+        # If titles share more than 70% of words, consider them similar
+        if len(title1_words) > 0 and len(title2_words) > 0:
+            common_words = title1_words.intersection(title2_words)
+            similarity = len(common_words) / max(len(title1_words), len(title2_words))
+            if similarity > 0.7:
+                return True
+        
+        # Check for similar organization names
+        org_keywords = ['mission', 'salvation army', 'yonge street', 'st. michael', 'st. stephen', 'good shepherd', 'covenant house', 'evangel hall']
+        for keyword in org_keywords:
+            if keyword in title1 and keyword in title2:
+                return True
+        
+        # Check for similar addresses
+        address_keywords = ['yonge', 'queen', 'king', 'dundas', 'college', 'bloor', 'spadina', 'church']
+        for keyword in address_keywords:
+            if keyword in snippet1 and keyword in snippet2:
+                # If both mention the same street, check if they're likely the same place
+                if any(org in title1 and org in title2 for org in org_keywords):
+                    return True
+        
+        # Check for phone number matches (if present)
+        phone_pattern = r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+        phones1 = re.findall(phone_pattern, snippet1)
+        phones2 = re.findall(phone_pattern, snippet2)
+        
+        if phones1 and phones2:
+            for phone1 in phones1:
+                for phone2 in phones2:
+                    # Normalize phone numbers
+                    phone1_clean = re.sub(r'[-.]', '', phone1)
+                    phone2_clean = re.sub(r'[-.]', '', phone2)
+                    if phone1_clean == phone2_clean:
+                        return True
+        
+        # Check for similar service descriptions
+        service_keywords = ['emergency shelter', 'homeless shelter', 'overnight accommodation', 'crisis housing']
+        for keyword in service_keywords:
+            if keyword in snippet1 and keyword in snippet2:
+                # If both describe the same service type, check if they're the same organization
+                if any(org in title1 and org in title2 for org in org_keywords):
+                    return True
+        
+        return False
+    
+    def filter_similar_results(self, results: List[Dict]) -> List[Dict]:
+        """
+        Remove results that are essentially the same shelter/service.
+        """
+        if not results:
+            return results
+        
+        filtered_results = [results[0]]  # Keep the first result
+        
+        for result in results[1:]:
+            is_duplicate = False
+            
+            for existing_result in filtered_results:
+                if self.is_similar_result(result, existing_result):
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                filtered_results.append(result)
+        
+        logger.info(f"Filtered {len(results)} results down to {len(filtered_results)} unique results")
+        return filtered_results
 
 def main():
     """
