@@ -56,7 +56,7 @@ router.post('/find-resources', asyncHandler(async (req, res) => {
     logger.info('Executing Python scraper', { command });
     
     exec(command, { 
-      timeout: 60000, // 60 second timeout
+      timeout: 30000, // 30 second timeout
       env: {
         ...process.env,
         PYTHONPATH: path.join(__dirname, '..')

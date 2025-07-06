@@ -6,7 +6,6 @@ const RecommendationsContent = () => {
   const [predictions, setPredictions] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fetchingRecommendations, setFetchingRecommendations] = useState(false);
   const [error, setError] = useState(null);
   const [selectedShelter, setSelectedShelter] = useState('');
   const [selectedCapacity, setSelectedCapacity] = useState('');
@@ -45,63 +44,6 @@ const RecommendationsContent = () => {
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchRecommendations = async () => {
-    if (!selectedShelter || !selectedPredictedInflux || !selectedCapacity) return;
-    
-    try {
-      setFetchingRecommendations(true);
-      setError(null);
-      
-      console.log('Fetching recommendations for:', selectedShelter, selectedPredictedInflux, selectedCapacity);
-      const response = await fetch(`/api/recommendations?shelter=${encodeURIComponent(selectedShelter)}&influx=${selectedPredictedInflux}&capacity=${selectedCapacity}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Recommendations API error:', response.status, errorText);
-        throw new Error(`Failed to fetch recommendations: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Recommendations data:', data);
-      setRecommendations([data]); // Store as array for consistency
-    } catch (err) {
-      console.error('Error fetching recommendations:', err);
-      setError(err.message);
-    } finally {
-      setFetchingRecommendations(false);
-    }
-  };
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'HIGH': return '#D03737';
-      case 'MEDIUM': return '#FFA500';
-      case 'LOW': return '#28A745';
-      default: return '#6C757D';
-    }
-  };
-
-  const getSeverityIcon = (severity) => {
-    switch (severity) {
-      case 'HIGH': return '🚨';
-      case 'MEDIUM': return '⚠️';
-      case 'LOW': return '✅';
-      default: return 'ℹ️';
-    }
-  };
-
-  const handleShelterChange = (shelterName) => {
-    setSelectedShelter(shelterName);
-    // Find the prediction for this shelter
-    const prediction = predictions.find(p => p.name === shelterName);
-    if (prediction) {
-      setSelectedPredictedInflux(prediction.predicted_influx || 0);
-      // Set a realistic capacity based on the predicted influx
-      const realisticCapacity = Math.max(50, Math.floor((prediction.predicted_influx || 0) * 0.8));
-      setSelectedCapacity(realisticCapacity);
     }
   };
 

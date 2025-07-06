@@ -956,6 +956,11 @@ class ResourceFinder:
         # Step 3: Enhance results with detailed scraping (optional)
         if enhance_with_scraping:
             logger.info("Enhancing results with detailed website scraping...")
+            # Limit the number of results to process to avoid timeouts
+            max_results_to_process = 10
+            if len(search_results) > max_results_to_process:
+                logger.info(f"Limiting processing to {max_results_to_process} results to avoid timeout")
+                search_results = search_results[:max_results_to_process]
             search_results = self.enhance_results_with_details(search_results)
         
         # Step 4: Process and filter results
