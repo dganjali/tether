@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './styles.css';
+import './FormField.css';
 
 const FormField = ({
   label,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './styles.css';
+import './Alerts.css';
 
 const Alerts = () => {
   const [shelters, setShelters] = useState([]);

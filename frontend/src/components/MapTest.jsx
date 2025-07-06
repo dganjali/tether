@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './styles.css';
+import './Map.css';
 
 const MapTest = () => {
   const [status, setStatus] = useState('Loading...');

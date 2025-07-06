@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
-import './styles.css';
+import './RecommendationsContent.css';
 
 const RecommendationsContent = () => {
   const [predictions, setPredictions] = useState([]);

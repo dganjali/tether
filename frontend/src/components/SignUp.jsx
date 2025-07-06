@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import FormField from './FormField';
 import LoadingSpinner from './LoadingSpinner';
-import './styles.css';
+import './Auth.css';
 import logo from '../images/LOGO.png';
 
 const SignUp = () => {

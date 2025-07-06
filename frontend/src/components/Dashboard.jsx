@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import './styles.css';
+import './Dashboard.css';
 
 const Dashboard = () => {
   const { logout } = useContext(AuthContext);

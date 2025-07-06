@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './styles.css';
+import './Heatmap.css';
 
 const ShelterHeatmap = ({ shelters }) => {
   const [showMap, setShowMap] = useState(true);
