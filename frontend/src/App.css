@@ -366,8 +366,13 @@ body {
 }
 
 .tab-button.active {
-  background: #D03737;
-  color: white;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+}
+
+.tab-button.active .tab-name,
+.tab-button.active .tab-description {
+  color: #ffffff;
 }
 
 .tab-icon {
@@ -469,9 +474,14 @@ body {
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.tab-button.active .tab-name,
+.tab-button.active .tab-description {
+  color: #ffffff;
 }
 
 .tab-icon {

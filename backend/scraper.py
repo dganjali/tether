@@ -223,6 +223,10 @@ class ResourceFinder:
             if not any(service in matching_services for service in selected_services):
                 continue
             
+            # Calculate match score
+            service_overlap = len(set(matching_services) & set(selected_services))
+            match_score = service_overlap / len(selected_services)
+            
             # Prioritize shelter-related results
             text_lower = text_to_analyze.lower()
             shelter_keywords = ['shelter', 'emergency housing', 'crisis housing', 'homeless shelter', 'overnight']
@@ -231,10 +235,6 @@ class ResourceFinder:
             # Boost score for shelter-related results
             if has_shelter_keywords:
                 match_score *= 1.5
-            
-            # Calculate match score
-            service_overlap = len(set(matching_services) & set(selected_services))
-            match_score = service_overlap / len(selected_services)
             
             # Create ServiceResult
             service_result = ServiceResult(

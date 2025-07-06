@@ -776,62 +776,138 @@
 
 .chart-container {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+  margin-bottom: 30px;
 }
 
-.chart-bar-group {
+.chart-y-axis {
+  display: flex;
+  flex-direction: column;
+  width: 60px;
+  position: relative;
+}
+
+.y-axis-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 10px;
+  transform: rotate(-90deg);
+  white-space: nowrap;
+  position: absolute;
+  left: -20px;
+  top: 50%;
+}
+
+.y-axis-ticks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 220px;
+  position: relative;
+}
+
+.y-tick {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 10px 0;
-}
-
-.bar-label {
-  min-width: 150px;
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
-}
-
-.bar-container {
-  flex: 1;
-  background: #f8f9fa;
-  border-radius: 8px;
-  overflow: hidden;
+  gap: 8px;
   position: relative;
-  min-height: 30px;
+}
+
+.tick-label {
+  font-size: 10px;
+  color: #666;
+  min-width: 30px;
+  text-align: right;
+}
+
+.tick-line {
+  width: 8px;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.chart-bars {
+  flex: 1;
+  position: relative;
+}
+
+.x-axis {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 240px;
+  position: relative;
+}
+
+.x-tick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  position: relative;
+}
+
+.bars-group {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
 }
 
 .bar {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   color: white;
+  font-size: 10px;
   font-weight: 600;
-  font-size: 0.9rem;
+  transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
+  border-radius: 4px 4px 0 0;
+  min-width: 40px;
 }
 
 .bar.predicted {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .bar.recorded {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: linear-gradient(135deg, #28a745, #20c997);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
 .bar.capacity {
-  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+  background: linear-gradient(135deg, #ffc107, #fd7e14);
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
 }
 
 .bar-value {
   position: absolute;
-  right: 10px;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  top: -20px;
+  font-size: 9px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.x-labels {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.x-label {
+  font-size: 10px;
+  color: #666;
+  text-align: center;
+  font-weight: 500;
 }
 
 /* Responsive Design */

@@ -630,39 +630,58 @@ const ShelterCharts = ({ predictions }) => {
         </div>
         
         <div className="chart-container">
-          {data.prediction && (
-            <div className="chart-bar-group">
-              <div className="bar-label">Predicted</div>
-              <div className="bar-container">
-                <div 
-                  className="bar predicted"
-                  style={{ 
-                    width: `${(data.prediction.predicted_influx / maxValue) * 100}%`,
-                    height: '30px'
-                  }}
-                >
-                  <span className="bar-value">{data.prediction.predicted_influx}</span>
+          <div className="chart-y-axis">
+            <div className="y-axis-label">Count</div>
+            <div className="y-axis-ticks">
+              {[0, Math.round(maxValue * 0.25), Math.round(maxValue * 0.5), Math.round(maxValue * 0.75), maxValue].map(tick => (
+                <div key={tick} className="y-tick">
+                  <span className="tick-label">{tick}</span>
+                  <div className="tick-line"></div>
                 </div>
-              </div>
+              ))}
             </div>
-          )}
+          </div>
           
-          {data.prediction && (
-            <div className="chart-bar-group">
-              <div className="bar-label">Capacity</div>
-              <div className="bar-container">
-                <div 
-                  className="bar capacity"
-                  style={{ 
-                    width: `${(data.prediction.capacity / maxValue) * 100}%`,
-                    height: '30px'
-                  }}
-                >
-                  <span className="bar-value">{data.prediction.capacity}</span>
+          <div className="chart-bars">
+            <div className="x-axis">
+              <div className="x-tick">
+                <div className="bars-group">
+                  {/* Predicted bar */}
+                  {data.prediction && (
+                    <div 
+                      className="bar predicted"
+                      style={{ 
+                        height: `${(data.prediction.predicted_influx / maxValue) * 200}px`,
+                        width: '60px'
+                      }}
+                      title={`Predicted: ${data.prediction.predicted_influx} people`}
+                    >
+                      <span className="bar-value">{data.prediction.predicted_influx}</span>
+                    </div>
+                  )}
+                  
+                  {/* Capacity bar */}
+                  {data.prediction && (
+                    <div 
+                      className="bar capacity"
+                      style={{ 
+                        height: `${(data.prediction.capacity / maxValue) * 200}px`,
+                        width: '60px'
+                      }}
+                      title={`Capacity: ${data.prediction.capacity} people`}
+                    >
+                      <span className="bar-value">{data.prediction.capacity}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="x-labels">
+                  <div className="x-label">Predicted</div>
+                  <div className="x-label">Capacity</div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     );

@@ -227,9 +227,14 @@
 }
 
 .tab-button.active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.12));
-  color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.tab-button.active .tab-name,
+.tab-button.active .tab-description {
+  color: #ffffff;
 }
 
 .tab-icon {
