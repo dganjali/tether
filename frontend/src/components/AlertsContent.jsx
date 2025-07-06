@@ -214,13 +214,7 @@ const AlertsContent = () => {
     );
   };
 
-  const handleSelectAll = () => {
-    if (selectedAlerts.length === alerts.length) {
-      setSelectedAlerts([]);
-    } else {
-      setSelectedAlerts(alerts.map(alert => alert.id));
-    }
-  };
+
 
   const getAlertTypeColor = (type) => {
     switch (type) {
